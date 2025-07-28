@@ -85,7 +85,6 @@ export default function Layout({ children }) {
     try {
       await User.logout();
       toast({
-        title: "התנתקות מוצלחת",
         description: "התנתקת בהצלחה מהמערכת",
       });
     } catch (error) {
@@ -166,6 +165,10 @@ export default function Layout({ children }) {
                 await User.login();
                 // After successful login, reload user data
                 await loadUser();
+                // Show success toast
+                toast({
+                  description: "התחברת בהצלחה למערכת",
+                });
               } catch (error) {
                 console.error('Login failed:', error);
                 setLoading(false);
