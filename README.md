@@ -1,5 +1,5 @@
 # CollaborativeLearning
-#פלטפורמה ללמידה שיתופית בקריה האקדמית אונו
+### **פלטפורמה ללמידה שיתופית בקריה האקדמית אונו**
 
 A comprehensive collaborative learning platform designed for Ono Academic College, built with modern web technologies to facilitate seamless interaction between students, lecturers, and administrators.
 
