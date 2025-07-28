@@ -25,6 +25,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
+import { LoginForm } from "@/components/LoginForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import AccessibilityWidget from '@/components/AccessibilityWidget';
 
 // eslint-disable-next-line react/prop-types
@@ -33,6 +35,7 @@ export default function Layout({ children }) {
   const [user, setUser] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loginError, setLoginError] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -146,46 +149,49 @@ export default function Layout({ children }) {
     );
   }
 
+  const handleLoginSuccess = async () => {
+    try {
+      setLoading(true);
+      await loadUser();
+      toast({
+        description: "התחברת בהצלחה למערכת",
+      });
+      setLoginError('');
+    } catch (error) {
+      console.error('Error loading user after login:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleLoginError = (error) => {
+    setLoginError(error);
+    setLoading(false);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4" dir="rtl">
-        <div className="text-center bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl max-w-sm w-full">
-          <div className="w-24 h-24 p-1 border-2 border-lime-200 dark:border-lime-700 rounded-full mx-auto mb-6 flex items-center justify-center bg-lime-500">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-12 h-12">
-               <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
-             </svg>
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-24 h-24 p-1 border-2 border-lime-200 dark:border-lime-700 rounded-full mx-auto mb-6 flex items-center justify-center bg-lime-500">
+               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-12 h-12">
+                 <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z"/>
+               </svg>
+            </div>
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">ברוכים הבאים ללמידה שיתופית</h1>
+            <p className="text-lg font-medium text-lime-600 dark:text-lime-400 mt-1 mb-6">בקריה האקדמית אונו</p>
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">ברוכים הבאים ללמידה שיתופית</h1>
-          <p className="text-lg font-medium text-lime-600 dark:text-lime-400 mt-1 mb-8">בקריה האקדמית אונו</p>
           
-          <Button
-            onClick={async () => {
-              try {
-                setLoading(true);
-                await User.login();
-                // After successful login, reload user data
-                await loadUser();
-                // Show success toast
-                toast({
-                  description: "התחברת בהצלחה למערכת",
-                });
-              } catch (error) {
-                console.error('Login failed:', error);
-                setLoading(false);
-              }
-            }}
-            variant="outline"
-            className="w-full border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700"
-            size="lg"
-            disabled={loading}
-          >
-            <svg className="ml-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 62.3l-66.5 64.6C305.5 102.6 277.6 88 248 88c-86.1 0-156 70-156 156s70 156 156 156c97.2 0 132.1-64.4 135.6-95.6H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
-            התחברות עם Google
-          </Button>
-
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-6">
-            אין לך חשבון? ההרשמה למערכת מתבצעת על ידי מנהל בלבד.
-          </p>
+          {loginError && (
+            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800">
+              <AlertDescription>{loginError}</AlertDescription>
+            </Alert>
+          )}
+          
+          <LoginForm 
+            onLoginSuccess={handleLoginSuccess}
+            onLoginError={handleLoginError}
+          />
         </div>
       </div>
     );

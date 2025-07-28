@@ -134,32 +134,24 @@ class Auth {
   }
 
   async me() {
-    try {
-      return await this.api.get('/auth/me');
-    } catch {
-      // If backend is not available, return mock user data
-      const mockUser = localStorage.getItem('mock_user');
-      if (mockUser && this.api.token) {
-        return JSON.parse(mockUser);
-      }
-      throw new Error('User not authenticated');
+    // Always use mock data since we don't have a real backend
+    const mockUser = localStorage.getItem('mock_user');
+    if (mockUser && this.api.token) {
+      return JSON.parse(mockUser);
     }
+    throw new Error('User not authenticated');
   }
 
   async updateMyUserData(data) {
-    try {
-      return await this.api.patch('/auth/me', data);
-    } catch {
-      // If backend is not available, update mock user data
-      const mockUser = localStorage.getItem('mock_user');
-      if (mockUser && this.api.token) {
-        const user = JSON.parse(mockUser);
-        const updatedUser = { ...user, ...data };
-        localStorage.setItem('mock_user', JSON.stringify(updatedUser));
-        return updatedUser;
-      }
-      throw new Error('User not authenticated');
+    // Always use mock data since we don't have a real backend
+    const mockUser = localStorage.getItem('mock_user');
+    if (mockUser && this.api.token) {
+      const user = JSON.parse(mockUser);
+      const updatedUser = { ...user, ...data };
+      localStorage.setItem('mock_user', JSON.stringify(updatedUser));
+      return updatedUser;
     }
+    throw new Error('User not authenticated');
   }
 
   async login(credentials) {
@@ -170,15 +162,89 @@ class Auth {
       }
       return response;
     } catch {
-      // If backend is not available, create a mock user for development
-      console.log('Backend login unavailable, creating mock user session');
-      const mockUser = {
-        id: 'mock-user-1',
-        email: 'user@example.com',
-        full_name: 'משתמש לדוגמה',
-        current_role: 'student',
-        theme_preference: 'light'
+      // If backend is not available, use mock authentication
+      console.log('Backend login unavailable, using mock authentication');
+      
+      const { email, password } = credentials;
+      
+      // Mock user database with different role combinations
+      const mockUsers = {
+        'student@ono.ac.il': {
+          id: 'user-001',
+          email: 'student@ono.ac.il',
+          full_name: 'אליה כהן',
+          roles: ['student'],
+          current_role: 'student',
+          theme_preference: 'light',
+          student_id: 'STU2024001',
+          academic_track: 'מדעי המחשב'
+        },
+        'lecturer@ono.ac.il': {
+          id: 'user-002', 
+          email: 'lecturer@ono.ac.il',
+          full_name: 'ד"ר שרה לוי',
+          roles: ['lecturer'],
+          current_role: 'lecturer',
+          theme_preference: 'light',
+          department: 'מדעי המחשב',
+          title: 'ד״ר'
+        },
+        'admin@ono.ac.il': {
+          id: 'user-003',
+          email: 'admin@ono.ac.il', 
+          full_name: 'משה אדמיניסטרטור',
+          roles: ['admin'],
+          current_role: 'admin',
+          theme_preference: 'dark',
+          department: 'מנהל מערכת'
+        },
+        'student.lecturer@ono.ac.il': {
+          id: 'user-004',
+          email: 'student.lecturer@ono.ac.il',
+          full_name: 'מיכל דוקטורנטית',
+          roles: ['student', 'lecturer'],
+          current_role: 'student',
+          theme_preference: 'light',
+          student_id: 'PhD2024002',
+          academic_track: 'מדעי המחשב - דוקטורט',
+          department: 'מדעי המחשב',
+          title: 'מרצה חיצונית'
+        },
+        'lecturer.admin@ono.ac.il': {
+          id: 'user-005',
+          email: 'lecturer.admin@ono.ac.il',
+          full_name: 'פרופ׳ דוד ראש המחלקה',
+          roles: ['lecturer', 'admin'],
+          current_role: 'lecturer',
+          theme_preference: 'light',
+          department: 'מדעי המחשב',
+          title: 'פרופ׳',
+          admin_permissions: ['manage_department', 'approve_courses']
+        },
+        'all.roles@ono.ac.il': {
+          id: 'user-006',
+          email: 'all.roles@ono.ac.il',
+          full_name: 'ד"ר רונה סופר יוזר',
+          roles: ['student', 'lecturer', 'admin'],
+          current_role: 'admin',
+          theme_preference: 'dark',
+          student_id: 'MBA2024003',
+          academic_track: 'מנהל עסקים - תואר שני',
+          department: 'מנהל עסקים וכלכלה',
+          title: 'ד״ר',
+          admin_permissions: ['full_access']
+        }
       };
+
+      // Check credentials
+      if (password !== '123456') {
+        throw new Error('סיסמה שגויה');
+      }
+
+      const mockUser = mockUsers[email];
+      if (!mockUser) {
+        throw new Error('משתמש לא נמצא במערכת');
+      }
       
       // Create a mock token and store it
       const mockToken = 'mock-token-' + Date.now();

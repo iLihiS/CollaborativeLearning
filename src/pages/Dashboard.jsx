@@ -74,43 +74,58 @@ export default function Dashboard() {
       const currentUser = await User.me();
       setUser(currentUser);
 
-      const roles = [];
-      const [studentRecords, lecturerRecords] = await Promise.all([
-        Student.filter({ email: currentUser.email }),
-        Lecturer.filter({ email: currentUser.email }),
-      ]);
+      // Use roles from the user object if available, otherwise create default roles
+      let roles = currentUser.roles || [];
+      
+      if (roles.length === 0) {
+        // Fallback for users without defined roles
+        const [studentRecords, lecturerRecords] = await Promise.all([
+          Student.filter({ email: currentUser.email }),
+          Lecturer.filter({ email: currentUser.email }),
+        ]);
 
-      let studentRecord = studentRecords[0];
-
-      if (studentRecord) {
-        roles.push('student');
-      } else {
-        studentRecord = await Student.create({
-          full_name: currentUser.full_name,
-          student_id: `STU${Date.now()}`,
-          email: currentUser.email,
-          academic_track: "לא שויך מסלול",
-          registered_courses: [],
-        });
-        roles.push('student');
-      }
-      setStudent(studentRecord);
-
-      if (lecturerRecords.length > 0) {
-        roles.push('lecturer');
-      } else {
-        await Lecturer.create({
-          full_name: currentUser.full_name,
-          email: currentUser.email,
-          assigned_courses: [],
-          semester_start: "סמסטר א' תשפ\"ה",
-          department: "מדעי המחשב"
-        });
-        roles.push('lecturer');
+        if (studentRecords.length > 0) {
+          roles.push('student');
+        }
+        if (lecturerRecords.length > 0) {
+          roles.push('lecturer');
+        }
+        roles.push('admin'); // For development purposes
       }
 
-      roles.push('admin');
       setUserRoles(roles);
+
+      // Handle student record
+      let studentRecord = null;
+      if (roles.includes('student')) {
+        const studentRecords = await Student.filter({ email: currentUser.email });
+        studentRecord = studentRecords[0];
+        
+        if (!studentRecord) {
+          studentRecord = await Student.create({
+            full_name: currentUser.full_name,
+            student_id: currentUser.student_id || `STU${Date.now()}`,
+            email: currentUser.email,
+            academic_track: currentUser.academic_track || "לא שויך מסלול",
+            registered_courses: [],
+          });
+        }
+        setStudent(studentRecord);
+      }
+
+      // Handle lecturer record  
+      if (roles.includes('lecturer')) {
+        const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
+        if (lecturerRecords.length === 0) {
+          await Lecturer.create({
+            full_name: currentUser.full_name,
+            email: currentUser.email,
+            assigned_courses: [],
+            semester_start: "סמסטר א' תשפ\"ה",
+            department: currentUser.department || "מדעי המחשב"
+          });
+        }
+      }
 
       if (!currentUser.current_role) {
         const defaultRole = roles.includes('student') ? 'student' : 
