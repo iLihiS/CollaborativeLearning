@@ -1,0 +1,118 @@
+
+import React, { useState, useEffect } from 'react';
+import { User } from '@/api/entities';
+import { Lecturer } from '@/api/entities';
+import { File } from '@/api/entities';
+import { Course } from '@/api/entities';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from '@/components/ui/button';
+import { Download, CheckCircle } from 'lucide-react';
+import { format } from 'date-fns';
+import { he } from 'date-fns/locale';
+
+
+export default function LecturerApprovedFiles() {
+  const [lecturer, setLecturer] = useState(null);
+  const [approvedFiles, setApprovedFiles] = useState([]);
+  const [coursesMap, setCoursesMap] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const currentUser = await User.me();
+      const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
+      const currentLecturer = lecturerRecords[0];
+      setLecturer(currentLecturer);
+
+      if (currentLecturer) {
+        const [allFiles, allCourses] = await Promise.all([
+            File.filter({ status: 'approved' }),
+            Course.list()
+        ]);
+        
+        const lecturerCourseIds = allCourses
+          .filter(c => c.lecturer_id === currentLecturer.id)
+          .map(c => c.id);
+
+        const lecturerApprovedFiles = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
+        setApprovedFiles(lecturerApprovedFiles);
+
+        const cMap = allCourses.reduce((acc, course) => {
+            acc[course.id] = course.course_name;
+            return acc;
+        }, {});
+        setCoursesMap(cMap);
+      }
+    } catch (error) {
+      console.error("Error loading approved files:", error);
+    }
+    setLoading(false);
+  };
+  
+  const handleDownload = (fileUrl) => {
+      window.open(fileUrl, '_blank');
+  }
+
+  return (
+    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-start mb-8">
+            <div>
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">קבצים שאושרו</h1>
+                </div>
+                <p className="text-white mt-3">רשימת כל חומרי הלימוד שאושרו על ידך</p>
+            </div>
+        </div>
+
+        <Card className="border-0 shadow-lg bg-white">
+          <CardContent className="p-0">
+            {loading ? <p className="p-6 text-center">טוען קבצים...</p> : approvedFiles.length > 0 ? (
+               <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead>שם קובץ</TableHead>
+                      <TableHead>קורס</TableHead>
+                      <TableHead>תאריך אישור</TableHead>
+                      <TableHead className="text-left">פעולות</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {approvedFiles.map(file => (
+                      <TableRow key={file.id}>
+                        <TableCell className="font-medium">{file.title}</TableCell>
+                        <TableCell>{coursesMap[file.course_id] || 'לא ידוע'}</TableCell>
+                        <TableCell>{format(new Date(file.updated_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                        <TableCell className="text-left">
+                            <Button variant="outline" size="sm" onClick={() => handleDownload(file.file_url)}>
+                                <Download className="w-4 h-4 ml-2" />
+                                הורדה
+                            </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+                <div className="text-center py-12">
+                    <CheckCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-slate-800">אין קבצים מאושרים</h3>
+                    <p className="text-slate-500 mt-2">עדיין לא אישרת קבצים.</p>
+                </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
