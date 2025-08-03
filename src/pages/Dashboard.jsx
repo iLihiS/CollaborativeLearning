@@ -1,16 +1,10 @@
 
-import React, { useState, useEffect } from "react";
-import { User } from "@/api/entities";
-import { Course } from "@/api/entities";
-import { File } from "@/api/entities";
-import { Student } from "@/api/entities";
-import { Lecturer } from "@/api/entities";
-import { Message } from "@/api/entities";
-import { Notification } from "@/api/entities";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { User, Course, File, Student, Lecturer, Message, Notification } from "@/api/entities";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   DropdownMenu,
@@ -25,22 +19,27 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Calendar,
   Sun,
   Moon,
   ChevronDown,
   GraduationCap,
   MessageSquare,
   Plus,
-  Heart
+  Heart,
+  Users,
+  Briefcase,
+  FileCog
 } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 
+const MORNING_START = 5;
+const AFTERNOON_START = 12;
+const EVENING_START = 18;
+const NIGHT_START = 22;
+
 export default function Dashboard() {
   const [user, setUser] = useState(null);
-  const [student, setStudent] = useState(null);
-  const [courses, setCourses] = useState([]);
   const [recentFiles, setRecentFiles] = useState([]);
   const [recentInquiries, setRecentInquiries] = useState([]);
   const [stats, setStats] = useState({
@@ -48,22 +47,22 @@ export default function Dashboard() {
     approvedFiles: 0,
     pendingFiles: 0,
     rejectedFiles: 0,
-    enrolledCourses: 0,
     totalDownloads: 0
   });
   const [greeting, setGreeting] = useState({ text: "", icon: null });
   const [loading, setLoading] = useState(true);
   const [userRoles, setUserRoles] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const currentHour = new Date().getHours();
-    if (currentHour >= 5 && currentHour < 12) {
+    if (currentHour >= MORNING_START && currentHour < AFTERNOON_START) {
         setGreeting({ text: "בוקר טוב", icon: <Sun className="w-5 h-5 text-yellow-300" /> });
-    } else if (currentHour >= 12 && currentHour < 18) {
+    } else if (currentHour >= AFTERNOON_START && currentHour < EVENING_START) {
         setGreeting({ text: "צהריים טובים", icon: <Sun className="w-5 h-5 text-yellow-300" /> });
-    } else {
+    } else if (currentHour >= EVENING_START && currentHour < NIGHT_START) {
         setGreeting({ text: "ערב טוב", icon: <Moon className="w-5 h-5 text-slate-300" /> });
+    } else {
+        setGreeting({ text: "לילה טוב", icon: <Moon className="w-5 h-5 text-slate-300" /> });
     }
 
     loadDashboardData();
@@ -74,95 +73,70 @@ export default function Dashboard() {
       const currentUser = await User.me();
       setUser(currentUser);
 
-      // Use roles from the user object if available, otherwise create default roles
       let roles = currentUser.roles || [];
-      
       if (roles.length === 0) {
-        // Fallback for users without defined roles
         const [studentRecords, lecturerRecords] = await Promise.all([
           Student.filter({ email: currentUser.email }),
           Lecturer.filter({ email: currentUser.email }),
         ]);
-
-        if (studentRecords.length > 0) {
-          roles.push('student');
-        }
-        if (lecturerRecords.length > 0) {
-          roles.push('lecturer');
-        }
-        roles.push('admin'); // For development purposes
+        if (studentRecords.length > 0) roles.push('student');
+        if (lecturerRecords.length > 0) roles.push('lecturer');
+        if (currentUser.email.includes('admin')) roles.push('admin');
       }
-
       setUserRoles(roles);
 
-      // Handle student record
       let studentRecord = null;
       if (roles.includes('student')) {
         const studentRecords = await Student.filter({ email: currentUser.email });
-        studentRecord = studentRecords[0];
-        
-        if (!studentRecord) {
-          studentRecord = await Student.create({
-            full_name: currentUser.full_name,
-            student_id: currentUser.student_id || `STU${Date.now()}`,
-            email: currentUser.email,
-            academic_track: currentUser.academic_track || "לא שויך מסלול",
-            registered_courses: [],
-          });
-        }
-        setStudent(studentRecord);
+        studentRecord = studentRecords[0] || await Student.create({
+          full_name: currentUser.full_name,
+          student_id: currentUser.student_id || `STU${Date.now()}`,
+          email: currentUser.email,
+          academic_track: currentUser.academic_track || "לא שויך מסלול",
+          registered_courses: [],
+        });
       }
 
-      // Handle lecturer record  
+      let lecturerRecords = [];
       if (roles.includes('lecturer')) {
-        const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
+        lecturerRecords = await Lecturer.filter({ email: currentUser.email });
         if (lecturerRecords.length === 0) {
-          await Lecturer.create({
+          lecturerRecords.push(await Lecturer.create({
             full_name: currentUser.full_name,
             email: currentUser.email,
             assigned_courses: [],
             semester_start: "סמסטר א' תשפ\"ה",
             department: currentUser.department || "מדעי המחשב"
-          });
+          }));
         }
       }
 
       if (!currentUser.current_role) {
-        const defaultRole = roles.includes('student') ? 'student' : 
+        const defaultRole = roles.includes('student') ? 'student' :
                            roles.includes('lecturer') ? 'lecturer' : 'admin';
-        await User.updateMyUserData({ current_role: defaultRole });
-        currentUser.current_role = defaultRole;
-        setUser(currentUser);
+        const updatedUser = await User.updateMyUserData({ current_role: defaultRole });
+        setUser(updatedUser);
       }
 
-      if (studentRecord) {
-        const [enrolledCourses, userFiles, userInquiries, userNotifications, allFiles, allCourses] = await Promise.all([
-          Course.list(),
-          File.filter({ uploaded_by: studentRecord.student_id }),
+      if (currentUser.current_role !== 'admin') {
+        const [userFiles, userInquiries, userNotifications, allFiles, allCourses] = await Promise.all([
+          File.filter({ uploader_id: studentRecord?.student_id }),
           Message.filter({ sender_email: currentUser.email }, '-created_date'),
           Notification.filter({ user_email: currentUser.email }, '-created_date', 5),
           File.filter({ status: 'pending' }),
           Course.list()
         ]);
-        
-        const userCourses = enrolledCourses.filter(course =>
-          studentRecord.registered_courses?.includes(course.id)
-        );
 
         const totalDownloads = userFiles.reduce((sum, file) => sum + (file.download_count || 0), 0);
         
         let pendingFilesForLecturer = 0;
-        if (currentUser.current_role === 'lecturer' || currentUser.current_role === 'admin') {
-          const currentLecturer = lecturerRecords[0];
-          if (currentLecturer) {
-            const lecturerCourseIds = allCourses
-              .filter(c => c.lecturer_id === currentLecturer.id)
-              .map(c => c.id);
-            pendingFilesForLecturer = allFiles.filter(f => lecturerCourseIds.includes(f.course_id)).length;
-          }
+        if (currentUser.current_role === 'lecturer' && lecturerRecords.length > 0) {
+          const lecturerCourseIds = allCourses
+            .filter(c => c.lecturer_id === lecturerRecords[0].id)
+            .map(c => c.id);
+          pendingFilesForLecturer = allFiles.filter(f => lecturerCourseIds.includes(f.course_id)).length;
         }
         
-        setCourses(userCourses);
         setRecentFiles(userNotifications);
         setRecentInquiries(userInquiries.slice(0, 3));
 
@@ -171,7 +145,6 @@ export default function Dashboard() {
           approvedFiles: userFiles.filter(f => f.status === 'approved').length,
           pendingFiles: currentUser.current_role === 'student' ? userFiles.filter(f => f.status === 'pending').length : pendingFilesForLecturer,
           rejectedFiles: userFiles.filter(f => f.status === 'rejected').length,
-          enrolledCourses: userCourses.length,
           totalDownloads: totalDownloads
         });
       }
@@ -207,39 +180,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'approved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <Clock className="w-4 h-4 text-amber-500" />;
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'אושר';
-      case 'rejected':
-        return 'נדחה';
-      default:
-        return 'ממתין';
-    }
-  };
 
   const getInquiryStatusBadge = (status) => {
     if (status === 'handled') {
@@ -376,74 +316,116 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* Downloads Card */}
-          <Link to={createPageUrl("Notifications")} className="block">
-            <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
-              <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Heart className="w-5 h-5 text-pink-500" />
+        {user?.current_role === 'admin' ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Admin Quick Links */}
+            <Link to={createPageUrl("AdminCourseManagement")} className="block">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <BookOpen className="w-5 h-5 text-sky-500" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">ניהול קורסים</h2>
+                <p className="text-xs text-slate-400">עריכה והוספה</p>
               </div>
-              <h2 className="text-xl font-bold text-slate-800">{stats.totalDownloads}</h2>
-              <p className="text-slate-500 text-xs">הורדות</p>
-              <p className="text-xs text-slate-400">לקבצים שלך</p>
-            </div>
-          </Link>
+            </Link>
+            <Link to={createPageUrl("AdminStudentManagement")} className="block">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Users className="w-5 h-5 text-teal-500" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">ניהול סטודנטים</h2>
+                <p className="text-xs text-slate-400">עריכה והוספה</p>
+              </div>
+            </Link>
+            <Link to={createPageUrl("AdminLecturerManagement")} className="block">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Briefcase className="w-5 h-5 text-indigo-500" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">ניהול מרצים</h2>
+                <p className="text-xs text-slate-400">עריכה והוספה</p>
+              </div>
+            </Link>
+            <Link to={createPageUrl("AdminFileManagement")} className="block">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <FileCog className="w-5 h-5 text-orange-500" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">ניהול קבצים</h2>
+                <p className="text-xs text-slate-400">צפייה וסינון</p>
+              </div>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {/* Downloads Card */}
+            <Link to={createPageUrl("Notifications")} className="block">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Heart className="w-5 h-5 text-pink-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">{stats.totalDownloads}</h2>
+                <p className="text-slate-500 text-xs">הורדות</p>
+                <p className="text-xs text-slate-400">לקבצים שלך</p>
+              </div>
+            </Link>
 
-          {/* Total Files Card */}
-          <Link to={createPageUrl("MyFiles")} className="block">
-            <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <FileText className="w-5 h-5 text-blue-500" />
+            {/* Total Files Card */}
+            <Link to={createPageUrl("MyFiles")} className="block">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <FileText className="w-5 h-5 text-blue-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">{stats.totalFiles}</h2>
+                <p className="text-slate-500 text-xs">קבצים</p>
+                <p className="text-xs text-slate-400">שהעלת</p>
               </div>
-              <h2 className="text-xl font-bold text-slate-800">{stats.totalFiles}</h2>
-              <p className="text-slate-500 text-xs">קבצים</p>
-              <p className="text-xs text-slate-400">שהעלת</p>
-            </div>
-          </Link>
+            </Link>
 
-          {/* Approved Card */}
-          <Link to={createPageUrl("MyFiles?status=approved")} className="block">
-            <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
+            {/* Approved Card */}
+            <Link to={createPageUrl("MyFiles?status=approved")} className="block">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">{stats.approvedFiles}</h2>
+                <p className="text-slate-500 text-xs">קבצים</p>
+                <p className="text-xs text-slate-400">מאושרים</p>
               </div>
-              <h2 className="text-xl font-bold text-slate-800">{stats.approvedFiles}</h2>
-              <p className="text-slate-500 text-xs">קבצים</p>
-              <p className="text-xs text-slate-400">מאושרים</p>
-            </div>
-          </Link>
+            </Link>
 
-          {/* Pending Card */}
-          <Link 
-            to={createPageUrl(user?.current_role === 'student' ? "MyFiles?status=pending" : "LecturerPendingFiles")} 
-            className="block"
-          >
-            <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
-              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Clock className="w-5 h-5 text-amber-500" />
+            {/* Pending Card */}
+            <Link 
+              to={createPageUrl(user?.current_role === 'student' ? "MyFiles?status=pending" : "LecturerPendingFiles")} 
+              className="block"
+            >
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Clock className="w-5 h-5 text-amber-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">{stats.pendingFiles}</h2>
+                <p className="text-slate-500 text-xs">
+                  {user?.current_role === 'student' ? 'ממתינה' : 'ממתינים'}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {user?.current_role === 'student' ? 'לבדיקה' : 'לאישורך'}
+                </p>
               </div>
-              <h2 className="text-xl font-bold text-slate-800">{stats.pendingFiles}</h2>
-              <p className="text-slate-500 text-xs">
-                {user?.current_role === 'student' ? 'ממתינה' : 'ממתינים'}
-              </p>
-              <p className="text-xs text-slate-400">
-                {user?.current_role === 'student' ? 'לבדיקה' : 'לאישורך'}
-              </p>
-            </div>
-          </Link>
+            </Link>
 
-          {/* Rejected Card */}
-          <Link to={createPageUrl("MyFiles?status=rejected")} className="block col-span-2 md:col-span-1">
-            <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <XCircle className="w-5 h-5 text-red-500" />
+            {/* Rejected Card */}
+            <Link to={createPageUrl("MyFiles?status=rejected")} className="block col-span-2 md:col-span-1">
+              <div className="bg-white rounded-2xl p-4 shadow-lg text-center h-full hover:shadow-xl hover:-translate-y-1 transition-all">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <XCircle className="w-5 h-5 text-red-500" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">{stats.rejectedFiles}</h2>
+                <p className="text-slate-500 text-xs">קבצים</p>
+                <p className="text-xs text-slate-400">שנדחו</p>
               </div>
-              <h2 className="text-xl font-bold text-slate-800">{stats.rejectedFiles}</h2>
-              <p className="text-slate-500 text-xs">קבצים</p>
-              <p className="text-xs text-slate-400">שנדחו</p>
-            </div>
-          </Link>
-        </div>
+            </Link>
+          </div>
+        )}
 
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

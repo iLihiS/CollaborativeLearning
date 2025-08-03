@@ -29,6 +29,9 @@ import { LoginForm } from "@/components/LoginForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import AccessibilityWidget from '@/components/AccessibilityWidget';
 
+const MORNING_START = 6; // 6 AM
+const EVENING_START = 22; // 10 PM
+
 // eslint-disable-next-line react/prop-types
 export default function Layout({ children }) {
   const location = useLocation();
@@ -57,29 +60,36 @@ export default function Layout({ children }) {
 
   const loadUser = async () => {
     setLoading(true);
-    
-    // Check if we have a valid token
+
+    const currentHour = new Date().getHours();
+    let defaultTheme = 'dark'; // Default to dark
+    if (currentHour >= MORNING_START && currentHour < EVENING_START) {
+        defaultTheme = 'light'; // It's daytime
+    }
+
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      // No token means user should login
-      setUser(null);
-      setLoading(false);
-      return;
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(defaultTheme);
+        setUser(null);
+        setLoading(false);
+        return;
     }
     
     try {
-      const currentUser = await User.me();
-      setUser(currentUser);
-      // Apply theme on load
-      const theme = currentUser.theme_preference || localStorage.getItem('theme') || 'light';
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(theme);
+        const currentUser = await User.me();
+        setUser(currentUser);
+
+        const theme = sessionStorage.getItem('session_theme') || currentUser.theme_preference || localStorage.getItem('theme') || defaultTheme;
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
     } catch {
-      console.log("User not authenticated");
-      // Clear any stored authentication data
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('mock_user');
-      setUser(null);
+        console.log("User not authenticated");
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(defaultTheme);
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('mock_user');
+        setUser(null);
     }
     setLoading(false);
   };
@@ -92,18 +102,15 @@ export default function Layout({ children }) {
       });
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if logout fails, clear local state
       toast({
         title: "התנתקות הושלמה",
         description: "נתוני המערכת נוקו בהצלחה",
       });
     }
-    // Clear all component state
+    sessionStorage.removeItem('session_theme'); // Clear session theme on logout
     setUser(null);
-    setLoading(false); // Set to false so login screen shows immediately
-    // Short delay to show the toast
+    setLoading(false); 
     setTimeout(() => {
-      // Don't redirect, just clear user state to show login screen
       setUser(null);
     }, 1000);
   };

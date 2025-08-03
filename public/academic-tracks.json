@@ -1,0 +1,38 @@
+[
+  {
+    "id": "computer-science",
+    "name": "מדעי המחשב",
+    "department": "מדעי המחשב",
+    "degree_type": "תואר ראשון"
+  },
+  {
+    "id": "software-engineering",
+    "name": "הנדסת תוכנה",
+    "department": "מדעי המחשב",
+    "degree_type": "תואר ראשון"
+  },
+  {
+    "id": "economics",
+    "name": "כלכלה",
+    "department": "כלכלה",
+    "degree_type": "תואר ראשון"
+  },
+  {
+    "id": "economics-2",
+    "name": "כלכלה 2",
+    "department": "כלכלה 2",
+    "degree_type": "תואר שני"
+  },
+  {
+    "id": "business-administration",
+    "name": "מנהל עסקים",
+    "department": "מנהל עסקים",
+    "degree_type": "תואר ראשון"
+  },
+  {
+    "id": "business-administration-2",
+    "name": "מנהל עסקים 2",
+    "department": "מנהל עסקים 2",
+    "degree_type": "תואר שני"
+  }
+] 

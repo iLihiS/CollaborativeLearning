@@ -1,39 +1,45 @@
 
-import React, { useState, useEffect } from 'react';
-import { Lecturer } from '@/api/entities';
+import { useState, useEffect } from 'react';
+import { Lecturer, AcademicTrack } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { GraduationCap, Plus, Edit, Trash2, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function AdminLecturerManagement() {
   const [lecturers, setLecturers] = useState([]);
+  const [academicTracks, setAcademicTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentLecturer, setCurrentLecturer] = useState(null);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    department: '',
-    semester_start: '',
+    academic_tracks: [],
   });
 
   useEffect(() => {
-    loadLecturers();
+    loadData();
   }, []);
 
-  const loadLecturers = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const lecturerList = await Lecturer.list();
+      const [lecturerList, trackList] = await Promise.all([
+        Lecturer.list(),
+        AcademicTrack.list()
+      ]);
       setLecturers(lecturerList);
+      setAcademicTracks(trackList);
     } catch (error) {
-      console.error("Error loading lecturers:", error);
+      console.error("Error loading data:", error);
     }
     setLoading(false);
   };
@@ -44,11 +50,14 @@ export default function AdminLecturerManagement() {
       setFormData({
         full_name: lecturer.full_name,
         email: lecturer.email,
-        department: lecturer.department || '',
-        semester_start: lecturer.semester_start,
+        academic_tracks: lecturer.academic_tracks || [],
       });
     } else {
-      setFormData({ full_name: '', email: '', department: '', semester_start: '' });
+      setFormData({ 
+        full_name: '', 
+        email: '', 
+        academic_tracks: [] 
+      });
     }
     setIsDialogOpen(true);
   };
@@ -63,6 +72,15 @@ export default function AdminLecturerManagement() {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  const handleTrackToggle = (trackId) => {
+    setFormData((prev) => ({
+      ...prev,
+      academic_tracks: prev.academic_tracks.includes(trackId)
+        ? prev.academic_tracks.filter(id => id !== trackId)
+        : [...prev.academic_tracks, trackId]
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -72,7 +90,7 @@ export default function AdminLecturerManagement() {
         await Lecturer.create(formData);
       }
       handleCloseDialog();
-      loadLecturers();
+      loadData();
     } catch (error) {
       console.error("Failed to save lecturer:", error);
       alert('שגיאה בשמירת המרצה.');
@@ -83,13 +101,18 @@ export default function AdminLecturerManagement() {
     if (window.confirm('האם אתה בטוח שברצונך למחוק מרצה זה?')) {
       try {
         await Lecturer.delete(lecturerId);
-        loadLecturers();
+        loadData();
       } catch (error) {
           console.error("Failed to delete lecturer:", error);
           alert('שגיאה במחיקת המרצה.');
       }
     }
   };
+  
+  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc, track) => {
+    if(track) acc[track.id] = track.name;
+    return acc;
+  }, {});
 
   return (
     <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
@@ -144,17 +167,30 @@ export default function AdminLecturerManagement() {
                     <TableRow className="hover:bg-[#ebeced]" style={{backgroundColor: '#ebeced'}}>
                       <TableHead className="text-right text-black">שם מלא</TableHead>
                       <TableHead className="text-right text-black">כתובת מייל</TableHead>
-                      <TableHead className="text-right text-black">מחלקה</TableHead>
+                      <TableHead className="text-right text-black">מסלולים אקדמיים</TableHead>
                       <TableHead className="text-right text-black w-32">פעולות</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lecturers.length > 0 ? (
-                      lecturers.map((lecturer) => (
-                        <TableRow key={lecturer.id} className="table-row-hover">
+                    {(Array.isArray(lecturers) ? lecturers : []).length > 0 ? (
+                      (Array.isArray(lecturers) ? lecturers : []).map((lecturer) => (
+                        lecturer && <TableRow key={lecturer.id} className="table-row-hover">
                           <TableCell className="font-medium text-right">{lecturer.full_name}</TableCell>
                           <TableCell className="text-right">{lecturer.email}</TableCell>
-                          <TableCell className="text-right">{lecturer.department}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex flex-wrap gap-1 justify-end">
+                              {lecturer.academic_tracks && lecturer.academic_tracks.length > 0 ? (
+                                lecturer.academic_tracks.map(trackId => (
+                                  <Badge key={trackId} variant="secondary" className="text-xs">
+                                    <GraduationCap className="w-3 h-3 ml-1" />
+                                    {tracksMap[trackId] || trackId}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-slate-400 text-sm">לא שויך</span>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
                               <Button variant="outline" size="icon" onClick={() => handleOpenDialog(lecturer)}>
@@ -182,7 +218,7 @@ export default function AdminLecturerManagement() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent dir="rtl" className="sm:max-w-[525px]">
+          <DialogContent dir="rtl" className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
             <DialogHeader className="text-right pl-10">
               <DialogTitle className="text-right">{currentLecturer ? 'עריכת מרצה' : 'הוספת מרצה חדש'}</DialogTitle>
               <DialogDescription className="text-right mt-2">
@@ -199,12 +235,24 @@ export default function AdminLecturerManagement() {
                 <Input type="email" id="email" value={formData.email} onChange={handleFormChange} required />
               </div>
               <div>
-                <Label htmlFor="department">מחלקה</Label>
-                <Input id="department" value={formData.department} onChange={handleFormChange} />
-              </div>
-              <div>
-                <Label htmlFor="semester_start">סמסטר התחלה</Label>
-                <Input id="semester_start" value={formData.semester_start} onChange={handleFormChange} required />
+                <Label className="text-base font-medium">מסלולים אקדמיים</Label>
+                <div className="mt-2 space-y-2 border rounded-md p-3 max-h-32 overflow-y-auto">
+                  {(Array.isArray(academicTracks) ? academicTracks : []).map(track => (
+                    track && <div key={track.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={track.id}
+                        checked={formData.academic_tracks.includes(track.id)}
+                        onCheckedChange={() => handleTrackToggle(track.id)}
+                      />
+                      <Label 
+                        htmlFor={track.id} 
+                        className="text-sm font-normal cursor-pointer flex-1"
+                      >
+                        {track.name} ({track.department})
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleCloseDialog}>ביטול</Button>

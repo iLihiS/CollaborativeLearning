@@ -1,11 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { User } from '@/api/entities';
-import { Student } from '@/api/entities';
-import { Lecturer } from '@/api/entities';
-import { Message } from '@/api/entities';
-import { AcademicTrack } from '@/api/entities';
-import { Course } from '@/api/entities';
+import { User, Student, Lecturer, Message, AcademicTrack, Course } from '@/api/entities';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { Sun, Moon, User as UserIcon, Palette, Shield, Save, CheckCircle, GraduationCap, Plus, X, Check, ChevronsUpDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -29,7 +34,6 @@ export default function Settings() {
   const [theme, setTheme] = useState('light');
   const [userRoles, setUserRoles] = useState([]);
   
-  // Academic tracks states
   const [allTracks, setAllTracks] = useState([]);
   const [userTracks, setUserTracks] = useState([]);
   const [availableTracks, setAvailableTracks] = useState([]);
@@ -37,6 +41,7 @@ export default function Settings() {
   const [trackComboboxOpen, setTrackComboboxOpen] = useState(false);
   const [showTrackRequestForm, setShowTrackRequestForm] = useState(false);
   const [submittingTrackRequest, setSubmittingTrackRequest] = useState(false);
+  const [themeChangeRequest, setThemeChangeRequest] = useState(null);
 
   useEffect(() => {
     loadUserData();
@@ -114,12 +119,30 @@ export default function Settings() {
   };
 
   const handleThemeChange = (newTheme) => {
+    // Immediately apply theme visually and for the session
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('session_theme', newTheme);
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(newTheme);
+    
+    // Open dialog to ask for permanent save
+    setThemeChangeRequest({ newTheme });
+  };
+  
+  const confirmPermanentThemeChange = () => {
+    if (!themeChangeRequest) return;
+    const { newTheme } = themeChangeRequest;
+    
+    sessionStorage.removeItem('session_theme'); // Clear the session theme
+    localStorage.setItem('theme', newTheme);
     User.updateMyUserData({ theme_preference: newTheme });
-    showSuccess(`ערכת נושא הוחלפה ל${newTheme === 'dark' ? 'כהה' : 'בהירה'}`);
+    showSuccess(`ערכת נושא ${newTheme === 'dark' ? 'כהה' : 'בהירה'} נשמרה כהעדפה קבועה`);
+    setThemeChangeRequest(null);
+  };
+
+  const cancelPermanentThemeChange = () => {
+    setThemeChangeRequest(null);
+    showSuccess(`ערכת נושא ${theme === 'dark' ? 'כהה' : 'בהירה'} תישאר פעילה לכניסה זו בלבד`);
   };
 
   const requestRole = (role) => {
@@ -445,6 +468,23 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={!!themeChangeRequest} onOpenChange={(open) => !open && setThemeChangeRequest(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>שמירת ערכת נושא</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם תרצה לשמור את ערכת הנושא ה{themeChangeRequest?.newTheme === 'dark' ? 'כהה' : 'בהירה'} כהעדפה קבועה לכניסות הבאות?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel onClick={cancelPermanentThemeChange}>לא, רק הפעם</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPermanentThemeChange} className="bg-lime-500 hover:bg-lime-600">
+              כן, שמור כהעדפה
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

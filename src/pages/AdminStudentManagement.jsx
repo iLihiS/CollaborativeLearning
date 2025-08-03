@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Student } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -148,7 +148,7 @@ export default function AdminStudentManagement() {
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow className="hover:bg-[#ebeced]" style={{backgroundColor: '#ebeced'}}>
                       <TableHead className="text-right text-black">שם מלא</TableHead>
-                      <TableHead className="text-right text-black">מספר סטודנט</TableHead>
+                      <TableHead className="text-right text-black">מספר ת.ז</TableHead>
                       <TableHead className="text-right text-black">כתובת מייל</TableHead>
                       <TableHead className="text-right text-black">מסלול אקדמי</TableHead>
                       <TableHead className="text-right text-black w-32">פעולות</TableHead>
@@ -206,7 +206,7 @@ export default function AdminStudentManagement() {
                 <Input id="full_name" value={formData.full_name} onChange={handleFormChange} required />
               </div>
               <div>
-                <Label htmlFor="student_id">ת.ז סטודנט</Label>
+                <Label htmlFor="student_id">מספר ת.ז</Label>
                 <Input id="student_id" value={formData.student_id} onChange={handleFormChange} required />
               </div>
               <div>

@@ -95,24 +95,153 @@ class Entity {
   }
 
   async list(sort = '') {
-    const endpoint = sort ? `/${this.entityName}?sort=${sort}` : `/${this.entityName}`;
-    return this.api.get(endpoint);
+    try {
+      const endpoint = sort ? `/${this.entityName}?sort=${sort}` : `/${this.entityName}`;
+      return await this.api.get(endpoint);
+    } catch {
+      // If backend is not available, return mock data
+      console.log(`Backend unavailable for ${this.entityName}, using mock data`);
+      return await this.getMockData();
+    }
+  }
+
+  async getMockData() {
+    switch (this.entityName) {
+      case 'courses':
+        return [
+          {
+            id: 'course-001',
+            course_name: 'מבוא למדעי המחשב',
+            course_code: 'CS101',
+            lecturer_id: 'lecturer-001',
+            semester: 'סמסטר א׳ תשפ״ה',
+            description: 'מבוא למושגי יסוד במדעי המחשב',
+            academic_tracks: ['computer-science', 'software-engineering']
+          },
+          {
+            id: 'course-002',
+            course_name: 'מבני נתונים ואלגוריתמים',
+            course_code: 'CS201',
+            lecturer_id: 'lecturer-002',
+            semester: 'סמסטר ב׳ תשפ״ה',
+            description: 'לימוד מבני נתונים ואלגוריתמים בסיסיים',
+            academic_tracks: ['computer-science']
+          },
+          {
+            id: 'course-003',
+            course_name: 'עקרונות של פיתוח תוכנה',
+            course_code: 'SE101',
+            lecturer_id: 'lecturer-001',
+            semester: 'סמסטר א׳ תשפ״ה',
+            description: 'עקרונות פיתוח תוכנה ומתודולוגיות',
+            academic_tracks: ['software-engineering', 'computer-science']
+          },
+          {
+            id: 'course-004',
+            course_name: 'מבוא לכלכלה',
+            course_code: 'ECON101',
+            lecturer_id: 'lecturer-003',
+            semester: 'סמסטר א׳ תשפ״ה',
+            description: 'מושגי יסוד בכלכלה מיקרו ומקרו',
+            academic_tracks: ['economics', 'business-administration']
+          },
+          {
+            id: 'course-005',
+            course_name: 'ניהול ארגונים',
+            course_code: 'MGMT201',
+            lecturer_id: 'lecturer-004',
+            semester: 'סמסטר ב׳ תשפ״ה',
+            description: 'עקרונות ניהול וארגון מודרני',
+            academic_tracks: ['business-administration']
+          }
+        ];
+      case 'lecturers':
+        return [
+          {
+            id: 'lecturer-001',
+            full_name: 'ד"ר שרה לוי',
+            email: 'sarah.levy@ono.ac.il',
+            department: 'מדעי המחשב',
+            title: 'ד״ר'
+          },
+          {
+            id: 'lecturer-002',
+            full_name: 'פרופ׳ מיכאל כהן',
+            email: 'michael.cohen@ono.ac.il',
+            department: 'מדעי המחשב',
+            title: 'פרופ׳'
+          },
+          {
+            id: 'lecturer-003',
+            full_name: 'ד"ר רחל אברהם',
+            email: 'rachel.abraham@ono.ac.il',
+            department: 'כלכלה',
+            title: 'ד״ר'
+          },
+          {
+            id: 'lecturer-004',
+            full_name: 'פרופ׳ דוד רוזן',
+            email: 'david.rosen@ono.ac.il',
+            department: 'מנהל עסקים',
+            title: 'פרופ׳'
+          }
+        ];
+      case 'academic-tracks':
+        try {
+          const response = await fetch('/academic-tracks.json');
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return await response.json();
+        } catch (error) {
+          console.error('Failed to fetch academic tracks:', error);
+          return []; // Return empty array on error
+        }
+      default:
+        return [];
+    }
   }
 
   async get(id) {
-    return this.api.get(`/${this.entityName}/${id}`);
+    try {
+      return await this.api.get(`/${this.entityName}/${id}`);
+    } catch {
+      console.log(`Backend unavailable for get ${this.entityName}, using mock data`);
+      const mockData = await this.getMockData();
+      return mockData.find(item => item.id === id);
+    }
   }
 
   async create(data) {
-    return this.api.post(`/${this.entityName}`, data);
+    try {
+      return await this.api.post(`/${this.entityName}`, data);
+    } catch {
+      console.log(`Backend unavailable for create ${this.entityName}, simulating creation`);
+      const newItem = { ...data, id: `${this.entityName}-${Date.now()}` };
+      console.log('Created:', newItem);
+      return newItem;
+    }
   }
 
   async update(id, data) {
-    return this.api.put(`/${this.entityName}/${id}`, data);
+    try {
+      return await this.api.put(`/${this.entityName}/${id}`, data);
+    } catch {
+      console.log(`Backend unavailable for update ${this.entityName}, simulating update`);
+      const updatedItem = { ...data, id };
+      console.log('Updated:', updatedItem);
+      return updatedItem;
+    }
   }
 
   async delete(id) {
-    return this.api.delete(`/${this.entityName}/${id}`);
+    try {
+      return await this.api.delete(`/${this.entityName}/${id}`);
+    } catch {
+      console.log(`Backend unavailable for delete ${this.entityName}, simulating deletion`);
+      console.log('Deleted item with id:', id);
+      return { success: true };
+    }
   }
 
   async filter(filters, sort = '') {

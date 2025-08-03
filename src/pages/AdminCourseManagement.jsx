@@ -1,7 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
-import { Course } from '@/api/entities';
-import { Lecturer } from '@/api/entities';
+import { useState, useEffect } from 'react';
+import { Course, Lecturer, AcademicTrack } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -9,14 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Book, Plus, Edit, Trash2, ArrowRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Book, Plus, Edit, Trash2, ArrowRight, GraduationCap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function AdminCourseManagement() {
   const [courses, setCourses] = useState([]);
   const [lecturers, setLecturers] = useState([]);
+  const [academicTracks, setAcademicTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentCourse, setCurrentCourse] = useState(null);
@@ -26,6 +27,7 @@ export default function AdminCourseManagement() {
     lecturer_id: '',
     semester: '',
     description: '',
+    academic_tracks: [],
   });
 
   useEffect(() => {
@@ -35,9 +37,14 @@ export default function AdminCourseManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [courseList, lecturerList] = await Promise.all([Course.list(), Lecturer.list()]);
+      const [courseList, lecturerList, trackList] = await Promise.all([
+        Course.list(), 
+        Lecturer.list(),
+        AcademicTrack.list()
+      ]);
       setCourses(courseList);
       setLecturers(lecturerList);
+      setAcademicTracks(trackList);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -53,9 +60,17 @@ export default function AdminCourseManagement() {
         lecturer_id: course.lecturer_id,
         semester: course.semester,
         description: course.description || '',
+        academic_tracks: course.academic_tracks || [],
       });
     } else {
-      setFormData({ course_name: '', course_code: '', lecturer_id: '', semester: '', description: '' });
+      setFormData({ 
+        course_name: '', 
+        course_code: '', 
+        lecturer_id: '', 
+        semester: '', 
+        description: '',
+        academic_tracks: []
+      });
     }
     setIsDialogOpen(true);
   };
@@ -72,6 +87,15 @@ export default function AdminCourseManagement() {
   
   const handleSelectChange = (value) => {
     setFormData((prev) => ({ ...prev, lecturer_id: value }));
+  };
+
+  const handleTrackToggle = (trackId) => {
+    setFormData((prev) => ({
+      ...prev,
+      academic_tracks: prev.academic_tracks.includes(trackId)
+        ? prev.academic_tracks.filter(id => id !== trackId)
+        : [...prev.academic_tracks, trackId]
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -102,10 +126,17 @@ export default function AdminCourseManagement() {
     }
   };
 
-  const lecturersMap = lecturers.reduce((acc, lec) => {
-    acc[lec.id] = lec.full_name;
+  const lecturersMap = (Array.isArray(lecturers) ? lecturers : []).reduce((acc, lec) => {
+    if(lec) acc[lec.id] = lec.full_name;
     return acc;
   }, {});
+
+  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc, track) => {
+    if(track) acc[track.id] = track.name;
+    return acc;
+  }, {});
+
+
 
   return (
     <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
@@ -136,7 +167,7 @@ export default function AdminCourseManagement() {
               </div>
               <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">ניהול קורסים</h1>
             </div>
-            <p className="text-slate-500 dark:text-slate-400">יצירה, עריכה וניהול של קורסים וסמסטרים</p>
+            <p className="text-slate-500 dark:text-slate-400">יצירה, עריכה וניהול של קורסים ושיוך למסלולים אקדמיים</p>
           </div>
           <div>
             <Button onClick={() => handleOpenDialog()} className="bg-lime-500 hover:bg-lime-600 text-white">
@@ -160,8 +191,8 @@ export default function AdminCourseManagement() {
                     <TableRow className="hover:bg-[#ebeced]" style={{backgroundColor: '#ebeced'}}>
                       <TableHead className="text-right text-black">שם קורס</TableHead>
                       <TableHead className="text-right text-black">קוד קורס</TableHead>
-                      <TableHead className="text-right text-black">מרצה</TableHead>
-                      <TableHead className="text-right text-black">סמסטר</TableHead>
+                      <TableHead className="text-right text-black">מרצה אחראי</TableHead>
+                      <TableHead className="text-right text-black">מסלולים אקדמיים</TableHead>
                       <TableHead className="text-right text-black">פעולות</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -172,7 +203,20 @@ export default function AdminCourseManagement() {
                           <TableCell className="font-medium text-right">{course.course_name}</TableCell>
                           <TableCell className="text-right">{course.course_code}</TableCell>
                           <TableCell className="text-right">{lecturersMap[course.lecturer_id] || 'לא משויך'}</TableCell>
-                          <TableCell className="text-right">{course.semester}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex flex-wrap gap-1 justify-end">
+                              {course.academic_tracks && course.academic_tracks.length > 0 ? (
+                                course.academic_tracks.map(trackId => (
+                                  <Badge key={trackId} variant="secondary" className="text-xs">
+                                    <GraduationCap className="w-3 h-3 ml-1" />
+                                    {tracksMap[trackId] || trackId}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-slate-400 text-sm">לא שויך</span>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
                               <Button variant="outline" size="icon" onClick={() => handleOpenDialog(course)}>
@@ -200,11 +244,11 @@ export default function AdminCourseManagement() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent dir="rtl" className="sm:max-w-[525px]">
+          <DialogContent dir="rtl" className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
             <DialogHeader className="text-right pl-10">
               <DialogTitle className="text-right">{currentCourse ? 'עריכת קורס' : 'הוספת קורס חדש'}</DialogTitle>
               <DialogDescription className="text-right mt-2">
-                {currentCourse ? 'ערוך את פרטי הקורס.' : 'מלא את פרטי הקורס החדש.'}
+                {currentCourse ? 'ערוך את פרטי הקורס ושיוך המסלולים.' : 'מלא את פרטי הקורס החדש ובחר מסלולים אקדמיים.'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -227,11 +271,31 @@ export default function AdminCourseManagement() {
                     <SelectValue placeholder="בחר מרצה" />
                   </SelectTrigger>
                   <SelectContent dir="rtl">
-                    {lecturers.map(lecturer => (
-                      <SelectItem key={lecturer.id} value={lecturer.id}>{lecturer.full_name}</SelectItem>
+                    {(Array.isArray(lecturers) ? lecturers : []).map(lecturer => (
+                      lecturer && <SelectItem key={lecturer.id} value={lecturer.id}>{lecturer.full_name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label className="text-base font-medium">מסלולים אקדמיים</Label>
+                <div className="mt-2 space-y-2 border rounded-md p-3 max-h-32 overflow-y-auto">
+                  {(Array.isArray(academicTracks) ? academicTracks : []).map(track => (
+                    track && <div key={track.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={track.id}
+                        checked={formData.academic_tracks.includes(track.id)}
+                        onCheckedChange={() => handleTrackToggle(track.id)}
+                      />
+                      <Label 
+                        htmlFor={track.id} 
+                        className="text-sm font-normal cursor-pointer flex-1"
+                      >
+                        {track.name} ({track.department})
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div>
                 <Label htmlFor="description">תיאור</Label>

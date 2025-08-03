@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
@@ -40,7 +41,7 @@ const AlertDialogHeader = ({
   ...props
 }) => (
   <div
-    className={cn("flex flex-col space-y-2 text-center sm:text-left", className)}
+    className={cn("flex flex-col space-y-2 text-center sm:text-right", className)}
     {...props} />
 )
 AlertDialogHeader.displayName = "AlertDialogHeader"

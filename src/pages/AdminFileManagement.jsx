@@ -1,8 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { File } from '@/api/entities';
-import { Course } from '@/api/entities';
-import { Student } from '@/api/entities';
+import { useState, useEffect } from 'react';
+import { File, Course, Student } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -57,18 +55,6 @@ export default function AdminFileManagement() {
     setLoading(false);
   };
   
-  // This function is no longer triggered from the UI due to table structure changes.
-  // Kept here in case it's used by other components or future features.
-  const handleStatusChange = async (fileId, newStatus) => {
-    try {
-        await File.update(fileId, { status: newStatus });
-        loadData();
-    } catch (error) {
-        console.error("Error updating status", error);
-        alert("שגיאה בעדכון הסטטוס.");
-    }
-  };
-
   const handleDelete = async (fileId) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק קובץ זה?')) {
       try {
@@ -154,9 +140,12 @@ export default function AdminFileManagement() {
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow className="hover:bg-[#ebeced]" style={{backgroundColor: '#ebeced'}}>
                       <TableHead className="text-right text-black">שם קובץ</TableHead>
+                      <TableHead className="text-right text-black">תיאור קצר</TableHead>
                       <TableHead className="text-right text-black">קורס</TableHead>
-                      <TableHead className="text-right text-black">סוג</TableHead>
+                      <TableHead className="text-right text-black">סוג קובץ</TableHead>
                       <TableHead className="text-right text-black">תאריך העלאה</TableHead>
+                      <TableHead className="text-right text-black">מעלה הקובץ</TableHead>
+                      <TableHead className="text-right text-black">כמות הורדות</TableHead>
                       <TableHead className="text-right text-black">סטטוס</TableHead>
                       <TableHead className="text-right text-black">פעולות</TableHead>
                     </TableRow>
@@ -166,9 +155,12 @@ export default function AdminFileManagement() {
                       filteredFiles.map((file) => (
                         <TableRow key={file.id} className="table-row-hover">
                           <TableCell className="font-medium text-right">{file.title}</TableCell>
+                          <TableCell className="text-right">{file.description}</TableCell>
                           <TableCell className="text-right">{coursesMap[file.course_id] || 'לא ידוע'}</TableCell>
                           <TableCell className="text-right">{getFileExtension(file.file_url)}</TableCell>
                           <TableCell className="text-right">{format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                          <TableCell className="text-right">{studentsMap[file.uploader_id] || 'לא ידוע'}</TableCell>
+                          <TableCell className="text-right">{file.download_count}</TableCell>
                           <TableCell className="text-right">{getStatusComponent(file.status)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
@@ -186,7 +178,7 @@ export default function AdminFileManagement() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                        <TableCell colSpan={9} className="text-center py-8 text-slate-500">
                           אין קבצים במערכת
                         </TableCell>
                       </TableRow>
