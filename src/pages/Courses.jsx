@@ -135,7 +135,7 @@ export default function Courses() {
                     <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-lime-200">
                       <BookOpen className="w-6 h-6 text-lime-700 transition-colors duration-300 group-hover:text-lime-800" />
                     </div>
-                    <CardTitle className="text-black transition-colors duration-300 group-hover:text-lime-800 text-lg leading-tight">{course.course_name}</CardTitle>
+                    <CardTitle className="text-slate-900 dark:text-white transition-colors duration-300 group-hover:text-lime-800 text-lg leading-tight">{course.course_name}</CardTitle>
                     <Badge className="mt-2 font-mono text-xs w-fit bg-lime-100 text-lime-800 border border-lime-300">{course.course_code}</Badge>
                   </CardHeader>
                   <CardContent>

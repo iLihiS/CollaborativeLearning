@@ -128,31 +128,33 @@ export default function Insights() {
   );
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen" dir="rtl">
+    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
       <style>{`
-        .fireworks-bg {
-          position: relative;
-          overflow: hidden;
+        @keyframes shimmer {
+          0% {
+            transform: translateX(100%) skewX(-15deg);
+          }
+          100% {
+            transform: translateX(-100%) skewX(-15deg);
+          }
         }
-        .fireworks-bg::before {
+
+        .shimmer-effect::after {
           content: '';
           position: absolute;
           top: 0;
+          right: 0;
+          bottom: 0;
           left: 0;
-          width: 100%;
-          height: 100%;
-          background-image: 
-            radial-gradient(circle, white 0.5px, transparent 1px),
-            radial-gradient(circle, white 0.5px, transparent 1px);
-          background-size: 30px 30px, 40px 40px;
-          background-position: 0 0, 20px 20px;
-          animation: sparkle 2s infinite linear;
-          opacity: 0;
+          transform: translateX(100%) skewX(-15deg);
+          background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+          animation: shimmer 3s infinite linear;
+          z-index: 1;
         }
-        @keyframes sparkle {
-          0% { opacity: 0; transform: scale(0.8); }
-          50% { opacity: 0.3; transform: scale(1); }
-          100% { opacity: 0; transform: scale(1.2); }
+
+        .shimmer-effect > * {
+          position: relative;
+          z-index: 2;
         }
       `}</style>
       <div className="max-w-7xl mx-auto">
@@ -324,8 +326,8 @@ export default function Insights() {
         </div>
         
         {topStudents.length === 0 && !loading && (
-             <div className="mt-4 text-white bg-slate-800 p-3 rounded-lg border border-slate-700 text-center">
-                המקומות על הפודיום עדיין לא נתפסו, <span className="font-bold text-lime-400">מהרו לתפוס!</span>
+             <div className="mt-4 text-white bg-lime-300 dark:bg-lime-400/90 p-3 rounded-lg border border-lime-200 dark:border-lime-300 text-center shimmer-effect relative overflow-hidden">
+                המקומות על הפודיום עדיין לא נתפסו, <span className="font-bold text-green-900 dark:text-green-950">מהרו לתפוס!</span>
             </div>
         )}
 

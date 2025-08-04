@@ -142,12 +142,12 @@ export default function Help() {
               <div className="flex justify-center gap-4">
                 <button 
                   onClick={() => window.open('tel:+972525551981', '_self')}
-                  className="bg-white text-lime-700 dark:bg-[#212121] dark:text-white hover:bg-lime-400 hover:text-white border-2 border-transparent hover:border-white px-5 py-2 rounded-lg font-semibold transition-colors"
+                  className="bg-white text-lime-700 dark:bg-slate-800 dark:text-white hover:bg-lime-100 hover:text-lime-800 dark:hover:bg-lime-100 dark:hover:text-lime-800 border-2 border-transparent hover:border-lime-200 dark:hover:border-lime-200 px-5 py-2 rounded-lg font-semibold transition-all duration-300"
                 >
                   צור קשר
                 </button>
                 <Link to={createPageUrl("TrackInquiries?new=true")}>
-                  <button className="border-2 border-white text-white px-5 py-2 rounded-lg font-semibold hover:bg-lime-400 hover:text-white transition-colors">
+                  <button className="border-2 border-white text-white px-5 py-2 rounded-lg font-semibold hover:bg-lime-100 hover:text-lime-800 hover:border-lime-200 dark:hover:bg-lime-100 dark:hover:text-lime-800 dark:hover:border-lime-200 transition-all duration-300">
                     שלח פנייה
                   </button>
                 </Link>

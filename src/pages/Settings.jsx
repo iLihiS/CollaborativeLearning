@@ -1,15 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
-import { User, Student, Lecturer, Message, AcademicTrack, Course } from '@/api/entities';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Badge } from '@/components/ui/badge';
-import { Sun, Moon, User as UserIcon, Palette, Shield, Save, CheckCircle, GraduationCap, Plus, X, Check, ChevronsUpDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Badge } from '../components/ui/badge';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '../components/ui/command';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
+import { Sun, Moon, X, User as UserIcon, Palette, Save, CheckCircle, GraduationCap, Plus, ChevronsUpDown, Shield } from 'lucide-react';
+import { User, Student, Lecturer, Message, AcademicTrack } from '../api/entities';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -26,8 +27,6 @@ import {
 export default function Settings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [student, setStudent] = useState(null);
-  const [lecturer, setLecturer] = useState(null);
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
@@ -42,13 +41,61 @@ export default function Settings() {
   const [showTrackRequestForm, setShowTrackRequestForm] = useState(false);
   const [submittingTrackRequest, setSubmittingTrackRequest] = useState(false);
   const [themeChangeRequest, setThemeChangeRequest] = useState(null);
+  const [trackRequestError, setTrackRequestError] = useState('');
+  const [themeStatus, setThemeStatus] = useState({
+    type: 'auto', // 'session', 'permanent', 'auto'
+    theme: 'light',
+    message: ''
+  });
 
   useEffect(() => {
     loadUserData();
     loadAcademicTracks();
-    const storedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(storedTheme);
   }, []);
+
+  useEffect(() => {
+    // Load current theme properly after user data is loaded
+    if (user) {
+      const currentTheme = sessionStorage.getItem('session_theme') || user.theme_preference || localStorage.getItem('theme') || 'light';
+      setTheme(currentTheme);
+      updateThemeStatus();
+    }
+  }, [user]); // Re-run when user data changes
+
+  // Update theme status whenever theme or user changes
+  useEffect(() => {
+    updateThemeStatus();
+  }, [theme, user]);
+
+  const updateThemeStatus = () => {
+    const savedTheme = localStorage.getItem('theme');
+    const userPreference = user?.theme_preference;
+    const sessionTheme = sessionStorage.getItem('session_theme');
+    
+    if (userPreference || savedTheme) {
+      // Always show the permanent preference first
+      const preferredTheme = userPreference || savedTheme;
+      setThemeStatus({
+        type: sessionTheme ? 'session' : 'permanent',
+        theme: preferredTheme,
+        message: `העדפה קבועה: ${preferredTheme === 'dark' ? 'כהה' : 'בהיר'}`
+      });
+    } else if (sessionTheme) {
+      // Only session theme, no permanent preference
+      setThemeStatus({
+        type: 'session',
+        theme: sessionTheme,
+        message: `נושא זמני: ${sessionTheme === 'dark' ? 'כהה' : 'בהיר'}`
+      });
+    } else {
+      // Auto mode
+      setThemeStatus({
+        type: 'auto',
+        theme: theme,
+        message: 'בחירה אוטומטית לפי השעה'
+      });
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -63,7 +110,6 @@ export default function Settings() {
       ]);
       
       if(studentRecords.length > 0) {
-        setStudent(studentRecords[0]);
         roles.push('student');
         
         // Load user's academic tracks
@@ -84,7 +130,6 @@ export default function Settings() {
       }
       
       if(lecturerRecords.length > 0) {
-        setLecturer(lecturerRecords[0]);
         roles.push('lecturer');
       }
       
@@ -101,13 +146,27 @@ export default function Settings() {
 
   const loadAcademicTracks = async () => {
     try {
-      const tracks = await AcademicTrack.filter({active: true});
+      // Load tracks from the JSON file in public folder
+      const tracks = await AcademicTrack.list();
       setAllTracks(tracks);
-      setAvailableTracks(tracks);
+      
+      // Filter out tracks that user already has
+      const userTrackIds = userTracks.map(track => track.id);
+      const available = tracks.filter(track => !userTrackIds.includes(track.id));
+      setAvailableTracks(available);
     } catch (error) {
       console.error("Error loading academic tracks:", error);
     }
   };
+
+  // Update available tracks when user tracks change
+  useEffect(() => {
+    if (allTracks.length > 0) {
+      const userTrackIds = userTracks.map(track => track.id);
+      const available = allTracks.filter(track => !userTrackIds.includes(track.id));
+      setAvailableTracks(available);
+    }
+  }, [userTracks, allTracks]);
 
   const handleProfileUpdate = async () => {
     try {
@@ -125,23 +184,42 @@ export default function Settings() {
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(newTheme);
     
+    // Update theme status display
+    updateThemeStatus();
+    
     // Open dialog to ask for permanent save
     setThemeChangeRequest({ newTheme });
   };
   
-  const confirmPermanentThemeChange = () => {
+  const confirmPermanentThemeChange = async () => {
     if (!themeChangeRequest) return;
     const { newTheme } = themeChangeRequest;
     
-    sessionStorage.removeItem('session_theme'); // Clear the session theme
-    localStorage.setItem('theme', newTheme);
-    User.updateMyUserData({ theme_preference: newTheme });
-    showSuccess(`ערכת נושא ${newTheme === 'dark' ? 'כהה' : 'בהירה'} נשמרה כהעדפה קבועה`);
+    try {
+      // Save to localStorage for immediate persistence
+      localStorage.setItem('theme', newTheme);
+      
+      // Save to user preferences
+      await User.updateMyUserData({ theme_preference: newTheme });
+      
+      // Remove session theme since we're making it permanent
+      sessionStorage.removeItem('session_theme');
+      
+      // Update theme status display
+      updateThemeStatus();
+      
+      showSuccess(`ערכת נושא ${newTheme === 'dark' ? 'כהה' : 'בהירה'} נשמרה כהעדפה קבועה`);
+    } catch (error) {
+      console.error("Error saving theme preference:", error);
+      showSuccess(`ערכת נושא ${newTheme === 'dark' ? 'כהה' : 'בהירה'} הוחלה לכניסה זו`);
+    }
+    
     setThemeChangeRequest(null);
   };
 
   const cancelPermanentThemeChange = () => {
     setThemeChangeRequest(null);
+    // Don't update theme status - keep the original message, just show it's temporary
     showSuccess(`ערכת נושא ${theme === 'dark' ? 'כהה' : 'בהירה'} תישאר פעילה לכניסה זו בלבד`);
   };
 
@@ -153,6 +231,7 @@ export default function Settings() {
   const handleAddTrackToSelection = (track) => {
     if (!selectedNewTracks.find(t => t.id === track.id)) {
       setSelectedNewTracks([...selectedNewTracks, track]);
+      setTrackRequestError(''); // Clear error when user makes a selection
     }
     setTrackComboboxOpen(false);
   };
@@ -162,11 +241,17 @@ export default function Settings() {
   };
 
   const handleSubmitTrackRequest = async () => {
-    if (selectedNewTracks.length === 0) return;
+    // Validation - must select at least one track
+    if (selectedNewTracks.length === 0) {
+      setTrackRequestError('חובה לבחור לפחות מסלול אקדמי אחד');
+      return;
+    }
     
+    setTrackRequestError(''); // Clear any previous errors
     setSubmittingTrackRequest(true);
+    
     try {
-      const trackNames = selectedNewTracks.map(t => t.track_name).join(', ');
+      const trackNames = selectedNewTracks.map(t => t.name).join(', ');
       await Message.create({
         subject: `בקשה לצירוף למסלולים אקדמיים`,
         content: `שלום, אני מבקש/ת להתקבל למסלולים האקדמיים הבאים: ${trackNames}. תודה.`,
@@ -177,16 +262,60 @@ export default function Settings() {
 
       setSelectedNewTracks([]);
       setShowTrackRequestForm(false);
+      setTrackRequestError('');
       showSuccess("הבקשה נשלחה בהצלחה! תקבל התראה לאחר אישור המנהלים.");
     } catch (error) {
       console.error("Error submitting track request:", error);
+      setTrackRequestError('שגיאה בשליחת הבקשה. נסה שוב.');
     }
+    
     setSubmittingTrackRequest(false);
   };
 
   const showSuccess = (message) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(''), 3000);
+  };
+
+  const handleResetThemePreference = async () => {
+    try {
+      // Clear all theme preferences
+      await User.updateMyUserData({ theme_preference: null });
+      localStorage.removeItem('theme');
+      sessionStorage.removeItem('session_theme');
+      
+      // Reset to automatic theme based on time
+      const defaultTheme = new Date().getHours() >= 6 && new Date().getHours() < 22 ? 'light' : 'dark';
+      setTheme(defaultTheme);
+      document.documentElement.classList.toggle('dark', defaultTheme === 'dark');
+      
+      updateThemeStatus();
+    } catch (error) {
+      console.error('Error resetting theme preference:', error);
+    }
+  };
+
+  const handleResetTemporaryTheme = () => {
+    // Remove only the temporary theme
+    sessionStorage.removeItem('session_theme');
+    
+    // Return to permanent preference or automatic
+    const userPreference = user?.theme_preference;
+    const savedTheme = localStorage.getItem('theme');
+    const preferredTheme = userPreference || savedTheme;
+    
+    if (preferredTheme) {
+      // Return to permanent preference
+      setTheme(preferredTheme);
+      document.documentElement.classList.toggle('dark', preferredTheme === 'dark');
+    } else {
+      // Return to automatic theme
+      const defaultTheme = new Date().getHours() >= 6 && new Date().getHours() < 22 ? 'light' : 'dark';
+      setTheme(defaultTheme);
+      document.documentElement.classList.toggle('dark', defaultTheme === 'dark');
+    }
+    
+    updateThemeStatus();
   };
 
   if (loading) {
@@ -250,7 +379,7 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="p-6 pt-4">
                 <p className="text-slate-600 dark:text-slate-400 mb-4">בחר את התצוגה המועדפת עליך</p>
-                <div className="flex gap-4">
+                <div className="flex gap-4 mb-4">
                   <Button 
                     variant={theme === 'light' ? 'default' : 'outline'} 
                     onClick={() => handleThemeChange('light')} 
@@ -274,14 +403,122 @@ export default function Settings() {
                     כהה
                   </Button>
                 </div>
+
+                {/* Current Preference Display */}
+                <div className="mt-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+                  <div>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <span className={`${
+                            themeStatus.type === 'session' ? 'text-lime-600 dark:text-lime-400' :
+                            themeStatus.type === 'permanent' ? 'text-lime-600 dark:text-lime-400' :
+                            'text-blue-600 dark:text-blue-400'
+                          }`}>
+                            {themeStatus.message}
+                          </span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
+                            {themeStatus.type === 'permanent' && 'תישמר לכניסות הבאות'}
+                            {themeStatus.type === 'session' && (user?.theme_preference || localStorage.getItem('theme')) && 'תישמר לכניסות הבאות'}
+                            {themeStatus.type === 'auto' && 'בהיר ביום (6:00-22:00), כהה בלילה'}
+                          </span>
+                        </p>
+                      </div>
+                      
+                      {/* Forget preference button - always at the top */}
+                      {(themeStatus.type === 'session' || themeStatus.type === 'permanent') && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleResetThemePreference}
+                                className="text-xs mr-2"
+                              >
+                                שכח העדפה
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">שכח את כל ההעדפות וחזור לבחירה אוטומטית</p>
+                              <p className="text-xs text-slate-400 mt-1">בהיר ביום (6:00-22:00), כהה בלילה</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                    
+                    {/* Show temporary theme override if exists */}
+                    {themeStatus.type === 'session' && sessionStorage.getItem('session_theme') && (user?.theme_preference || localStorage.getItem('theme')) && (
+                      <TooltipProvider>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-amber-600 dark:text-amber-400 text-sm">
+                              נושא זמני: {sessionStorage.getItem('session_theme') === 'dark' ? 'כהה' : 'בהיר'}
+                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleResetTemporaryTheme}
+                                  className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
+                                >
+                                  <X className="h-3 w-3 text-red-600 dark:text-red-400" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left">
+                                <p className="text-xs">שכח העדפה זמנית וחזור לערכת הנושא המועדפת</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
+                            יתאפס בהתנתקות ויחזור להעדפה הקבועה
+                          </span>
+                        </div>
+                      </TooltipProvider>
+                    )}
+                    
+                    {/* Show regular temporary theme if no permanent preference */}
+                    {themeStatus.type === 'session' && sessionStorage.getItem('session_theme') && !(user?.theme_preference || localStorage.getItem('theme')) && (
+                      <TooltipProvider>
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-amber-600 dark:text-amber-400 text-sm">
+                              נושא זמני: {sessionStorage.getItem('session_theme') === 'dark' ? 'כהה' : 'בהיר'}
+                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleResetTemporaryTheme}
+                                  className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
+                                >
+                                  <X className="h-3 w-3 text-red-600 dark:text-red-400" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left">
+                                <p className="text-xs">שכח העדפה זמנית וחזור לבחירה אוטומטית</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
+                            יתאפס בהתנתקות
+                          </span>
+                        </div>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Academic and Role Management */}
           <div className="space-y-8">
-            {/* Academic Tracks Card - Only for students */}
-            {user?.current_role === 'student' && (
+            {/* Academic Tracks Card - Only for students (excluding admins) */}
+            {user?.current_role === 'student' && !userRoles.includes('admin') && (
               <Card className="border-0 shadow-lg bg-white">
                 <CardHeader className="border-b dark:border-slate-700 pb-3">
                   <CardTitle className="flex items-center gap-2 text-black">
@@ -299,8 +536,9 @@ export default function Settings() {
                         <div key={track.id} className="flex items-center gap-3 p-3 rounded-lg bg-lime-100 border border-lime-300">
                           <CheckCircle className="w-5 h-5 text-lime-700" />
                           <div>
-                            <span className="font-medium text-lime-800">{track.track_name}</span>
+                            <span className="font-medium text-lime-800">{track.name}</span>
                             <p className="text-xs text-lime-700">{track.department}</p>
+                            <p className="text-xs text-lime-600">{track.degree_type}</p>
                           </div>
                         </div>
                       ))
@@ -324,16 +562,25 @@ export default function Settings() {
                   ) : (
                     <div className="space-y-4 border-t pt-4">
                       <div>
-                        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">בחר מסלולים:</Label>
+                        <Label className={`text-sm font-medium ${trackRequestError ? 'text-red-600' : 'text-slate-700 dark:text-slate-300'}`}>
+                          בחר מסלולים:
+                          {trackRequestError && <span className="text-red-500 ml-1">*</span>}
+                        </Label>
+                        {trackRequestError && (
+                          <p className="text-red-600 text-xs mt-1">{trackRequestError}</p>
+                        )}
                         <Popover open={trackComboboxOpen} onOpenChange={setTrackComboboxOpen}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               role="combobox"
                               aria-expanded={trackComboboxOpen}
-                              className="w-full justify-between mt-2"
+                              className={`w-full justify-between mt-2 ${trackRequestError ? 'border-red-300 focus:border-red-500' : ''}`}
                             >
-                              בחר מסלול...
+                              {selectedNewTracks.length > 0 
+                                ? `נבחרו ${selectedNewTracks.length} מסלולים`
+                                : 'בחר מסלול...'
+                              }
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
@@ -349,8 +596,9 @@ export default function Settings() {
                                     className="justify-between"
                                   >
                                     <div>
-                                      <div className="font-medium">{track.track_name}</div>
+                                      <div className="font-medium">{track.name}</div>
                                       <div className="text-xs text-slate-500">{track.department}</div>
+                                      <div className="text-xs text-slate-400">{track.degree_type}</div>
                                     </div>
                                   </CommandItem>
                                 ))}
@@ -367,7 +615,7 @@ export default function Settings() {
                           <div className="flex flex-wrap gap-2">
                             {selectedNewTracks.map(track => (
                               <Badge key={track.id} className="bg-lime-100 text-lime-800 border-lime-300">
-                                {track.track_name}
+                                {track.name}
                                 <X 
                                   className="w-3 h-3 ml-1 cursor-pointer" 
                                   onClick={() => handleRemoveTrackFromSelection(track.id)}
@@ -381,7 +629,7 @@ export default function Settings() {
                       <div className="flex gap-3">
                         <Button 
                           onClick={handleSubmitTrackRequest}
-                          disabled={selectedNewTracks.length === 0 || submittingTrackRequest}
+                          disabled={submittingTrackRequest}
                           className="bg-lime-500 hover:bg-lime-600 text-white"
                         >
                           {submittingTrackRequest ? 'שולח...' : 'שלח בקשה'}
@@ -391,6 +639,7 @@ export default function Settings() {
                           onClick={() => {
                             setShowTrackRequestForm(false);
                             setSelectedNewTracks([]);
+                            setTrackRequestError('');
                           }}
                         >
                           ביטול

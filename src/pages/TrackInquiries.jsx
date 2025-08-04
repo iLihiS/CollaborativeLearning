@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from '@/api/entities';
 import { Message } from '@/api/entities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { MessagesSquare, Plus, Send, CheckCircle, Clock, MessageCircle, Eye } from 'lucide-react';
+import { MessagesSquare, Plus, Send, CheckCircle, Clock, MessageCircle, Eye, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 
@@ -35,7 +35,6 @@ export default function TrackInquiries() {
     if (urlParams.get('new') === 'true') {
       setShowNewInquiry(true);
       if(urlParams.get('type') === 'role_request') {
-          const role = urlParams.get('role');
           const roleHe = urlParams.get('role_he');
           setFormData({
               subject: `בקשה להוספת תפקיד: ${roleHe}`,
@@ -94,30 +93,21 @@ export default function TrackInquiries() {
 
   return (
     <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
-      <style>{`
-        .table-row-hover:hover {
-          background-color: #64748b !important;
-          color: white !important;
-        }
-        .table-row-hover:hover * {
-          color: white !important;
-        }
-      `}</style>
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-end mb-8">
+        <div className="flex flex-col md:flex-row justify-between md:items-end mb-8 gap-4">
           <div>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
                 <MessagesSquare className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">מעקב פניות</h1>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">מעקב פניות</h1>
             </div>
-            <p className="text-white mt-3">שלחו פניות למנהלי המערכת ועקבו אחר הטיפול</p>
+            <p className="text-slate-600 dark:text-slate-300 mt-3">שלחו פניות למנהלי המערכת ועקבו אחר הטיפול</p>
           </div>
           <div>
             <Button
               onClick={() => setShowNewInquiry(!showNewInquiry)}
-              className="bg-lime-500 hover:bg-lime-600 text-white"
+              className="bg-lime-500 hover:bg-lime-600 text-white w-full md:w-auto"
             >
               <Plus className="w-4 h-4 ml-2" />
               פנייה חדשה
@@ -135,7 +125,7 @@ export default function TrackInquiries() {
         )}
 
         {showNewInquiry && (
-          <Card className="border-0 shadow-lg bg-white mb-8">
+          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800 mb-8">
             <CardHeader>
               <CardTitle>פנייה חדשה</CardTitle>
             </CardHeader>
@@ -180,7 +170,7 @@ export default function TrackInquiries() {
                       </>
                     )}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowNewInquiry(false)}>
+                  <Button type="button" variant="outline" onClick={() => setShowNewInquiry(false)} className="dark:text-slate-200 dark:border-slate-600">
                     ביטול
                   </Button>
                 </div>
@@ -189,107 +179,150 @@ export default function TrackInquiries() {
           </Card>
         )}
 
-        <Card className="border-0 shadow-lg bg-white overflow-hidden">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto mb-4"></div>
-                <p className="text-slate-500">טוען פניות...</p>
-              </div>
-            ) : (
-              <div className="max-h-96 overflow-y-auto">
-                  <Table>
-                      <TableHeader className="sticky top-0 z-10">
-                          <TableRow className="hover:bg-[#ebeced]" style={{backgroundColor: '#ebeced'}}>
-                              <TableHead className="text-right text-black">נושא</TableHead>
-                              <TableHead className="text-right text-black">תאריך שליחה</TableHead>
-                              <TableHead className="text-right text-black">סטטוס</TableHead>
-                              <TableHead className="text-right text-black">פעולות</TableHead>
-                          </TableRow>
+        {/* Desktop Table View */}
+        <div className="hidden md:block">
+          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800 overflow-hidden">
+            <CardContent className="p-0">
+              {loading ? (
+                <div className="text-center py-16">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div>
+                  <p className="mt-4 text-slate-500 dark:text-slate-400">טוען פניות...</p>
+                </div>
+              ) : (
+                <div className="max-h-96 overflow-y-auto">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-700">
+                        <TableRow className="hover:bg-slate-100 dark:hover:bg-slate-600">
+                          <TableHead className="text-right text-slate-800 dark:text-slate-300">נושא הפנייה</TableHead>
+                          <TableHead className="text-right text-slate-800 dark:text-slate-300">תאריך שליחה</TableHead>
+                          <TableHead className="text-right text-slate-800 dark:text-slate-300">סטטוס</TableHead>
+                          <TableHead className="text-right text-slate-800 dark:text-slate-300">פעולות</TableHead>
+                        </TableRow>
                       </TableHeader>
-                      <TableBody>
-                          {inquiries.length > 0 ? (
-                              inquiries.map((inquiry) => (
-                                  <TableRow key={inquiry.id} className="table-row-hover">
-                                      <TableCell className="font-medium text-right">{inquiry.subject}</TableCell>
-                                      <TableCell className="text-right">{format(new Date(inquiry.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
-                                      <TableCell className="text-right">{getStatusBadge(inquiry.status)}</TableCell>
-                                      <TableCell className="text-right">
-                                          <Button variant="outline" size="sm" onClick={() => setSelectedInquiry(inquiry)}>
-                                              <Eye className="w-4 h-4 ml-2" />
-                                              צפייה
-                                          </Button>
-                                      </TableCell>
-                                  </TableRow>
-                              ))
-                          ) : (
-                              <TableRow>
-                                  <TableCell colSpan={4} className="text-center py-16 text-slate-500">
-                                  עדיין לא שלחתם פניות.
-                                  </TableCell>
-                              </TableRow>
-                          )}
+                      <TableBody className="dark:text-slate-200">
+                        {inquiries.length > 0 ? (
+                          inquiries.map((inquiry) => (
+                            <TableRow key={inquiry.id} className="dark:border-slate-700">
+                              <TableCell className="font-medium">{inquiry.subject}</TableCell>
+                              <TableCell>{format(new Date(inquiry.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                              <TableCell>{getStatusBadge(inquiry.status)}</TableCell>
+                              <TableCell>
+                                <Button variant="outline" size="sm" onClick={() => setSelectedInquiry(inquiry)} className="dark:text-slate-200 dark:border-slate-600">
+                                  <Eye className="w-4 h-4 ml-2" />
+                                  צפייה
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-16 text-slate-500 dark:text-slate-400">
+                              עדיין לא שלחתם פניות.
+                            </TableCell>
+                          </TableRow>
+                        )}
                       </TableBody>
-                  </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        <div className="mt-6 text-sm text-white text-right space-y-1">
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div>
+              <p className="mt-4 text-slate-500 dark:text-slate-400">טוען פניות...</p>
+            </div>
+          ) : inquiries.length > 0 ? (
+            inquiries.map((inquiry) => (
+              <Card key={inquiry.id} className="border-0 shadow-lg bg-white dark:bg-slate-800">
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-start">
+                    <span className="text-slate-900 dark:text-slate-100 text-base leading-tight">{inquiry.subject}</span>
+                    {getStatusBadge(inquiry.status)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                    <Calendar className="w-4 h-4"/>
+                    <span>{format(new Date(inquiry.created_date), 'd MMM yyyy', { locale: he })}</span>
+                  </div>
+                  <div className="flex justify-start">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedInquiry(inquiry)} className="dark:text-slate-200 dark:border-slate-600">
+                      <Eye className="w-4 h-4 ml-2" />
+                      צפייה
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center py-16 text-slate-500 dark:text-slate-400">
+              <MessagesSquare className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+              <p>עדיין לא שלחתם פניות.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 text-sm text-slate-600 dark:text-slate-400 text-right space-y-1">
           <p><span className="font-bold">הערה:</span> הפניות כאן מיועדות למנהלי המערכת בלבד.</p>
           <p>לתקשורת עם מרצים או סטודנטים אחרים, השתמשו בכלי התקשורת הרגילים של המוסד.</p>
         </div>
-      </div> {/* Closing div for max-w-7xl mx-auto */}
+      </div>
       
       <Dialog open={!!selectedInquiry} onOpenChange={() => setSelectedInquiry(null)}>
-          <DialogContent dir="rtl" className="sm:max-w-[525px]">
-              {selectedInquiry && (
-                  <>
-                      <DialogHeader className="text-right pl-10">
-                          <div className="flex justify-between items-start gap-4">
-                              <div className="flex-1">
-                                  <DialogTitle className="text-right">{selectedInquiry.subject}</DialogTitle>
-                                  <DialogDescription className="text-right mt-2">
-                                      נשלח בתאריך {format(new Date(selectedInquiry.created_date), 'd בMMM yyyy, HH:mm', { locale: he })}
-                                  </DialogDescription>
-                              </div>
-                          </div>
-                      </DialogHeader>
-                      <div className="py-4 space-y-4">
-                          <div className="space-y-1">
-                              <Label>תוכן הפנייה:</Label>
-                              <p className="text-slate-600 bg-slate-50 p-3 rounded-md border">{selectedInquiry.content}</p>
-                          </div>
+        <DialogContent dir="rtl" className="sm:max-w-[525px]">
+          {selectedInquiry && (
+            <>
+              <DialogHeader className="text-right pl-10">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <DialogTitle className="text-right">{selectedInquiry.subject}</DialogTitle>
+                    <DialogDescription className="text-right mt-2">
+                      נשלח בתאריך {format(new Date(selectedInquiry.created_date), 'd בMMM yyyy, HH:mm', { locale: he })}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="py-4 space-y-4">
+                <div className="space-y-1">
+                  <Label>תוכן הפנייה:</Label>
+                  <p className="text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 p-3 rounded-md border dark:border-slate-600">{selectedInquiry.content}</p>
+                </div>
 
-                          {selectedInquiry.admin_response ? (
-                              <div className="bg-lime-50 border-r-4 border-lime-400 p-3 rounded">
-                                  <div className="flex items-center gap-2 mb-2">
-                                      <MessageCircle className="w-4 h-4 text-lime-600" />
-                                      <span className="font-medium text-lime-800">תשובת המנהל</span>
-                                      {selectedInquiry.response_date && (
-                                      <span className="text-xs text-lime-600">
-                                          {format(new Date(selectedInquiry.response_date), 'd בMMM yyyy', { locale: he })}
-                                      </span>
-                                      )}
-                                  </div>
-                                  <p className="text-slate-700">{selectedInquiry.admin_response}</p>
-                              </div>
-                          ) : (
-                              <div className="text-center text-sm text-slate-500 p-4 bg-slate-50 rounded-md border">
-                                  <Clock className="w-6 h-6 mx-auto mb-2 text-slate-400" />
-                                  הפנייה עדיין ממתינה לטיפול.
-                              </div>
-                          )}
-                      </div>
-                      <DialogFooter>
-                          <DialogClose asChild>
-                              <Button variant="outline">סגור</Button>
-                          </DialogClose>
-                      </DialogFooter>
-                  </>
-              )}
-          </DialogContent>
+                {selectedInquiry.admin_response ? (
+                  <div className="bg-lime-50 dark:bg-lime-900/20 border-r-4 border-lime-400 dark:border-lime-500 p-3 rounded">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageCircle className="w-4 h-4 text-lime-600 dark:text-lime-400" />
+                      <span className="font-medium text-lime-800 dark:text-lime-200">תשובת המנהל</span>
+                      {selectedInquiry.response_date && (
+                        <span className="text-xs text-lime-600 dark:text-lime-400">
+                          {format(new Date(selectedInquiry.response_date), 'd בMMM yyyy', { locale: he })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-200">{selectedInquiry.admin_response}</p>
+                  </div>
+                ) : (
+                  <div className="text-center text-sm text-slate-500 dark:text-slate-400 p-4 bg-slate-50 dark:bg-slate-700 rounded-md border dark:border-slate-600">
+                    <Clock className="w-6 h-6 mx-auto mb-2 text-slate-400" />
+                    הפנייה עדיין ממתינה לטיפול.
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" className="dark:text-slate-200 dark:border-slate-600">סגור</Button>
+                </DialogClose>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
     </div>
   );

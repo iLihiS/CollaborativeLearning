@@ -170,7 +170,7 @@ export default function UploadFilePage() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                 הקובץ הועלה בהצלחה!
               </h2>
               <p className="text-slate-600 mb-6">
@@ -211,12 +211,12 @@ export default function UploadFilePage() {
             <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
               <Upload className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">העלאת קובץ חדש</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">העלאת קובץ חדש</h1>
           </div>
           <p className="text-slate-500 dark:text-slate-600 mt-3">שתפו חומרי לימוד עם סטודנטים אחרים</p>
         </div>
 
-        <Card className="border-0 shadow-lg bg-white dark:bg-slate-200">
+        <Card className="border-0 shadow-lg bg-white dark:bg-slate-800">
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
@@ -228,19 +228,20 @@ export default function UploadFilePage() {
 
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="font-semibold text-slate-800 dark:text-slate-900">כותרת הקובץ</Label>
+                  <Label htmlFor="title" className="font-semibold text-slate-800 dark:text-white">כותרת הקובץ</Label>
                   <Input
                     id="title"
-                    placeholder="לדוגמה: חדו״א 1 - סיכום פרק 3"
+                    type="text"
+                    placeholder="הכנס כותרת לקובץ"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     required
-                    className="h-11 bg-white dark:bg-slate-50 border border-slate-300 text-slate-900 dark:border-slate-400 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2"
+                    className="h-11 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="course_id" className="font-semibold text-slate-800 dark:text-slate-900">שיוך לקורס</Label>
+                  <Label htmlFor="course_id" className="font-semibold text-slate-800 dark:text-white">שיוך לקורס</Label>
                   <Popover open={courseComboboxOpen} onOpenChange={setCourseComboboxOpen}>
                     <PopoverTrigger asChild>
                       <Button
@@ -285,7 +286,7 @@ export default function UploadFilePage() {
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="description" className="font-semibold text-slate-800 dark:text-slate-900">תיאור (עד 200 תווים)</Label>
+                  <Label htmlFor="description" className="font-semibold text-slate-800 dark:text-white">תיאור (עד 200 תווים)</Label>
                   <Textarea
                     id="description"
                     placeholder="תיאור קצר של תוכן הקובץ..."
@@ -299,7 +300,7 @@ export default function UploadFilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="file_type" className="font-semibold text-slate-800 dark:text-slate-900">סוג הקובץ</Label>
+                  <Label htmlFor="file_type" className="font-semibold text-slate-800 dark:text-white">סוג הקובץ</Label>
                   <Select 
                     value={formData.file_type} 
                     onValueChange={(value) => handleInputChange("file_type", value)}
@@ -317,7 +318,7 @@ export default function UploadFilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="file-upload" className="font-semibold text-slate-800 dark:text-slate-900">בחירת קובץ</Label>
+                  <Label htmlFor="file-upload" className="font-semibold text-slate-800 dark:text-white">בחירת קובץ</Label>
                    <Input
                       id="file-upload"
                       ref={fileInputRef}

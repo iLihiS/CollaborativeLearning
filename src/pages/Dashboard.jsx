@@ -324,7 +324,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <BookOpen className="w-5 h-5 text-sky-500" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-800">ניהול קורסים</h2>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">ניהול קורסים</h2>
                 <p className="text-xs text-slate-400">עריכה והוספה</p>
               </div>
             </Link>
@@ -333,7 +333,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Users className="w-5 h-5 text-teal-500" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-800">ניהול סטודנטים</h2>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">ניהול סטודנטים</h2>
                 <p className="text-xs text-slate-400">עריכה והוספה</p>
               </div>
             </Link>
@@ -342,7 +342,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Briefcase className="w-5 h-5 text-indigo-500" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-800">ניהול מרצים</h2>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">ניהול מרצים</h2>
                 <p className="text-xs text-slate-400">עריכה והוספה</p>
               </div>
             </Link>
@@ -351,7 +351,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <FileCog className="w-5 h-5 text-orange-500" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-800">ניהול קבצים</h2>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">ניהול קבצים</h2>
                 <p className="text-xs text-slate-400">צפייה וסינון</p>
               </div>
             </Link>
@@ -364,7 +364,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Heart className="w-5 h-5 text-pink-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">{stats.totalDownloads}</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white">{stats.totalDownloads}</h2>
                 <p className="text-slate-500 text-xs">הורדות</p>
                 <p className="text-xs text-slate-400">לקבצים שלך</p>
               </div>
@@ -376,7 +376,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <FileText className="w-5 h-5 text-blue-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">{stats.totalFiles}</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white">{stats.totalFiles}</h2>
                 <p className="text-slate-500 text-xs">קבצים</p>
                 <p className="text-xs text-slate-400">שהעלת</p>
               </div>
@@ -388,7 +388,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">{stats.approvedFiles}</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white">{stats.approvedFiles}</h2>
                 <p className="text-slate-500 text-xs">קבצים</p>
                 <p className="text-xs text-slate-400">מאושרים</p>
               </div>
@@ -403,7 +403,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Clock className="w-5 h-5 text-amber-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">{stats.pendingFiles}</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white">{stats.pendingFiles}</h2>
                 <p className="text-slate-500 text-xs">
                   {user?.current_role === 'student' ? 'ממתינה' : 'ממתינים'}
                 </p>
@@ -419,7 +419,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <XCircle className="w-5 h-5 text-red-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">{stats.rejectedFiles}</h2>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white">{stats.rejectedFiles}</h2>
                 <p className="text-slate-500 text-xs">קבצים</p>
                 <p className="text-xs text-slate-400">שנדחו</p>
               </div>
@@ -432,7 +432,7 @@ export default function Dashboard() {
           {/* Recent Activity (now Notifications) */}
           <Card className="border-0 shadow-lg bg-white flex flex-col">
             <CardHeader className="border-b bg-slate-50/50 p-4 rounded-t-lg">
-              <CardTitle className="text-xl dark:text-slate-900">פעילויות אחרונות</CardTitle>
+              <CardTitle className="text-xl text-slate-900 dark:text-white">פעילויות אחרונות</CardTitle>
             </CardHeader>
             <CardContent className="p-4 flex-grow">
               {recentFiles.length > 0 ? (
@@ -459,7 +459,7 @@ export default function Dashboard() {
                             <FileText className="w-5 h-5 text-slate-600" />}
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900 text-sm">{notification.title}</p>
+                          <p className="font-semibold text-slate-900 dark:text-white text-sm">{notification.title}</p>
                           <p className="text-xs text-slate-500">
                             {format(new Date(notification.created_date), 'd בMMM yyyy', { locale: he })}
                           </p>
@@ -481,7 +481,7 @@ export default function Dashboard() {
             </CardContent>
             <CardFooter className="p-4 border-t">
               <Link to={createPageUrl("Notifications")} className="w-full">
-                <Button variant="outline" className="w-full hover:bg-lime-50 hover:text-lime-700 hover:border-lime-200 transition-colors">
+                <Button variant="outline" className="w-full bg-lime-50 text-lime-700 border-lime-200 dark:bg-lime-500/20 dark:text-lime-400 dark:border-lime-500/50 hover:bg-lime-100 hover:text-lime-800 hover:border-lime-300 dark:hover:bg-slate-700 dark:hover:text-lime-300 dark:hover:border-lime-400 transition-all duration-300">
                   הצג את כל הפעילויות
                 </Button>
               </Link>
@@ -492,7 +492,7 @@ export default function Dashboard() {
           <Card className="border-0 shadow-lg bg-white flex flex-col">
             <CardHeader className="border-b bg-slate-50/50 p-4 rounded-t-lg">
               <div className="flex items-end justify-between">
-                <CardTitle className="text-xl dark:text-slate-900">פניות אחרונות</CardTitle>
+                <CardTitle className="text-xl text-slate-900 dark:text-white">פניות אחרונות</CardTitle>
                 <Link to={createPageUrl("TrackInquiries?new=true")}>
                   <Button variant="outline" size="xs" className="hover:bg-lime-50 hover:text-lime-700 hover:border-lime-200 transition-colors text-xs px-2 py-1">
                     <Plus className="w-3 h-3" />
@@ -513,7 +513,7 @@ export default function Dashboard() {
                           <MessageSquare className="w-5 h-5 text-slate-600" />
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900 text-sm truncate max-w-32">{inquiry.subject}</p>
+                          <p className="font-semibold text-slate-900 dark:text-white text-sm truncate max-w-32">{inquiry.subject}</p>
                           <p className="text-xs text-slate-500">
                             {format(new Date(inquiry.created_date), 'd בMMM yyyy', { locale: he })}
                           </p>
@@ -533,7 +533,7 @@ export default function Dashboard() {
             </CardContent>
             <CardFooter className="p-4 border-t">
               <Link to={createPageUrl("TrackInquiries")} className="w-full">
-                <Button variant="outline" className="w-full hover:bg-lime-50 hover:text-lime-700 hover:border-lime-200 transition-colors">
+                <Button variant="outline" className="w-full bg-lime-50 text-lime-700 border-lime-200 dark:bg-lime-500/20 dark:text-lime-400 dark:border-lime-500/50 hover:bg-lime-100 hover:text-lime-800 hover:border-lime-300 dark:hover:bg-slate-700 dark:hover:text-lime-300 dark:hover:border-lime-400 transition-all duration-300">
                   הצג את כל הפניות
                 </Button>
               </Link>
@@ -545,7 +545,7 @@ export default function Dashboard() {
             {/* Quick Actions Card */}
             <Card className="border-0 shadow-lg bg-white">
               <CardHeader className="p-4">
-                <CardTitle className="text-xl dark:text-slate-900">פעולות מהירות</CardTitle>
+                <CardTitle className="text-xl text-slate-900 dark:text-white">פעולות מהירות</CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-2">
                 <div className="flex flex-col gap-3">
@@ -556,13 +556,13 @@ export default function Dashboard() {
                     </Button>
                   </Link>
                   <Link to={createPageUrl("Courses")}>
-                    <Button variant="outline" className="w-full justify-start hover:bg-lime-100 hover:text-lime-700 hover:border-lime-200 transition-colors">
+                    <Button variant="outline" className="w-full justify-start bg-lime-50 text-lime-700 border-lime-200 dark:bg-lime-500/20 dark:text-lime-400 dark:border-lime-500/50 hover:bg-lime-100 hover:text-lime-800 hover:border-lime-300 dark:hover:bg-slate-700 dark:hover:text-lime-300 dark:hover:border-lime-400 transition-all duration-300">
                       <BookOpen className="w-4 h-4 ml-2" />
                       עיון בקורסים
                     </Button>
                   </Link>
                   <Link to={createPageUrl("MyFiles")}>
-                    <Button variant="outline" className="w-full justify-start hover:bg-lime-100 hover:text-lime-700 hover:border-lime-200 transition-colors">
+                    <Button variant="outline" className="w-full justify-start bg-lime-50 text-lime-700 border-lime-200 dark:bg-lime-500/20 dark:text-lime-400 dark:border-lime-500/50 hover:bg-lime-100 hover:text-lime-800 hover:border-lime-300 dark:hover:bg-slate-700 dark:hover:text-lime-300 dark:hover:border-lime-400 transition-all duration-300">
                       <FileText className="w-4 h-4 ml-2" />
                       הקבצים שלי
                     </Button>
@@ -574,13 +574,13 @@ export default function Dashboard() {
             {/* Performance Card */}
             <Card className="border-0 shadow-lg bg-white">
               <CardHeader className="p-4">
-                <CardTitle className="text-xl dark:text-slate-900">ביצועים</CardTitle>
+                <CardTitle className="text-xl text-slate-900 dark:text-white">ביצועים</CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-2">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">קבצים שאושרו</span>
-                    <span className="font-semibold text-sm text-slate-900 dark:text-slate-900">{stats.approvedFiles}/{stats.totalFiles}</span>
+                    <span className="font-semibold text-sm text-slate-900 dark:text-white">{stats.approvedFiles}/{stats.totalFiles}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div

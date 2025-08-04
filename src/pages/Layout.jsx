@@ -69,8 +69,10 @@ export default function Layout({ children }) {
 
     const token = localStorage.getItem('auth_token');
     if (!token) {
+        // When not logged in, use saved theme preference or default
+        const savedTheme = localStorage.getItem('theme') || defaultTheme;
         document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(defaultTheme);
+        document.documentElement.classList.add(savedTheme);
         setUser(null);
         setLoading(false);
         return;
@@ -80,15 +82,22 @@ export default function Layout({ children }) {
         const currentUser = await User.me();
         setUser(currentUser);
 
-        const theme = sessionStorage.getItem('session_theme') || currentUser.theme_preference || localStorage.getItem('theme') || defaultTheme;
+        // Priority: session theme -> user preference -> localStorage -> default
+        let themeToUse = sessionStorage.getItem('session_theme');
+        if (!themeToUse) {
+            themeToUse = currentUser.theme_preference || localStorage.getItem('theme') || defaultTheme;
+        }
+        
         document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(theme);
+        document.documentElement.classList.add(themeToUse);
     } catch {
         console.log("User not authenticated");
+        // When authentication fails, still use saved theme
+        const savedTheme = localStorage.getItem('theme') || defaultTheme;
         document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(defaultTheme);
+        document.documentElement.classList.add(savedTheme);
         localStorage.removeItem('auth_token');
-        localStorage.removeItem('mock_user');
+        // Note: We don't remove 'mock_user' to preserve user preferences like theme
         setUser(null);
     }
     setLoading(false);
@@ -444,7 +453,7 @@ export default function Layout({ children }) {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 user-name truncate dark:text-slate-900">
+                      <p className="font-semibold text-slate-900 user-name truncate dark:text-slate-800">
                         {user?.full_name || 'משתמש'}
                       </p>
                       <p className="text-xs text-lime-600 dark:text-lime-400 truncate font-medium">{user?.email}</p>

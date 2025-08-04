@@ -3,77 +3,6 @@
 @tailwind utilities;
 
 
-/* :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-} */
-
-
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -110,49 +39,289 @@ button:focus-visible {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+  
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 0 0% 0%; /* שחור */
+    --foreground: 210 40% 98%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 116 74% 36%; /* #74b711 */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 19% 27%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217 19% 27%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 212.7 26.8% 83.9%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-background: 217 33% 17%; /* החלפה - רקע הכרטיסיות */
+    --sidebar-foreground: 0 0% 55%;
     --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217 19% 27%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217 19% 27%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-
-
-@layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: hsl(var(--border));
+    outline-color: hsl(var(--ring) / 0.5);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* ערכת נושא כהה אחידה לכל האתר */
+  
+  /* צבעי בסיס */
+  .dark {
+    /* רקע כללי שחור */
+    background: #000000;
+  }
+  
+  /* טקסט וכותרות */
+  .dark h1:not(.user-name), 
+  .dark h2:not(.user-name), 
+  .dark h3:not(.user-name), 
+  .dark h4:not(.user-name), 
+  .dark h5:not(.user-name), 
+  .dark h6:not(.user-name) {
+    color: #ffffff !important; /* כל הכותרות לבנות */
+  }
+  
+  .dark .text-black:not(.user-name),
+  .dark .text-slate-900:not(.user-name),
+  .dark .text-slate-800:not(.user-name),
+  .dark .text-slate-700:not(.user-name) {
+    color: #ffffff !important; /* כל טקסט כהה יהפוך ללבן */
+  }
+  
+  .dark .font-semibold.text-slate-800:not(.user-name),
+  .dark .font-semibold.text-slate-900:not(.user-name) {
+    color: #ffffff !important; /* טקסט מודגש לבן */
+  }
+  
+  /* טקסט משני */
+  .dark .text-slate-600 {
+    color: rgb(156 163 175) !important; /* slate-400 */
+  }
+  
+  .dark .text-slate-500 {
+    color: rgb(156 163 175) !important; /* slate-400 */
+  }
+  
+  /* רקעים - החזרה לצבעים המקוריים */
+  .dark .bg-white {
+    background-color: rgb(30 41 59) !important; /* רקע מקורי */
+  }
+  
+  .dark .bg-slate-50 {
+    background-color: #000000 !important; /* רקע העמודים - שחור */
+  }
+  
+  .dark .bg-slate-100 {
+    background-color: rgb(30 41 59) !important; /* רקע מקורי */
+  }
+  
+  .dark .bg-slate-200 {
+    background-color: rgb(30 41 59) !important; /* רקע מקורי */
+  }
+  
+  .dark .bg-gray-50 {
+    background-color: #000000 !important; /* רקע העמודים - שחור */
+  }
+  
+  .dark .bg-gray-100 {
+    background-color: rgb(30 41 59) !important; /* רקע מקורי */
+  }
+  
+  /* כרטיסים - החזרה לצבעים המקוריים */
+  .dark [data-shadcn="card"] {
+    background-color: rgb(30 41 59) !important; /* רקע הכרטיסיות המקורי */
+    border-color: rgb(55 65 81) !important; /* גבול הכרטיסיות המקורי */
+  }
+  
+  /* גבולות - החזרה לצבעים המקוריים */
+  .dark .border-slate-200 {
+    border-color: rgb(75 85 99) !important; /* slate-600 */
+  }
+  
+  .dark .border-slate-300 {
+    border-color: rgb(75 85 99) !important; /* slate-600 */
+  }
+  
+  .dark .border-slate-400 {
+    border-color: rgb(75 85 99) !important; /* slate-600 */
+  }
+  
+  /* אינפוטים ופורמים - החזרה לצבעים המקוריים */
+  .dark input[type="text"],
+  .dark input[type="email"],
+  .dark input[type="password"],
+  .dark textarea,
+  .dark select {
+    background-color: rgb(30 41 59) !important; /* רקע מקורי */
+    border-color: rgb(75 85 99) !important; /* slate-600 */
+    color: rgb(241 245 249) !important; /* slate-100 */
+  }
+  
+  .dark input[type="text"]:focus,
+  .dark input[type="email"]:focus,
+  .dark input[type="password"]:focus,
+  .dark textarea:focus,
+  .dark select:focus {
+    border-color: #74b711 !important; /* ירוק כהה */
+    box-shadow: 0 0 0 3px rgb(116 183 17 / 0.2) !important;
+  }
+  
+  .dark .placeholder\:text-slate-500::placeholder {
+    color: rgb(156 163 175) !important; /* slate-400 */
+  }
+  
+  /* צבעי ירוק אחידים - הירוק הכהה החדש */
+  .dark .bg-lime-400,
+  .dark .bg-lime-500,
+  .dark .bg-lime-600 {
+    background-color: #74b711 !important;
+  }
+  
+  .dark .text-lime-500,
+  .dark .text-lime-600,
+  .dark .text-lime-700,
+  .dark .text-lime-800 {
+    color: #a3e635 !important; /* ירוק בהיר לטקסט */
+  }
+  
+  .dark .border-lime-300,
+  .dark .border-lime-400,
+  .dark .border-lime-500,
+  .dark .border-lime-600 {
+    border-color: #74b711 !important;
+  }
+  
+  .dark .bg-lime-50,
+  .dark .bg-lime-100 {
+    background-color: rgb(30 41 59 / 0.5) !important; /* רקע הכרטיסיות הישן/50 */
+  }
+  
+  /* גרדיאנטים ירוקים */
+  .dark .from-lime-400,
+  .dark .from-lime-500 {
+    --tw-gradient-from: #74b711 !important;
+  }
+  
+  .dark .via-lime-500 {
+    --tw-gradient-via: #74b711 !important;
+  }
+  
+  .dark .to-lime-400,
+  .dark .to-lime-600 {
+    --tw-gradient-to: #74b711 !important;
+  }
+  
+  .dark .bg-gradient-to-r.from-lime-400.via-lime-500.to-lime-600,
+  .dark .bg-gradient-to-r.from-lime-500.to-lime-600 {
+    background: linear-gradient(to right, #74b711, #74b711) !important;
+  }
+  
+  /* hover effects - החזרה לצבעים המקוריים */
+  .dark .hover\:bg-slate-50:hover,
+  .dark .hover\:bg-slate-100:hover,
+  .dark .hover\:bg-gray-100:hover {
+    background-color: rgb(30 41 59) !important; /* רקע מקורי */
+  }
+  
+  .dark .hover\:bg-lime-500:hover,
+  .dark .hover\:bg-lime-600:hover {
+    background-color: #5a8a0d !important; /* ירוק כהה יותר */
+  }
+  
+  .dark .hover\:border-lime-300:hover,
+  .dark .hover\:border-lime-500:hover,
+  .dark .hover\:border-lime-600:hover {
+    border-color: #74b711 !important;
+  }
+  
+  .dark .hover\:text-lime-700:hover,
+  .dark .hover\:text-lime-800:hover {
+    color: #a3e635 !important;
+  }
+  
+  /* כפתורים מיוחדים */
+  .dark .focus-visible\:ring-lime-500:focus-visible,
+  .dark .ring-lime-500 {
+    --tw-ring-color: #74b711 !important;
+  }
+  
+  /* סיידבר - החלפה */
+  .dark .sidebar {
+    background-color: rgb(30 41 59) !important; /* רקע הכרטיסיות הישן */
+    border-color: rgb(15 23 42) !important; /* רקע הסיידבר הישן */
+  }
+  
+  .dark .sidebar a,
+  .dark .sidebar button,
+  .dark nav a,
+  .dark nav button {
+    color: #8c929c !important;
+  }
+  
+  .dark .sidebar a:hover,
+  .dark .sidebar button:hover,
+  .dark nav a:hover,
+  .dark nav button:hover {
+    color: #ffffff !important;
+    background-color: rgb(15 23 42 / 0.5) !important; /* רקע הסיידבר הישן/50 */
+  }
+  
+  .dark .nav-item.bg-gradient-to-r,
+  .dark .nav-item.from-lime-500.to-lime-600 {
+    color: #ffffff !important;
+    background: linear-gradient(to right, #74b711, #74b711) !important;
+  }
+  
+  /* יוצא מן הכלל - שם המשתמש בסיידבר */
+  .dark .user-name {
+    color: #1e293b !important;
+  }
+  
+  /* פופאובר ודיאלוגים - החזרה לצבעים המקוריים */
+  .dark .bg-popover {
+    background-color: rgb(30 41 59) !important; /* רקע מקורי */
+    border-color: rgb(55 65 81) !important; /* גבול מקורי */
+  }
+  
+  /* מיוחד לטבלאות ומכלולים - החזרה לצבעים המקוריים */
+  .dark .bg-muted {
+    background-color: rgb(30 41 59 / 0.7) !important; /* רקע מקורי/70 */
+  }
+  
+  .dark .bg-secondary {
+    background-color: rgb(55 65 81 / 0.8) !important; /* רקע מקורי/80 */
+  }
+  
+  /* רקעים קלים שצריכים להישאר אפורים (לא שחורים) */
+  .dark .bg-slate-50:not(.min-h-screen),
+  .dark .bg-gray-50:not(.min-h-screen) {
+    background-color: rgb(30 41 59 / 0.6) !important; /* רקע אפור קל */
+  }
+  
+  /* רקעי העמודים הראשיים - שחור */
+  .dark .bg-slate-50.min-h-screen,
+  .dark .bg-gray-50.min-h-screen {
+    background-color: #000000 !important; /* רקע העמודים - שחור */
   }
 }
