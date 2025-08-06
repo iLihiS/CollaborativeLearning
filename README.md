@@ -1,5 +1,12 @@
-# CollaborativeLearning
+<div align="center">
+  <img width="120" height="120" alt="image" src="https://github.com/user-attachments/assets/726c7dae-32db-415f-9c0c-38a0973760dd" />
+
 ### **פלטפורמה ללמידה שיתופית בקריה האקדמית אונו**
+
+# CollaborativeLearning
+
+
+</div>
 
 A comprehensive collaborative learning platform designed for Ono Academic College, built with modern web technologies to facilitate seamless interaction between students, lecturers, and administrators.
 
