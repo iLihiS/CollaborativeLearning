@@ -39,7 +39,8 @@ import {
   Typography,
   CircularProgress,
   Paper,
-  Divider
+  Divider,
+  Badge
 } from "@mui/material";
 import { LoginForm } from "@/components/LoginForm.tsx";
 import AccessibilityWidget from '@/components/AccessibilityWidget.tsx';
@@ -61,9 +62,12 @@ export default function Layout({ children, currentPageName }: { children: React.
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loginError, setLoginError] = useState('');
   const [toast, setToast] = useState({ open: false, message: '' });
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unhandledInquiries, setUnhandledInquiries] = useState(0);
 
   useEffect(() => {
     document.title = 'למידה שיתופית בקריה האקדמית אונו';
@@ -82,6 +86,43 @@ export default function Layout({ children, currentPageName }: { children: React.
   useEffect(() => {
     loadUser();
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (user) {
+      loadNotificationCounts();
+    }
+  }, [user]);
+
+  const loadNotificationCounts = async () => {
+    try {
+      if (!user) return;
+      
+      // Import the entities we need
+      const { Notification, Message } = await import("@/api/entities");
+      
+      // Load unread notifications
+      const notifications = await Notification.filter({ 
+        user_email: user.email, 
+        is_read: false 
+      });
+      setUnreadNotifications(notifications.length);
+      
+      // Load unhandled inquiries (only for admin/lecturer)
+      if (user.current_role === 'admin' || user.current_role === 'lecturer') {
+        const inquiries = await Message.filter({ status: 'pending' });
+        setUnhandledInquiries(inquiries.length);
+      } else {
+        // For students, show their own pending inquiries
+        const inquiries = await Message.filter({ 
+          sender_email: user.email, 
+          status: 'pending' 
+        });
+        setUnhandledInquiries(inquiries.length);
+      }
+    } catch (error) {
+      console.error("Error loading notification counts:", error);
+    }
+  };
 
   const loadUser = async () => {
     setLoading(true);
@@ -153,17 +194,17 @@ export default function Layout({ children, currentPageName }: { children: React.
     const currentRole = user.current_role;
     const allNavItems = [
       { title: "דף הבית", url: createPageUrl("Dashboard"), icon: Home, roles: ["student", "lecturer", "admin"] },
+      { title: "פאנל ניהול", url: createPageUrl("AdminPanel"), icon: SettingsIcon, roles: ["admin"] },
       { title: "הקבצים שלי", url: createPageUrl("MyFiles"), icon: FileText, roles: ["student", "lecturer", "admin"] },
+      { title: "קבצים ממתינים", url: createPageUrl("LecturerPendingFiles"), icon: Clock, roles: ["lecturer", "admin"] },
+      { title: "קבצים מאושרים", url: createPageUrl("LecturerApprovedFiles"), icon: CheckCircle, roles: ["lecturer", "admin"] },
+      { title: "קבצים שנדחו", url: createPageUrl("LecturerRejectedFiles"), icon: XCircleIcon, roles: ["lecturer", "admin"] },
       { title: "קורסים", url: createPageUrl("Courses"), icon: BookOpen, roles: ["student", "lecturer", "admin"] },
       { title: "העלאת קובץ", url: createPageUrl("UploadFile"), icon: Upload, roles: ["student", "lecturer", "admin"] },
       { title: "תובנות", url: createPageUrl("Insights"), icon: BarChart3, roles: ["student", "lecturer", "admin"] },
       { title: "התראות", url: createPageUrl("Notifications"), icon: Bell, roles: ["student", "lecturer", "admin"] },
       { title: "מעקב פניות", url: createPageUrl("TrackInquiries"), icon: MessageSquare, roles: ["student", "lecturer", "admin"] },
       { title: "עזרה", url: createPageUrl("Help"), icon: HelpCircle, roles: ["student", "lecturer", "admin"] },
-      { title: "קבצים ממתינים", url: createPageUrl("LecturerPendingFiles"), icon: Clock, roles: ["lecturer", "admin"] },
-      { title: "קבצים מאושרים", url: createPageUrl("LecturerApprovedFiles"), icon: CheckCircle, roles: ["lecturer", "admin"] },
-      { title: "קבצים שנדחו", url: createPageUrl("LecturerRejectedFiles"), icon: XCircleIcon, roles: ["lecturer", "admin"] },
-      { title: "פאנל ניהול", url: createPageUrl("AdminPanel"), icon: SettingsIcon, roles: ["admin"] },
     ];
     return allNavItems.filter(item => item.roles.includes(currentRole));
   };
@@ -238,32 +279,20 @@ export default function Layout({ children, currentPageName }: { children: React.
   const navigationItems = getNavigationItems();
 
   const drawerContent = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'var(--bg-sidebar)' }}>
-      <Toolbar>
-        <Link to={createPageUrl("Dashboard")} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Box sx={{ width: 40, height: 40, bgcolor: 'primary.main', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 3 }}>
-            <GraduationCap style={{ width: 24, height: 24, color: 'white' }} />
-          </Box>
-          <Box>
-            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
-              למידה שיתופית
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'var(--lime-primary)' }}>
-              בקריה האקדמית אונו
-            </Typography>
-          </Box>
-        </Link>
-      </Toolbar>
-      <Divider />
-      <List sx={{ flexGrow: 1, p: 2, direction: 'rtl' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'var(--bg-sidebar)', overflow: 'hidden' }}>
+      <List sx={{ flexGrow: 1, p: 1.5, direction: 'rtl', overflow: 'auto' }}>
         {navigationItems.map((item) => (
-          <ListItem key={item.title} disablePadding sx={{ mb: 1 , justifyItems: 'center'}}>
+          <ListItem key={item.title} disablePadding sx={{ mb: 0.75, justifyItems: 'center'}}>
             <ListItemButton
               component={Link}
               to={item.url}
               sx={{
-                borderRadius: '12px',
-                alignItems: 'flex-start',
+                borderRadius: '8px',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                direction: 'rtl',
+                py: 1,
+                height: '45px',
                 '&.Mui-selected': {
                   background: 'linear-gradient(to right, #84cc16, #65a30d)',
                   color: 'white',
@@ -271,49 +300,69 @@ export default function Layout({ children, currentPageName }: { children: React.
                   '& .MuiListItemIcon-root': {
                     color: 'white',
                   },
+                  '& .MuiListItemText-primary': {
+                    color: 'white',
+                  },
                 },
                  '&:hover': {
                   backgroundColor: '#ebfaca',
                   color: '#52820e',
-                  borderColor: '#52820e',
+                   borderColor: '#52820e',
                  }
               }}
               selected={location.pathname === item.url}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: 'var(--text-secondary)' }}>
+              <ListItemIcon sx={{ minWidth: 40, color: 'var(--text-secondary)', align: 'end' }}>
                 <item.icon style={{ width: 20, height: 20 }} />
               </ListItemIcon>
-              <ListItemText primary={item.title} sx={{ textAlign: 'right', color: 'var(--text-primary)'}} />
+              <ListItemText 
+                primary={item.title} 
+                primaryTypographyProps={{
+                  sx: {
+                    fontSize: '1rem',
+                    textAlign: 'left'
+                  }
+                }}
+                sx={{
+                  color: 'var(--text-primary)'
+                }} 
+              />
+              
             </ListItemButton>
           </ListItem>
         ))}
       </List>
       <Divider />
       <Box sx={{ p: 2 }}>
-        <Paper elevation={0} sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '12px', background: 'linear-gradient(to right, #f0fdf4, #e2f5d8)'}}>
+        <Paper elevation={0} sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '8px', background: 'linear-gradient(to right, #f0fdf4, #e2f5d8)'}}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-              <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 40, height: 40 }}>
+              <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 38, height: 38 }}>
                 {user.full_name?.charAt(0) || 'מ'}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
-                <Typography noWrap fontWeight="bold" sx={{ color: 'var(--text-primary)'}}>
+                <Typography noWrap fontWeight="bold" sx={{ color: 'var(--text-primary)', fontSize: '0.9rem'}}>
                   {user.full_name || 'משתמש'}
                 </Typography>
-                <Typography variant="body2" noWrap sx={{ color: 'var(--lime-secondary)' }}>
+                <Typography variant="caption" noWrap sx={{ color: 'var(--lime-secondary)', fontSize: '0.8rem' }}>
                   {user.email}
                 </Typography>
               </Box>
             </Box>
             <IconButton component={Link} to={createPageUrl("Settings")} size="small">
-              <SettingsIcon />
+              <SettingsIcon style={{ width: 18, height: 18 }} />
             </IconButton>
         </Paper>
         <Button
           fullWidth
           variant="text"
-          startIcon={<LogOutIcon />}
+          startIcon={<LogOutIcon style={{ width: 18, height: 18 }} />}
           onClick={handleLogout}
-          sx={{ mt: 1, color: 'error.main' }}
+          sx={{ 
+            mt: 1.5, 
+            color: 'error.main',
+            py: 0.75,
+            fontSize: '0.9rem'
+          }}
         >
           התנתקות
         </Button>
@@ -322,7 +371,7 @@ export default function Layout({ children, currentPageName }: { children: React.
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
        <style>{`
         :root {
           --bg-primary: #f8fafc;
@@ -348,67 +397,226 @@ export default function Layout({ children, currentPageName }: { children: React.
           --lime-secondary: #a3e635;
         }
       `}</style>
+      
       <AppBar
-        position="fixed"
+        position="static"
         sx={{
-          display: { xs: 'block', lg: 'none' },
-          backdropFilter: 'blur(12px)',
-          backgroundColor: 'var(--bg-sidebar)',
-          boxShadow: 'none',
-          borderBottom: '1px solid var(--border-color)'
+          background: 'linear-gradient(to right, #84cc16, #65a30d)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            sx={{ mr: 2, display: { lg: 'none' } }}
+        <Toolbar sx={{ minHeight: '48px !important', py: 0, position: 'relative' }}>
+          {/* Left side - Logo and title */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              color="inherit"
+              aria-label="toggle drawer"
+              edge="start"
+              onClick={() => {
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+                setIsDrawerOpen(!isDrawerOpen);
+              }}
+              sx={{ mr: 2 }}
+            >
+              <Menu />
+            </IconButton>
+            
+            <Box 
+              component={Link}
+              to={createPageUrl("Dashboard")}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5,
+                textDecoration: 'none',
+                '&:hover': {
+                  opacity: 0.8
+                }
+              }}
+            >
+              <Box 
+                sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  bgcolor: 'rgba(255,255,255,0.2)', 
+                  borderRadius: '8px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center'
+                }}
+              >
+                <GraduationCap style={{ width: 18, height: 18, color: 'white' }} />
+              </Box>
+              
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: 'white',
+                  fontWeight: 'bold',
+                  lineHeight: 1,
+                  fontSize: '1.1rem'
+                }}
+              >
+                למידה שיתופית
+              </Typography>
+              
+              <Typography 
+                variant="body1"
+                sx={{ 
+                  color: 'white',
+                  fontWeight: 300,
+                  opacity: 0.9,
+                  lineHeight: 1,
+                  fontSize: '1rem'
+                }}
+              >
+                בקריה האקדמית אונו
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Center - Quote - Absolutely positioned for true center */}
+          <Box
+            sx={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: { xs: 'none', md: 'block' }
+            }}
           >
-            <Menu />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            למידה שיתופית
-          </Typography>
+            <Typography 
+              variant="body2"
+              sx={{ 
+                color: 'white',
+                fontStyle: 'italic',
+                opacity: 0.8,
+                fontSize: '0.85rem',
+                direction: 'ltr'
+              }}
+            >
+              " When you share successes, you succeed more "
+            </Typography>
+          </Box>
+
+          {/* Right side - Action buttons */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+            <IconButton
+              component={Link}
+              to={createPageUrl("Notifications")}
+              sx={{ 
+                color: 'white',
+                position: 'relative',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+              }}
+            >
+              <Badge badgeContent={unreadNotifications} color="error">
+                <Bell style={{ width: 20, height: 20 }} />
+              </Badge>
+            </IconButton>
+            
+            <IconButton
+              component={Link}
+              to={createPageUrl("TrackInquiries")}
+              sx={{ 
+                color: 'white',
+                position: 'relative',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+              }}
+            >
+              <Badge badgeContent={unhandledInquiries} color="warning">
+                <MessageSquare style={{ width: 20, height: 20 }} />
+              </Badge>
+            </IconButton>
+            
+            <IconButton
+              component={Link}
+              to={createPageUrl("Help")}
+              sx={{ 
+                color: 'white',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+              }}
+            >
+              <HelpCircle style={{ width: 20, height: 20 }} />
+            </IconButton>
+          </Box>
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { lg: 240 }, flexShrink: { lg: 0 } }}
-        aria-label="mailbox folders"
-      >
-        <Drawer
-          variant="temporary"
-          open={isMobileMenuOpen}
-          onClose={() => setIsMobileMenuOpen(false)}
-          ModalProps={{
-            keepMounted: true, 
+      
+      <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+        {/* Sidebar and main content */}
+        <Box
+          component="nav"
+          sx={{ 
+            width: { xs: 0, lg: isDrawerOpen ? 240 : 0 }, 
+            flexShrink: 0,
+            transition: 'width 0.3s ease',
+            overflow: 'hidden',
+            height: '100%'
           }}
-          sx={{
-            display: { xs: 'block', lg: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+          aria-label="mailbox folders"
+        >
+          <Drawer
+            variant="temporary"
+            open={isMobileMenuOpen}
+            onClose={() => setIsMobileMenuOpen(false)}
+            ModalProps={{
+              keepMounted: true, 
+            }}
+            sx={{
+              display: { xs: 'block', lg: 'none' },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+            }}
+          >
+            {drawerContent}
+          </Drawer>
+          
+          {/* Desktop sidebar as regular Box */}
+          <Box
+            sx={{
+              display: { xs: 'none', lg: isDrawerOpen ? 'block' : 'none' },
+              width: 240,
+              height: '100%',
+              transition: 'opacity 0.3s ease',
+              overflow: 'auto'
+            }}
+          >
+            {drawerContent}
+          </Box>
+        </Box>
+        
+        <Box
+          component="main"
+          sx={{ 
+            flexGrow: 1,
+            transition: 'margin 0.3s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            overflow: 'hidden'
           }}
         >
-          {drawerContent}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', lg: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
-          }}
-          open
-        >
-          {drawerContent}
-        </Drawer>
+          <Box sx={{ flexGrow: 1, p: 3, overflow: 'auto' }}>
+            {children}
+          </Box>
+        </Box>
       </Box>
+      
+      {/* Footer - at bottom of page */}
       <Box
-        component="main"
-        sx={{ flexGrow: 1, p: 3, width: { lg: 'calc(100% - 240px)' } }}
+        component="footer"
+        sx={{
+          py: 1,
+          px: 2,
+          backgroundColor: 'grey.100',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          textAlign: 'center',
+          width: '100%'
+        }}
       >
-        <Toolbar />
-        {children}
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+          © {new Date().getFullYear()} מערכת זו נבנתה על ידי <Box component="span" sx={{ fontWeight: 'bold' }}>ליהי סער</Box>
+        </Typography>
       </Box>
       
       <AccessibilityWidget />
@@ -416,10 +624,16 @@ export default function Layout({ children, currentPageName }: { children: React.
         open={toast.open}
         autoHideDuration={6000}
         onClose={handleCloseToast}
-        message={toast.message}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      />
+      >
+        <Alert 
+          onClose={handleCloseToast} 
+          severity="success" 
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
-

@@ -170,10 +170,81 @@ const seedMockData = () => {
     { id: 'file-008', title: 'סיכום שלי - פסיכולוגיה', description: 'סיכום אישי, לא בטוח כמה זה עוזר.', course_id: 'course-007', uploader_id: 'student-005', created_date: '2023-11-15T20:00:00Z', status: 'approved', download_count: 42 },
   ];
 
+  const initialMessages = [
+    { 
+      id: 'msg-001', 
+      subject: 'בקשה לצירוף למסלול מדעי המחשב', 
+      content: 'שלום, אני מבקש להתקבל למסלול מדעי המחשב. יש לי רקע בתכנות.', 
+      sender_name: 'ד"ר רונה סופר יוזר', 
+      sender_email: 'all.roles@ono.ac.il', 
+      status: 'pending',
+      created_date: '2024-01-20T10:00:00Z'
+    },
+    { 
+      id: 'msg-002', 
+      subject: 'שאלה על קורס אלגברה לינארית', 
+      content: 'יש לי שאלה לגבי המטלה האחרונה בקורס אלגברה לינארית.', 
+      sender_name: 'יוסי כהן', 
+      sender_email: 'student@ono.ac.il', 
+      status: 'pending',
+      created_date: '2024-01-19T14:30:00Z'
+    },
+    { 
+      id: 'msg-003', 
+      subject: 'בקשה לעזרה טכנית', 
+      content: 'אני מתקשה להעלות קבצים למערכת. האם ניתן לקבל עזרה?', 
+      sender_name: 'מירי לוי', 
+      sender_email: 'lecturer@ono.ac.il', 
+      status: 'handled',
+      created_date: '2024-01-18T09:15:00Z'
+    }
+  ];
+
+  const initialNotifications = [
+    {
+      id: 'notif-001',
+      title: 'קובץ חדש אושר',
+      content: 'הקובץ "סיכום מבני נתונים" שלך אושר והועלה למערכת',
+      type: 'file_approved',
+      user_email: 'all.roles@ono.ac.il',
+      is_read: false,
+      created_date: '2024-01-20T11:00:00Z'
+    },
+    {
+      id: 'notif-002', 
+      title: 'פנייה חדשה התקבלה',
+      content: 'התקבלה פנייה חדשה מסטודנט בנושא "שאלה על קורס"',
+      type: 'inquiry_received',
+      user_email: 'all.roles@ono.ac.il',
+      is_read: false,
+      created_date: '2024-01-20T09:30:00Z'
+    },
+    {
+      id: 'notif-003',
+      title: 'קובץ חדש הועלה לאישור',
+      content: 'סטודנט העלה קובץ חדש וממתין לאישורך',
+      type: 'file_uploaded',
+      user_email: 'all.roles@ono.ac.il',
+      is_read: true,
+      created_date: '2024-01-19T16:45:00Z'
+    },
+    {
+      id: 'notif-004',
+      title: 'הודעת מערכת',
+      content: 'המערכת תעבור תחזוקה מתוכננת מחר בין השעות 02:00-04:00',
+      type: 'system_message',
+      user_email: 'all.roles@ono.ac.il',
+      is_read: false,
+      created_date: '2024-01-20T08:00:00Z'
+    }
+  ];
+
   initializeMockData('mock_courses', initialCourses);
   initializeMockData('mock_lecturers', initialLecturers);
   initializeMockData('mock_students', initialStudents);
   initializeMockData('mock_files', initialFiles);
+  initializeMockData('mock_messages', initialMessages);
+  initializeMockData('mock_notifications', initialNotifications);
 };
 
 seedMockData(); // Run on script load
