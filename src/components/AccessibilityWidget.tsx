@@ -171,7 +171,7 @@ export default function AccessibilityWidget() {
         /* Widget positioning */
         .accessibility-widget {
           position: fixed;
-          left: 20px;
+          right: 20px;
           bottom: 20px;
           z-index: 9999;
           direction: ltr;
@@ -180,28 +180,36 @@ export default function AccessibilityWidget() {
         .accessibility-panel {
           position: absolute;
           bottom: 70px;
-          left: 0;
+          right: 0;
           width: 320px;
           max-height: 80vh;
           overflow-y: auto;
         }
 
-        /* For desktop screens, remove the height limit and scrollbar */
+        /* For desktop screens, keep the scrolling capability */
         @media (min-width: 1024px) {
             .accessibility-panel {
-                max-height: none;
-                overflow-y: visible;
+                max-height: 80vh;
+                overflow-y: auto;
             }
         }
       `}</style>
 
-      <Box sx={{ position: 'fixed', left: 20, bottom: 20, zIndex: 9999 }}>
+      <Box sx={{ position: 'fixed', right: 20, bottom: 20, zIndex: 9999 }}>
         <Fab color="primary" aria-label="accessibility" onClick={toggleWidget}>
           <Accessibility />
         </Fab>
 
         {isOpen && (
-          <Card sx={{ position: 'absolute', bottom: 70, left: 0, width: 320 }}>
+          <Card
+            sx={{ 
+            position: 'absolute', 
+            bottom: 70, 
+            right: 0, 
+            width: 320,
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
             <CardHeader
               title="נגישות"
               action={
@@ -209,33 +217,58 @@ export default function AccessibilityWidget() {
                   <X />
                 </IconButton>
               }
+              sx={{ pb: 1 }}
+              titleTypographyProps={{ align: 'right' }}
             />
-            <CardContent>
+            <CardContent sx={{ pt: 0, pb: 2 }}>
               <Button
                 fullWidth
                 variant="outlined"
                 onClick={handleThemeChange}
                 startIcon={theme === 'light' ? <Moon /> : <Sun />}
+                sx={{ mb: 1.5 }}
               >
                 {theme === 'light' ? 'מצב כהה' : 'מצב בהיר'}
               </Button>
-              <Divider sx={{ my: 2 }} />
-              <Typography>גודל טקסט</Typography>
-              <ToggleButtonGroup value={settings.fontSize} exclusive>
-                <ToggleButton onClick={() => adjustFontSize('decrease')} value={settings.fontSize - 5} disabled={settings.fontSize <= 85}>
+              <Divider sx={{ my: 1.5 }} />
+              <Typography sx={{ mb: 0.5 }} align="right">גודל טקסט</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <ToggleButton 
+                  value="decrease"
+                  onClick={() => adjustFontSize('decrease')} 
+                  disabled={settings.fontSize <= 85}
+                  size="small"
+                >
                   <Minus />
                 </ToggleButton>
-                <ToggleButton onClick={() => adjustFontSize('increase')} value={settings.fontSize + 5} disabled={settings.fontSize >= 130}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    minWidth: '60px', 
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {settings.fontSize}%
+                </Typography>
+                <ToggleButton 
+                  value="increase"
+                  onClick={() => adjustFontSize('increase')} 
+                  disabled={settings.fontSize >= 130}
+                  size="small"
+                >
                   <Plus />
                 </ToggleButton>
-              </ToggleButtonGroup>
-              <Divider sx={{ my: 2 }} />
-              <Typography>הגדרות ויזואליות</Typography>
+              </Box>
+              <Divider sx={{ my: 1.5 }} />
+              <Typography sx={{ mb: 1 }} align="right">הגדרות ויזואליות</Typography>
               <ToggleButton
                 value="highContrast"
                 selected={settings.highContrast}
                 onChange={() => toggleSetting('highContrast')}
                 fullWidth
+                sx={{ mb: 0.5 }}
               >
                 <Contrast /> ניגודיות גבוהה
               </ToggleButton>
@@ -244,6 +277,7 @@ export default function AccessibilityWidget() {
                 selected={settings.grayscale}
                 onChange={() => toggleSetting('grayscale')}
                 fullWidth
+                sx={{ mb: 0.5 }}
               >
                 <Eye /> גווני אפור
               </ToggleButton>
@@ -252,26 +286,29 @@ export default function AccessibilityWidget() {
                 selected={settings.hideImages}
                 onChange={() => toggleSetting('hideImages')}
                 fullWidth
+                sx={{ mb: 1.5 }}
               >
                 <EyeOff /> הסתר תמונות
               </ToggleButton>
-              <Divider sx={{ my: 2 }} />
-              <Typography>הגדרות ניווט</Typography>
+              <Divider sx={{ my: 1.5 }} />
+              <Typography sx={{ mb: 1 }} align="right">הגדרות ניווט</Typography>
               <ToggleButton
                 value="highlightLinks"
                 selected={settings.highlightLinks}
                 onChange={() => toggleSetting('highlightLinks')}
                 fullWidth
+                sx={{ mb: 1.5 }}
               >
                 <Keyboard /> הדגש קישורים
               </ToggleButton>
-              <Divider sx={{ my: 2 }} />
-              <Typography>הגדרות קריאה</Typography>
+              <Divider sx={{ my: 1.5 }} />
+              <Typography sx={{ mb: 1 }} align="right">הגדרות קריאה</Typography>
               <ToggleButton
                 value="readableFont"
                 selected={settings.readableFont}
                 onChange={() => toggleSetting('readableFont')}
                 fullWidth
+                sx={{ mb: 0.5 }}
               >
                 Aa גופן קריא
               </ToggleButton>
@@ -280,10 +317,11 @@ export default function AccessibilityWidget() {
                 selected={settings.textSpacing}
                 onChange={() => toggleSetting('textSpacing')}
                 fullWidth
+                sx={{ mb: 1.5 }}
               >
                 | | ריווח טקסט
               </ToggleButton>
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 1.5 }} />
               <Button fullWidth variant="outlined" onClick={resetSettings} startIcon={<RotateCcw />}>
                 איפוס הגדרות
               </Button>
