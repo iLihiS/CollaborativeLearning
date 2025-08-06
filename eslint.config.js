@@ -35,4 +35,10 @@ export default [
       ],
     },
   },
+  {
+    files: ['*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ]

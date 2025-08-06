@@ -1,17 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Course } from "@/api/entities";
-import { Lecturer } from "@/api/entities";
-import { User } from "@/api/entities"; // New import: User entity
-import { Student } from "@/api/entities"; // New import: Student entity
-import { AcademicTrack } from "@/api/entities";
+import { Course, Lecturer, User, Student, AcademicTrack } from "@/api/entities";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { BookOpen, User as UserIcon, Calendar, Search } from "lucide-react"; // Renamed User import from lucide-react to UserIcon to avoid conflict with User entity
+import {
+    Card, CardContent, CardActionArea, Typography, Grid, Box,
+    TextField, Button, Chip, Skeleton, InputAdornment, Avatar
+} from "@mui/material";
+import { BookOpen, User as UserIcon, Calendar, Search } from "lucide-react";
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -85,133 +81,115 @@ export default function Courses() {
   });
 
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-              <BookOpen className="w-6 h-6 text-white"/>
-            </div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">רשימת קורסים</h1>
-          </div>
-          {/* Note: text-white on bg-slate-50 might make this text hard to see */}
-          <p className="text-white mt-3">מצא חומרי לימוד לפי הקורסים הזמינים במערכת</p>
-        </div>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+            <BookOpen />
+          </Avatar>
+          <Box>
+            <Typography variant="h4" fontWeight="bold">רשימת קורסים</Typography>
+            <Typography color="text.secondary">מצא חומרי לימוד לפי הקורסים הזמינים במערכת</Typography>
+          </Box>
+        </Box>
+      </Box>
 
-        <div className="mb-8">
-          <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <Input
-              type="text"
-              placeholder="חפש קורס לפי שם או קוד..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-12 h-12 text-base focus-visible:ring-lime-500"
-            />
-          </div>
-        </div>
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="חפש קורס לפי שם או קוד..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ mb: 4 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search />
+            </InputAdornment>
+          ),
+        }}
+      />
 
-        <div className="flex flex-wrap items-center gap-2 mb-8">
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 4 }}>
+        <Button
+          variant={!selectedTrack ? 'contained' : 'outlined'}
+          onClick={() => setSelectedTrack(null)}
+        >
+          הצג הכל
+        </Button>
+        {filterableTracks.map((track) => (
           <Button
-            size="sm"
-            variant={!selectedTrack ? 'default' : 'outline'}
-            onClick={() => setSelectedTrack(null)}
-            className={!selectedTrack ? 'bg-lime-600 hover:bg-lime-700 text-white' : 'text-slate-700'}
+            key={track.id}
+            variant={selectedTrack === track.id ? 'contained' : 'outlined'}
+            onClick={() => setSelectedTrack(track.id)}
           >
-            הצג הכל
+            {track.name}
           </Button>
-          {filterableTracks.map((track) => (
-            <Button
-              size="sm"
-              key={track.id}
-              variant={selectedTrack === track.id ? 'default' : 'outline'}
-              onClick={() => setSelectedTrack(track.id)}
-              className={selectedTrack === track.id ? 'bg-lime-600 hover:bg-lime-700 text-white' : 'text-slate-700'}
-            >
-              {track.name}
-            </Button>
-          ))}
-        </div>
+        ))}
+      </Box>
 
+      <Grid container spacing={3}>
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array(8).fill(0).map((_, i) => (
-              <Card key={i} className="border border-transparent shadow-lg h-full bg-white animate-pulse">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-slate-200 rounded-lg mb-4"></div>
-                  <div className="h-6 bg-slate-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-slate-200 rounded w-full"></div>
-                    <div className="h-4 bg-slate-200 rounded w-5/6"></div>
-                  </div>
-                  <div className="border-t mt-4 pt-4 space-y-2">
-                    <div className="h-3 bg-slate-200 rounded w-1/2"></div>
-                    <div className="h-3 bg-slate-200 rounded w-1/3"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          Array.from(new Array(8)).map((_, index) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+              <Skeleton variant="rectangular" height={250} sx={{ borderRadius: 2 }} />
+            </Grid>
+          ))
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {searchFilteredCourses.map((course) => (
-              <Link 
-                to={createPageUrl(`Course?id=${course.id}&track=${selectedTrack || ''}&search=${searchTerm || ''}`)} 
-                key={course.id} 
-                className="group block h-full"
-              >
-                <Card className="border border-transparent shadow-lg group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 h-full group-hover:bg-lime-50 group-hover:border-lime-200 bg-white">
-                  <CardHeader>
-                    <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-lime-200">
-                      <BookOpen className="w-6 h-6 text-lime-700 transition-colors duration-300 group-hover:text-lime-800" />
-                    </div>
-                    <CardTitle className="text-slate-900 dark:text-white transition-colors duration-300 group-hover:text-lime-800 text-lg leading-tight">{course.course_name}</CardTitle>
-                    <Badge className="mt-2 font-mono text-xs w-fit bg-lime-100 text-lime-800 border border-lime-300">{course.course_code}</Badge>
-                  </CardHeader>
+          searchFilteredCourses.map((course) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={course.id}>
+              <Card component={Link} to={createPageUrl(`Course?id=${course.id}&track=${selectedTrack || ''}&search=${searchTerm || ''}`)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', textDecoration: 'none', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
+                <CardActionArea sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <CardContent>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                      {course.description 
-                          ? (course.description.length > 100 ? `${course.description.substring(0, 100)}...` : course.description)
-                          : 'אין תיאור זמין לקורס זה.'
-                      }
-                    </p>
-                    <div className="space-y-2 border-t pt-4 mt-auto">
-                        <div className="flex items-center gap-2 text-sm text-slate-500">
-                            <UserIcon className="w-4 h-4" /> {/* Using UserIcon to avoid conflict */}
-                            <span>{lecturers[course.lecturer_id] || 'מרצה לא ידוע'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-500">
-                            <Calendar className="w-4 h-4" />
-                            <span>{course.semester}</span>
-                        </div>
-                    </div>
+                    <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', mb: 2 }}>
+                      <BookOpen />
+                    </Avatar>
+                    <Typography variant="h6" component="div" gutterBottom>{course.course_name}</Typography>
+                    <Chip label={course.course_code} size="small" sx={{ mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary" sx={{
+                      mb: 2,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {course.description || 'אין תיאור זמין לקורס זה.'}
+                    </Typography>
+                    <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2, width: '100%' }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <UserIcon size={16} /> {lecturers[course.lecturer_id] || 'מרצה לא ידוע'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Calendar size={16} /> {course.semester}
+                      </Typography>
+                    </Box>
                   </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          ))
         )}
-        {searchFilteredCourses.length === 0 && !loading && searchTerm === "" && (
-          <div className="text-center text-slate-600 p-8">
-            <p className="text-lg font-semibold">לא נמצאו קורסים זמינים.</p>
-            <p className="text-sm mt-2">
-              {currentUser?.current_role === 'admin'
+      </Grid>
+
+      {!loading && searchFilteredCourses.length === 0 && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6">
+            {searchTerm
+              ? `לא נמצאו קורסים עבור החיפוש "${searchTerm}"`
+              : 'לא נמצאו קורסים זמינים.'
+            }
+          </Typography>
+          <Typography color="text.secondary">
+            {searchTerm
+              ? 'נסה מונח חיפוש אחר.'
+              : currentUser?.current_role === 'admin'
                 ? 'נראה שעדיין לא הוספו קורסים למערכת.'
                 : 'יתכן ואין קורסים המשויכים למסלולים האקדמיים שלך עבור תפקידך הנוכחי.'
-              }
-            </p>
-          </div>
-        )}
-        {searchFilteredCourses.length === 0 && !loading && searchTerm !== "" && (
-          <div className="text-center text-slate-600 p-8">
-            <p className="text-lg font-semibold">לא נמצאו קורסים עבור החיפוש &quot;{searchTerm}&quot;.</p>
-            <p className="text-sm mt-2">נסה מונח חיפוש אחר.</p>
-          </div>
-        )}
-      </div>
-    </div>
+            }
+          </Typography>
+        </Box>
+      )}
+    </Box>
   );
 }

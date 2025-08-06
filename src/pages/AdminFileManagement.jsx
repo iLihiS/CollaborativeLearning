@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { File, Course, Student } from '@/api/entities';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
+    Select, MenuItem, InputLabel, FormControl, Box, Typography, Paper,
+    IconButton, CircularProgress, Chip, Avatar
+} from '@mui/material';
 import { FileText, Trash2, Check, X, Download, Clock, ArrowRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
@@ -47,7 +47,7 @@ export default function AdminFileManagement() {
       const cMap = courseList.reduce((acc, c) => ({ ...acc, [c.id]: c.course_name }), {});
       setCoursesMap(cMap);
 
-      const sMap = studentList.reduce((acc, s) => ({ ...acc, [s.student_id]: s.full_name }), {});
+      const sMap = studentList.reduce((acc, s) => ({ ...acc, [s.id]: s.full_name }), {});
       setStudentsMap(sMap);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -69,9 +69,9 @@ export default function AdminFileManagement() {
 
   const getStatusComponent = (status) => {
     switch (status) {
-      case 'approved': return <Badge className="bg-green-100 text-green-800"><Check className="w-3 h-3 ml-1" />אושר</Badge>;
-      case 'rejected': return <Badge className="bg-red-100 text-red-800"><X className="w-3 h-3 ml-1" />נדחה</Badge>;
-      default: return <Badge className="bg-amber-100 text-amber-800"><Clock className="w-3 h-3 ml-1" />ממתין</Badge>;
+      case 'approved': return <Chip icon={<Check />} label="אושר" color="success" size="small" />;
+      case 'rejected': return <Chip icon={<X />} label="נדחה" color="error" size="small" />;
+      default: return <Chip icon={<Clock />} label="ממתין" color="warning" size="small" />;
     }
   };
 
@@ -82,114 +82,74 @@ export default function AdminFileManagement() {
   };
 
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
-      <style>{`
-        .table-row-hover:hover {
-          background-color: #64748b !important;
-          color: white !important;
-        }
-        .table-row-hover:hover * {
-          color: white !important;
-        }
-      `}</style>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <Link to={createPageUrl("AdminPanel")}>
-            <Button variant="outline" className="hover:bg-slate-100 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700">
-              <ArrowRight className="w-4 h-4 ml-2" />
-              חזרה לפאנל הניהול
-            </Button>
-          </Link>
-        </div>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
+        חזרה לפאנל הניהול
+      </Button>
 
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">ניהול קבצים</h1>
-            </div>
-            <p className="text-slate-500 dark:text-slate-400">צפייה וניהול של כל הקבצים שהועלו למערכת</p>
-          </div>
-          <div>
-             <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
-                    <SelectValue placeholder="סנן לפי סטטוס" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                    <SelectItem value="all">כל הסטטוסים</SelectItem>
-                    <SelectItem value="pending">ממתין</SelectItem>
-                    <SelectItem value="approved">מאושר</SelectItem>
-                    <SelectItem value="rejected">נדחה</SelectItem>
-                </SelectContent>
-            </Select>
-          </div>
-        </div>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><FileText /></Avatar>
+            <Typography variant="h4" fontWeight="bold">ניהול קבצים</Typography>
+          </Box>
+          <Typography color="text.secondary">צפייה וניהול של כל הקבצים שהועלו למערכת</Typography>
+        </Box>
+        <FormControl sx={{ minWidth: 160 }}>
+          <InputLabel id="status-filter-label">סנן לפי סטטוס</InputLabel>
+          <Select
+            labelId="status-filter-label"
+            value={statusFilter}
+            label="סנן לפי סטטוס"
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <MenuItem value="all">כל הסטטוסים</MenuItem>
+            <MenuItem value="pending">ממתין</MenuItem>
+            <MenuItem value="approved">מאושר</MenuItem>
+            <MenuItem value="rejected">נדחה</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
 
-        <Card className="border-0 shadow-lg bg-white dark:bg-slate-800 overflow-hidden">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div>
-                <p className="mt-4 text-slate-500">טוען קבצים...</p>
-              </div>
-            ) : (
-              <div className="max-h-96 overflow-y-auto">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10">
-                    <TableRow className="hover:bg-[#ebeced]" style={{backgroundColor: '#ebeced'}}>
-                      <TableHead className="text-right text-black">שם קובץ</TableHead>
-                      <TableHead className="text-right text-black">תיאור קצר</TableHead>
-                      <TableHead className="text-right text-black">קורס</TableHead>
-                      <TableHead className="text-right text-black">סוג קובץ</TableHead>
-                      <TableHead className="text-right text-black">תאריך העלאה</TableHead>
-                      <TableHead className="text-right text-black">מעלה הקובץ</TableHead>
-                      <TableHead className="text-right text-black">כמות הורדות</TableHead>
-                      <TableHead className="text-right text-black">סטטוס</TableHead>
-                      <TableHead className="text-right text-black">פעולות</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredFiles.length > 0 ? (
-                      filteredFiles.map((file) => (
-                        <TableRow key={file.id} className="table-row-hover">
-                          <TableCell className="font-medium text-right">{file.title}</TableCell>
-                          <TableCell className="text-right">{file.description}</TableCell>
-                          <TableCell className="text-right">{coursesMap[file.course_id] || 'לא ידוע'}</TableCell>
-                          <TableCell className="text-right">{getFileExtension(file.file_url)}</TableCell>
-                          <TableCell className="text-right">{format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
-                          <TableCell className="text-right">{studentsMap[file.uploader_id] || 'לא ידוע'}</TableCell>
-                          <TableCell className="text-right">{file.download_count}</TableCell>
-                          <TableCell className="text-right">{getStatusComponent(file.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex gap-2 justify-end">
-                               <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                                <Button variant="outline" size="icon">
-                                  <Download className="w-4 h-4" />
-                                </Button>
-                              </a>
-                               <Button variant="destructive" size="icon" onClick={() => handleDelete(file.id)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-slate-500">
-                          אין קבצים במערכת
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      <Paper elevation={2}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>שם קובץ</TableCell>
+                <TableCell>קורס</TableCell>
+                <TableCell>סוג</TableCell>
+                <TableCell>תאריך העלאה</TableCell>
+                <TableCell>מעלה הקובץ</TableCell>
+                <TableCell>הורדות</TableCell>
+                <TableCell>סטטוס</TableCell>
+                <TableCell align="left">פעולות</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center"><CircularProgress /></TableCell>
+                </TableRow>
+              ) : filteredFiles.map((file) => (
+                <TableRow key={file.id} hover>
+                  <TableCell>{file.title}</TableCell>
+                  <TableCell>{coursesMap[file.course_id] || 'לא ידוע'}</TableCell>
+                  <TableCell>{getFileExtension(file.file_url)}</TableCell>
+                  <TableCell>{format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                  <TableCell>{studentsMap[file.uploader_id] || 'לא ידוע'}</TableCell>
+                  <TableCell>{file.download_count}</TableCell>
+                  <TableCell>{getStatusComponent(file.status)}</TableCell>
+                  <TableCell align="left">
+                    <IconButton component="a" href={file.file_url} target="_blank" rel="noopener noreferrer"><Download /></IconButton>
+                    <IconButton onClick={() => handleDelete(file.id)} color="error"><Trash2 /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Box>
   );
 }

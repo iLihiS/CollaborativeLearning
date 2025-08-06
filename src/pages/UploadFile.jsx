@@ -1,21 +1,12 @@
 
 import { useState, useEffect, useRef } from "react";
-import { User } from "@/api/entities";
-import { Course } from "@/api/entities";
-import { File } from "@/api/entities";
-import { Student } from "@/api/entities";
-import { Lecturer } from "@/api/entities";
+import { User, Course, File, Student, Lecturer } from "@/api/entities";
 import { UploadFile as UploadFileIntegration } from "@/api/integrations";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, CheckCircle, AlertCircle, X, ChevronsUpDown, Check } from "lucide-react";
+import {
+    Card, CardContent, Button, TextField, Select, MenuItem, InputLabel, FormControl,
+    Box, Typography, CircularProgress, Alert, Autocomplete, Avatar, IconButton
+} from '@mui/material';
+import { Upload, CheckCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -35,7 +26,6 @@ export default function UploadFilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [courseComboboxOpen, setCourseComboboxOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
@@ -192,241 +182,113 @@ export default function UploadFilePage() {
 
   if (success) {
     return (
-      <div className="p-4 lg:p-8 bg-slate-50 min-h-screen flex items-center justify-center" dir="rtl">
-        <div className="max-w-md w-full">
-          <Card className="border-0 shadow-lg text-center">
-            <CardContent className="p-12">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                הקובץ הועלה בהצלחה!
-              </h2>
-              <p className="text-slate-600 mb-6">
-                {user?.current_role === 'lecturer' 
-                  ? "הקובץ שלך אושר אוטומטיות וזמין כעת לכלל הסטודנטים."
-                  : (
-                    <>
-                      הקובץ שלך הוגש לאישור המרצה.
-                      <br />
-                      תקבל התראה ברגע שהוא ייבדק.
-                    </>
-                  )
-                }
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(createPageUrl("MyFiles"))}
-                  className="text-lime-700 hover:bg-lime-50 hover:text-lime-800 hover:border-lime-400"
-                >
-                  צפייה בקבצים שלי
-                </Button>
-                <Button
-                  onClick={() => {
-                    setSuccess(false);
-                    setFormData({ title: "", description: "", file_type: "", course_id: "", file: null });
-                  }}
-                  className="bg-lime-500 hover:bg-lime-600 text-white"
-                >
-                  העלאת קובץ נוסף
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <Box sx={{ p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <Card sx={{ maxWidth: 400, textAlign: 'center' }}>
+          <CardContent sx={{ p: 4 }}>
+            <Avatar sx={{ bgcolor: 'success.light', color: 'success.dark', width: 64, height: 64, mx: 'auto', mb: 2 }}>
+              <CheckCircle sx={{ fontSize: 40 }} />
+            </Avatar>
+            <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>הקובץ הועלה בהצלחה!</Typography>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              {user?.current_role === 'lecturer' ? "הקובץ שלך אושר אוטומטיות וזמין כעת לכלל הסטודנטים." : "הקובץ שלך הוגש לאישור המרצה. תקבל התראה ברגע שהוא ייבדק."}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+              <Button variant="outlined" onClick={() => navigate(createPageUrl("MyFiles"))}>צפייה בקבצים שלי</Button>
+              <Button variant="contained" onClick={() => {
+                setSuccess(false);
+                setFormData({ title: "", description: "", file_type: "", course_id: "", file: null });
+              }}>העלאת קובץ נוסף</Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
     );
   }
 
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 dark:bg-slate-900 min-h-screen" dir="rtl">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-              <Upload className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">העלאת קובץ חדש</h1>
-          </div>
-          <p className="text-slate-500 dark:text-slate-600 mt-3">שתפו חומרי לימוד עם סטודנטים אחרים</p>
-        </div>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+          <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 48, height: 48 }}>
+            <Upload />
+          </Avatar>
+          <Typography variant="h4" fontWeight="bold">העלאת קובץ חדש</Typography>
+        </Box>
+        <Typography color="text.secondary" sx={{ mb: 3 }}>שתפו חומרי לימוד עם סטודנטים אחרים</Typography>
 
-        <Card className="border-0 shadow-lg bg-white dark:bg-slate-800">
-          <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-700">
-                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
-                  <AlertDescription className="text-red-700 dark:text-red-300">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="font-semibold text-slate-800 dark:text-white">כותרת הקובץ</Label>
-                  <Input
-                    id="title"
-                    type="text"
-                    placeholder="הכנס כותרת לקובץ"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange("title", e.target.value)}
-                    className={`h-11 bg-white dark:bg-slate-700 border ${validationErrors.title ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}
+        <Card elevation={2}>
+          <CardContent sx={{ p: 3 }}>
+            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {error && <Alert severity="error">{error}</Alert>}
+              <TextField
+                label="כותרת הקובץ"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                error={!!validationErrors.title}
+                helperText={validationErrors.title}
+                required fullWidth
+              />
+              <Autocomplete
+                options={courses}
+                getOptionLabel={(option) => `${option.course_code} - ${option.course_name}`}
+                value={courses.find(c => c.id === formData.course_id) || null}
+                onChange={(event, newValue) => {
+                  handleInputChange("course_id", newValue ? newValue.id : "");
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="שיוך לקורס"
+                    error={!!validationErrors.course_id}
+                    helperText={validationErrors.course_id}
+                    required
                   />
-                  {validationErrors.title && (
-                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.title}</p>
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="course_id" className="font-semibold text-slate-800 dark:text-white">שיוך לקורס</Label>
-                  <Popover open={courseComboboxOpen} onOpenChange={setCourseComboboxOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={courseComboboxOpen}
-                        className={`w-full justify-between h-11 font-normal bg-white dark:bg-slate-700 border ${validationErrors.course_id ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}
-                      >
-                        <span className={`truncate ${!formData.course_id ? 'text-slate-500' : 'text-slate-900'}`}>
-                          {formData.course_id
-                            ? courses.find((course) => course.id === formData.course_id)?.course_name
-                            : "בחר קורס..."}
-                        </span>
-                        <ChevronsUpDown className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" dir="rtl">
-                      <Command>
-                        <CommandInput placeholder="חיפוש קורס..." />
-                        <CommandEmpty>לא נמצא קורס.</CommandEmpty>
-                        <CommandGroup>
-                          {courses.map((course) => (
-                            <CommandItem
-                              key={course.id}
-                              value={`${course.course_code} - ${course.course_name}`}
-                              onSelect={() => {
-                                handleInputChange("course_id", course.id);
-                                setCourseComboboxOpen(false);
-                              }}
-                              className="justify-between"
-                            >
-                              {course.course_code} - {course.course_name}
-                              <Check
-                                className={`ml-2 h-4 w-4 ${formData.course_id === course.id ? "opacity-100" : "opacity-0"}`}
-                              />
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  {validationErrors.course_id && (
-                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.course_id}</p>
-                  )}
-                </div>
-
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="description" className="font-semibold text-slate-800 dark:text-white">תיאור (עד 200 תווים)</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="תיאור קצר של תוכן הקובץ..."
-                    value={formData.description}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
-                    maxLength={200}
-                    rows={4}
-                    className={`resize-none bg-white dark:bg-slate-700 border ${validationErrors.description ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}
-                  />
-                  <p className="text-xs text-slate-500 dark:text-slate-600 text-right">{formData.description.length}/200</p>
-                  {validationErrors.description && (
-                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.description}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="file_type" className="font-semibold text-slate-800 dark:text-white">סוג הקובץ</Label>
-                  <Select 
-                    value={formData.file_type} 
-                    onValueChange={(value) => handleInputChange("file_type", value)}
-                  >
-                    <SelectTrigger id="file_type" className={`h-11 justify-end gap-2 bg-white dark:bg-slate-700 border ${validationErrors.file_type ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white data-[placeholder]:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}>
-                      <SelectValue placeholder="בחר סוג" />
-                    </SelectTrigger>
-                    <SelectContent dir="rtl">
-                      {fileTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {validationErrors.file_type && (
-                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.file_type}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="file-upload" className="font-semibold text-slate-800 dark:text-white">בחירת קובץ</Label>
-                   <Input
-                      id="file-upload"
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".pdf,.docx,.png,.jpg,.jpeg"
-                      onChange={handleFileChange}
-                      className={`hidden ${validationErrors.file ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}`}
-                    />
-                  {formData.file ? (
-                    <div className="flex items-center justify-between p-2 pl-3 border-2 border-lime-300 dark:border-lime-400 bg-lime-50 dark:bg-lime-50/50 rounded-lg h-11">
-                      <span className="text-sm text-slate-700 dark:text-slate-800 font-medium truncate" dir="ltr">
-                        {formData.file.name}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleRemoveFile}
-                        className="h-8 w-8 text-red-500 hover:bg-red-100 dark:hover:bg-red-200/50 rounded-full"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <Label
-                        htmlFor="file-upload"
-                        className={`h-11 cursor-pointer border ${validationErrors.file ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} hover:border-lime-300 dark:hover:border-lime-500 focus-within:ring-2 focus-within:ring-lime-500 focus-within:ring-offset-2 transition-colors rounded-lg flex items-center p-0 bg-white dark:bg-slate-700`}
-                        dir="rtl"
-                    >
-                        <div className="bg-lime-500 hover:bg-lime-600 text-white rounded-r-md px-4 text-sm font-medium h-full flex items-center">
-                            בחר קובץ
-                        </div>
-                        <span className="px-3 text-sm text-slate-500 flex-1">
-                            לא נבחר קובץ
-                        </span>
-                    </Label>
-                  )}
-                  <p className="text-xs text-slate-500 dark:text-slate-600 text-right">רק קבצי PDF, DOCX, PNG, JPG מותרים.</p>
-                  {validationErrors.file && (
-                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.file}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="pt-4 flex justify-start">
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-lime-500 hover:bg-lime-600 text-white font-semibold px-8 py-2 h-auto"
+                )}
+              />
+              <TextField
+                label="תיאור (עד 200 תווים)"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                error={!!validationErrors.description}
+                helperText={validationErrors.description}
+                required multiline rows={4} fullWidth
+                inputProps={{ maxLength: 200 }}
+              />
+              <FormControl fullWidth error={!!validationErrors.file_type}>
+                <InputLabel id="file-type-label">סוג הקובץ</InputLabel>
+                <Select
+                  labelId="file-type-label"
+                  value={formData.file_type}
+                  label="סוג הקובץ"
+                  onChange={(e) => handleInputChange("file_type", e.target.value)}
+                  required
                 >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin ml-2" />
-                      מעלה...
-                    </>
-                  ) : "העלאת הקובץ"}
+                  {fileTypes.map((type) => (
+                    <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+                  ))}
+                </Select>
+                {validationErrors.file_type && <Typography color="error" variant="caption">{validationErrors.file_type}</Typography>}
+              </FormControl>
+              <Box>
+                <Button variant="contained" component="label">
+                  בחר קובץ
+                  <input type="file" hidden accept=".pdf,.docx,.png,.jpg,.jpeg" ref={fileInputRef} onChange={handleFileChange} />
                 </Button>
-              </div>
-            </form>
+                {formData.file && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <Typography>{formData.file.name}</Typography>
+                    <IconButton onClick={handleRemoveFile}><X /></IconButton>
+                  </Box>
+                )}
+                {validationErrors.file && <Typography color="error" variant="caption">{validationErrors.file}</Typography>}
+              </Box>
+              <Button type="submit" variant="contained" disabled={loading} startIcon={loading ? <CircularProgress size={20} /> : <Upload />}>
+                {loading ? 'מעלה...' : 'העלאת הקובץ'}
+              </Button>
+            </Box>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

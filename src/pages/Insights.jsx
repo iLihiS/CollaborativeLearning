@@ -1,16 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
-import { File } from '@/api/entities';
-import { Course } from '@/api/entities';
-import { Student } from '@/api/entities';
-import { User } from '@/api/entities';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Star, Download, BookOpen, FileText, Crown, Award } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { File, Course, Student, User } from '@/api/entities';
+import {
+    Card, CardContent, CardHeader, Typography, Box, Paper,
+    CircularProgress, Chip, Avatar, List, ListItem, ListItemAvatar,
+    ListItemText, Button
+} from '@mui/material';
+import { TrendingUp, Download, FileText, Crown } from 'lucide-react';
 
 const fileTypeToHebrew = {
-  note: "הרצאות וסיכומים",
+  note: "סיכומים",
   exam: "מבחני תרגול",
   formulas: "דף נוסחאות",
   assignment: "מטלות",
@@ -21,7 +20,6 @@ export default function Insights() {
   const [popularFiles, setPopularFiles] = useState([]);
   const [popularCourses, setPopularCourses] = useState([]);
   const [topStudents, setTopStudents] = useState([]);
-  const [currentUserStats, setCurrentUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,15 +82,7 @@ export default function Insights() {
       // Current user stats
       const currentStudent = allStudents.find(s => s.email === currentUser.email);
       if(currentStudent) {
-          const count = uploadCounts[currentStudent.student_id] || 0;
-          const rank = sortedStudentIds.indexOf(currentStudent.student_id) + 1;
-          const uploadsToFirst = topStudentsData.length > 0 ? (topStudentsData[0].count - count) : 0;
-          
-          setCurrentUserStats({
-              studentId: currentStudent.student_id,
-              isTopThree: rank > 0 && rank <= 3,
-              uploadsToFirst: uploadsToFirst > 0 ? uploadsToFirst : 0,
-          });
+          // const count = uploadCounts[currentStudent.student_id] || 0;
       }
 
     } catch (error) {
@@ -110,240 +100,98 @@ export default function Insights() {
     loadInsights();
   };
 
-  const LoadingTable = () => (
-    <div className="space-y-3">
+  const LoadingList = () => (
+    <List>
       {Array(5).fill(0).map((_, i) => (
-        <div key={i} className="flex justify-between items-center p-4 rounded-lg bg-slate-50 animate-pulse">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-200 rounded-full"></div>
-            <div className="space-y-1">
-              <div className="h-4 w-32 bg-slate-200 rounded"></div>
-              <div className="h-3 w-20 bg-slate-200 rounded"></div>
-            </div>
-          </div>
-          <div className="w-12 h-6 bg-slate-200 rounded-full"></div>
-        </div>
+        <ListItem key={i}>
+          <ListItemAvatar><CircularProgress size={24} /></ListItemAvatar>
+          <ListItemText primary={<Box sx={{ height: 20, bgcolor: 'grey.300', borderRadius: 1 }} />} />
+        </ListItem>
       ))}
-    </div>
+    </List>
   );
 
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
-      <style>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(100%) skewX(-15deg);
-          }
-          100% {
-            transform: translateX(-100%) skewX(-15deg);
-          }
-        }
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+        <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><TrendingUp /></Avatar>
+        <Box>
+          <Typography variant="h4" fontWeight="bold">תובנות המערכת</Typography>
+          <Typography color="text.secondary">גלה את החומרים והקורסים הפופולריים ביותר</Typography>
+        </Box>
+      </Box>
 
-        .shimmer-effect::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          transform: translateX(100%) skewX(-15deg);
-          background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
-          animation: shimmer 3s infinite linear;
-          z-index: 1;
-        }
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
+        <Card elevation={2}>
+          <CardHeader titleTypographyProps={{ variant: 'h6' }} title="הקבצים הפופולריים ביותר" />
+          <CardContent>
+            {loading ? <LoadingList /> : (
+              <List>
+                {popularFiles.map((file, index) => (
+                  <ListItem key={file.id} secondaryAction={
+                    <Button variant="contained" size="small" startIcon={<Download />} onClick={() => handleDownload(file)}>
+                      {file.download_count || 0}
+                    </Button>
+                  }>
+                    <ListItemAvatar><Avatar>{index + 1}</Avatar></ListItemAvatar>
+                    <ListItemText primary={file.title} secondary={fileTypeToHebrew[file.file_type] || file.file_type} />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </CardContent>
+        </Card>
 
-        .shimmer-effect > * {
-          position: relative;
-          z-index: 2;
-        }
-      `}</style>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-gray-200">תובנות המערכת</h1>
-          </div>
-          <p className="text-slate-600 dark:text-slate-300 mt-2">גלה את החומרים והקורסים הפופולריים ביותר</p>
-        </div>
+        <Card elevation={2}>
+          <CardHeader titleTypographyProps={{ variant: 'h6' }} title="הקורסים הפעילים ביותר" />
+          <CardContent>
+            {loading ? <LoadingList /> : (
+              <List>
+                {popularCourses.map((course, index) => (
+                  <ListItem key={course.id} secondaryAction={
+                    <Chip icon={<FileText />} label={course.fileCount} />
+                  }>
+                    <ListItemAvatar><Avatar>{index + 1}</Avatar></ListItemAvatar>
+                    <ListItemText primary={course.course_name} secondary={course.course_code} />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Popular Files */}
-          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800 flex flex-col">
-            <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-700/50 rounded-t-lg py-3">
-              <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100 text-lg">
-                <div className="w-7 h-7 bg-lime-100 rounded-lg flex items-center justify-center">
-                  <Star className="w-4 h-4 text-lime-600" />
-                </div>
-                הקבצים הפופולריים ביותר
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 flex-grow h-96 overflow-y-auto">
-              {loading ? <LoadingTable /> : (
-                <div className="space-y-2">
-                  {popularFiles.length > 0 ? popularFiles.map((file, index) => (
-                    <div key={file.id} className="flex justify-between items-center p-3 rounded-lg border border-slate-100 hover:bg-lime-50/50 hover:border-lime-200 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:border-lime-800 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 bg-lime-100 dark:bg-slate-600 rounded-full text-lime-700 dark:text-lime-300 font-bold text-sm">
-                          #{index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-900 dark:text-slate-200 text-sm leading-tight">{file.title}</p>
-                          <Badge variant="secondary" className="mt-1 text-xs dark:bg-slate-600 dark:text-slate-300">{fileTypeToHebrew[file.file_type] || file.file_type}</Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <button
-                          onClick={() => handleDownload(file)}
-                          className="flex items-center gap-2 bg-lime-700 hover:bg-lime-800 text-white px-3 py-1.5 rounded-full transition-all duration-200 font-semibold text-sm"
-                        >
-                          <Download className="w-3 h-3" />
-                          <span>{file.download_count || 0}</span>
-                        </button>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="text-center py-6">
-                      <Star className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">אין עדיין קבצים פופולריים</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Popular Courses */}
-          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800 flex flex-col">
-            <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-700/50 rounded-t-lg py-3">
-              <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100 text-lg">
-                <div className="w-7 h-7 bg-lime-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-lime-600" />
-                </div>
-                הקורסים הפעילים ביותר
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 flex-grow h-96 overflow-y-auto">
-              {loading ? <LoadingTable /> : (
-                <div className="space-y-2">
-                  {popularCourses.length > 0 ? popularCourses.map((course, index) => (
-                    <div key={course.id} className="flex justify-between items-center p-3 rounded-lg border border-slate-100 hover:bg-lime-50/50 hover:border-lime-200 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:border-lime-800 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-7 h-7 bg-lime-100 dark:bg-slate-600 rounded-full text-lime-700 dark:text-lime-300 font-bold text-sm">
-                          #{index + 1}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="w-4 h-4 text-lime-500" />
-                          <div>
-                            <p className="font-medium text-slate-900 dark:text-slate-200 text-sm leading-tight">{course.course_name}</p>
-                            <Badge variant="outline" className="mt-1 text-xs font-mono dark:border-slate-600 dark:text-slate-300">{course.course_code}</Badge>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-700 px-2 py-1 rounded-full">
-                        <FileText className="w-3 h-3 text-lime-500" />
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{course.fileCount}</span>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="text-center py-6">
-                      <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                      <p className="text-slate-500 dark:text-slate-400 text-sm">אין עדיין קורסים פעילים</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-           {/* Top Students Podium */}
-          <Card className="lg:col-span-2 border-0 shadow-lg bg-white dark:bg-slate-800">
-            <CardHeader className="py-3">
-              <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100 text-lg">
-                <div className="w-7 h-7 bg-lime-100 rounded-lg flex items-center justify-center">
-                  <Award className="w-4 h-4 text-lime-600" />
-                </div>
-                הסטודנטים המשתפים ביותר
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              {loading ? (
-                <div className="h-44 flex justify-center items-center">
-                  <p className="dark:text-slate-300">טוען נתונים...</p>
-                </div>
-              ) : (
-                <div className="flex flex-col lg:flex-row justify-around items-center lg:items-end gap-4 h-auto lg:h-44">
-                  {/* 2nd Place */}
-                  <div className="flex flex-col items-center w-full lg:w-1/3 order-2 lg:order-1">
-                    <p className="font-bold text-sm text-lime-700 dark:text-lime-300 mb-1">מקום 2</p>
-                    <div className={`w-full bg-lime-300 dark:bg-lime-800/50 h-24 rounded-lg flex flex-col justify-center items-center text-center p-2 relative ${topStudents[1]?.id === currentUserStats?.studentId ? 'fireworks-bg' : ''}`}>
-                      {topStudents[1] ? (
-                        <>
-                          <p className="font-bold text-lime-800 dark:text-lime-200 text-xs">{topStudents[1].name}</p>
-                          <p className="text-xs text-lime-700 dark:text-lime-300">{topStudents[1].count} קבצים</p>
-                        </>
-                      ) : (
-                        <p className="text-xs text-lime-600 dark:text-lime-400">המקום עדיין פנוי!</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 1st Place */}
-                  <div className="flex flex-col items-center w-full lg:w-1/3 order-1 lg:order-2">
-                    <Crown className="w-6 h-6 text-lime-500 mb-1" />
-                    <div className={`w-full bg-lime-500 dark:bg-lime-600 h-32 rounded-lg flex flex-col justify-center items-center text-center p-2 shadow-lg relative ${topStudents[0]?.id === currentUserStats?.studentId ? 'fireworks-bg' : ''}`}>
-                       {topStudents[0] ? (
-                        <>
-                          <p className="font-bold text-white text-sm">{topStudents[0].name}</p>
-                          <p className="text-xs text-lime-100">{topStudents[0].count} קבצים</p>
-                        </>
-                      ) : (
-                        <p className="text-sm font-bold text-white">המקום הראשון מחכה!</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 3rd Place */}
-                  <div className="flex flex-col items-center w-full lg:w-1/3 order-3 lg:order-3">
-                    <p className="font-bold text-sm text-lime-600 dark:text-lime-400 mb-1">מקום 3</p>
-                    <div className={`w-full bg-lime-200 dark:bg-lime-900/60 h-20 rounded-lg flex flex-col justify-center items-center text-center p-2 relative ${topStudents[2]?.id === currentUserStats?.studentId ? 'fireworks-bg' : ''}`}>
-                       {topStudents[2] ? (
-                        <>
-                          <p className="font-bold text-lime-800 dark:text-lime-300 text-xs">{topStudents[2].name}</p>
-                          <p className="text-xs text-lime-700 dark:text-lime-400">{topStudents[2].count} קבצים</p>
-                        </>
-                      ) : (
-                         <p className="text-xs text-lime-700 dark:text-lime-500">המקום עדיין פנוי!</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-        </div>
-        
-        {topStudents.length === 0 && !loading && (
-             <div className="mt-4 text-white bg-lime-300 dark:bg-lime-400/90 p-3 rounded-lg border border-lime-200 dark:border-lime-300 text-center shimmer-effect relative overflow-hidden">
-                המקומות על הפודיום עדיין לא נתפסו, <span className="font-bold text-green-900 dark:text-green-950">מהרו לתפוס!</span>
-            </div>
-        )}
-
-        {currentUserStats && !currentUserStats.isTopThree && currentUserStats.uploadsToFirst > 0 && !loading && (
-            <div className="mt-4 text-white bg-lime-700 p-3 rounded-lg text-center">
-                את/ה במרחק של <span className="font-bold text-lime-100">{currentUserStats.uploadsToFirst}</span> קבצים בלבד מהמקום הראשון. המשיכו כך!
-            </div>
-        )}
-        
-        {currentUserStats && currentUserStats.isTopThree && !loading && (
-             <div className="mt-4 text-white bg-slate-800 p-3 rounded-lg border border-slate-700 text-center">
-                <span className="font-bold text-lime-400">כל הכבוד!</span> אתם בראש הטבלה, המשיכו להוביל!
-            </div>
-        )}
-
-      </div>
-    </div>
+        <Card elevation={2} sx={{ gridColumn: { lg: 'span 2' } }}>
+          <CardHeader titleTypographyProps={{ variant: 'h6' }} title="הסטודנטים המשתפים ביותר" />
+          <CardContent>
+            {loading ? <CircularProgress /> : (
+              <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', minHeight: 150 }}>
+                {/* 2nd Place */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6">מקום 2</Typography>
+                  <Paper sx={{ p: 2, bgcolor: 'grey.300', minHeight: 80 }}>
+                    {topStudents[1] ? `${topStudents[1].name} (${topStudents[1].count})` : '-'}
+                  </Paper>
+                </Box>
+                {/* 1st Place */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Crown />
+                  <Typography variant="h5">מקום 1</Typography>
+                  <Paper sx={{ p: 2, bgcolor: 'primary.main', color: 'white', minHeight: 120 }}>
+                    {topStudents[0] ? `${topStudents[0].name} (${topStudents[0].count})` : '-'}
+                  </Paper>
+                </Box>
+                {/* 3rd Place */}
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6">מקום 3</Typography>
+                  <Paper sx={{ p: 2, bgcolor: 'grey.400', minHeight: 60 }}>
+                    {topStudents[2] ? `${topStudents[2].name} (${topStudents[2].count})` : '-'}
+                  </Paper>
+                </Box>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   );
 }

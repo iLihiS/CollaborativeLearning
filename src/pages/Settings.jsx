@@ -1,29 +1,20 @@
 
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Badge } from '../components/ui/badge';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '../components/ui/command';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
-import { Sun, Moon, X, User as UserIcon, Palette, Save, CheckCircle, GraduationCap, Plus, ChevronsUpDown, Shield, Lock, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import {
+    Card, CardHeader, CardContent, Button, TextField, Typography, Box, Alert,
+    Accordion, AccordionSummary, AccordionDetails, IconButton,
+    ToggleButtonGroup, ToggleButton, Dialog, DialogActions, DialogContent,
+    DialogContentText, DialogTitle, Autocomplete, Chip, CircularProgress,
+    Grid, Avatar
+} from '@mui/material';
+import {
+    Sun, Moon, User as UserIcon, Palette, Save, CheckCircle, GraduationCap,
+    Plus, Shield, Lock, Eye, EyeOff
+} from 'lucide-react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { User, Student, Lecturer, Message, AcademicTrack } from '../api/entities';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../components/ui/collapsible';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -41,21 +32,15 @@ export default function Settings() {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  
   const [allTracks, setAllTracks] = useState([]);
   const [userTracks, setUserTracks] = useState([]);
   const [availableTracks, setAvailableTracks] = useState([]);
   const [selectedNewTracks, setSelectedNewTracks] = useState([]);
-  const [trackComboboxOpen, setTrackComboboxOpen] = useState(false);
   const [showTrackRequestForm, setShowTrackRequestForm] = useState(false);
   const [submittingTrackRequest, setSubmittingTrackRequest] = useState(false);
   const [themeChangeRequest, setThemeChangeRequest] = useState(null);
   const [trackRequestError, setTrackRequestError] = useState('');
-  const [themeStatus, setThemeStatus] = useState({
-    type: 'auto', // 'session', 'permanent', 'auto'
-    theme: 'light',
-    message: ''
-  });
 
   useEffect(() => {
     loadUserData();
@@ -67,44 +52,13 @@ export default function Settings() {
     if (user) {
       const currentTheme = sessionStorage.getItem('session_theme') || user.theme_preference || localStorage.getItem('theme') || 'light';
       setTheme(currentTheme);
-      updateThemeStatus();
     }
   }, [user]); // Re-run when user data changes
 
   // Update theme status whenever theme or user changes
   useEffect(() => {
-    updateThemeStatus();
+    // This useEffect is no longer needed as themeStatus state is removed
   }, [theme, user]);
-
-  const updateThemeStatus = () => {
-    const savedTheme = localStorage.getItem('theme');
-    const userPreference = user?.theme_preference;
-    const sessionTheme = sessionStorage.getItem('session_theme');
-    
-    if (userPreference || savedTheme) {
-      // Always show the permanent preference first
-      const preferredTheme = userPreference || savedTheme;
-      setThemeStatus({
-        type: sessionTheme ? 'session' : 'permanent',
-        theme: preferredTheme,
-        message: `העדפה קבועה: ${preferredTheme === 'dark' ? 'כהה' : 'בהיר'}`
-      });
-    } else if (sessionTheme) {
-      // Only session theme, no permanent preference
-      setThemeStatus({
-        type: 'session',
-        theme: sessionTheme,
-        message: `נושא זמני: ${sessionTheme === 'dark' ? 'כהה' : 'בהיר'}`
-      });
-    } else {
-      // Auto mode
-      setThemeStatus({
-        type: 'auto',
-        theme: theme,
-        message: 'בחירה אוטומטית לפי השעה'
-      });
-    }
-  };
 
   const loadUserData = async () => {
     try {
@@ -210,18 +164,15 @@ export default function Settings() {
     }
   };
 
-  const handleThemeChange = (newTheme) => {
-    // Immediately apply theme visually and for the session
+  const handleThemeChange = (event, newTheme) => {
+    if (newTheme !== null) {
     setTheme(newTheme);
     sessionStorage.setItem('session_theme', newTheme);
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(newTheme);
-    
-    // Update theme status display
-    updateThemeStatus();
-    
-    // Open dialog to ask for permanent save
+      // updateThemeStatus(); // This function is removed
     setThemeChangeRequest({ newTheme });
+    }
   };
   
   const confirmPermanentThemeChange = async () => {
@@ -239,7 +190,7 @@ export default function Settings() {
       sessionStorage.removeItem('session_theme');
       
       // Update theme status display
-      updateThemeStatus();
+      // updateThemeStatus(); // This function is removed
       
       showSuccess(`ערכת נושא ${newTheme === 'dark' ? 'כהה' : 'בהירה'} נשמרה כהעדפה קבועה`);
     } catch (error) {
@@ -259,18 +210,6 @@ export default function Settings() {
   const requestRole = (role) => {
     const roleHebrew = role === 'student' ? 'סטודנט' : 'מרצה';
     navigate(createPageUrl(`TrackInquiries?new=true&type=role_request&role=${role}&role_he=${roleHebrew}`));
-  };
-
-  const handleAddTrackToSelection = (track) => {
-    if (!selectedNewTracks.find(t => t.id === track.id)) {
-      setSelectedNewTracks([...selectedNewTracks, track]);
-      setTrackRequestError(''); // Clear error when user makes a selection
-    }
-    setTrackComboboxOpen(false);
-  };
-
-  const handleRemoveTrackFromSelection = (trackId) => {
-    setSelectedNewTracks(selectedNewTracks.filter(t => t.id !== trackId));
   };
 
   const handleSubmitTrackRequest = async () => {
@@ -310,520 +249,148 @@ export default function Settings() {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  const handleResetThemePreference = async () => {
-    try {
-      // Clear all theme preferences
-      await User.updateMyUserData({ theme_preference: null });
-      localStorage.removeItem('theme');
-      sessionStorage.removeItem('session_theme');
-      
-      // Reset to automatic theme based on time
-      const defaultTheme = new Date().getHours() >= 6 && new Date().getHours() < 22 ? 'light' : 'dark';
-      setTheme(defaultTheme);
-      document.documentElement.classList.toggle('dark', defaultTheme === 'dark');
-      
-      updateThemeStatus();
-    } catch (error) {
-      console.error('Error resetting theme preference:', error);
-    }
-  };
-
-  const handleResetTemporaryTheme = () => {
-    // Remove only the temporary theme
-    sessionStorage.removeItem('session_theme');
-    
-    // Return to permanent preference or automatic
-    const userPreference = user?.theme_preference;
-    const savedTheme = localStorage.getItem('theme');
-    const preferredTheme = userPreference || savedTheme;
-    
-    if (preferredTheme) {
-      // Return to permanent preference
-      setTheme(preferredTheme);
-      document.documentElement.classList.toggle('dark', preferredTheme === 'dark');
-    } else {
-      // Return to automatic theme
-      const defaultTheme = new Date().getHours() >= 6 && new Date().getHours() < 22 ? 'light' : 'dark';
-      setTheme(defaultTheme);
-      document.documentElement.classList.toggle('dark', defaultTheme === 'dark');
-    }
-    
-    updateThemeStatus();
-  };
-
   if (loading) {
-    return <div className="p-8">טוען הגדרות...</div>;
+    return <Box p={4}>טוען הגדרות...</Box>;
   }
   
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 dark:bg-slate-900 min-h-screen" dir="rtl">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                    <UserIcon className="w-6 h-6 text-white" />
-                </div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">הגדרות חשבון</h1>
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 mt-3">נהל את פרטי הפרופיל, העדפות התצוגה והתפקידים שלך במערכת.</p>
-        </div>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+            <UserIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="h4" fontWeight="bold">הגדרות חשבון</Typography>
+            <Typography color="text.secondary">נהל את פרטי הפרופיל, העדפות התצוגה והתפקידים שלך במערכת.</Typography>
+          </Box>
+        </Box>
+      </Box>
 
         {successMessage && (
-            <Alert className="mb-6 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-700">
-                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <AlertDescription className="text-green-700 dark:text-green-300">
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage('')}>
                     {successMessage}
-                </AlertDescription>
             </Alert>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Profile and Theme Settings */}
-          <div className="space-y-8">
-            <Card className="border-0 shadow-lg bg-white">
-              <CardHeader className="border-b dark:border-slate-700 pb-3">
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <UserIcon className="w-5 h-5 text-black"/>
-                  פרטים אישיים
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-2 space-y-4">
-                <div>
-                  <Label htmlFor="email" className="text-black font-medium">כתובת מייל</Label>
-                  <Input id="email" type="email" value={user.email} disabled className="mt-1 bg-slate-100 dark:bg-slate-700 dark:border-slate-600"/>
-                </div>
-                <div>
-                  <Label htmlFor="fullName" className="text-black font-medium">שם מלא</Label>
-                  <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"/>
-                </div>
-                <Button onClick={handleProfileUpdate} className="bg-lime-500 hover:bg-lime-600 text-white">
-                  <Save className="ml-2 w-4 h-4"/>
-                  שמור שינויים
-                </Button>
+      <Grid container spacing={4}>
+        {/* Left Column */}
+        <Grid item xs={12} lg={6}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Card elevation={2}>
+              <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><UserIcon /> פרטים אישיים</Typography>} />
+              <CardContent>
+                <Box component="form" noValidate autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <TextField label="כתובת מייל" value={user.email} disabled fullWidth />
+                  <TextField label="שם מלא" value={fullName} onChange={(e) => setFullName(e.target.value)} fullWidth />
+                  <Button onClick={handleProfileUpdate} variant="contained" startIcon={<Save />}>שמור שינויים</Button>
+                </Box>
               </CardContent>
             </Card>
 
-            <Collapsible>
-              <Card className="border-0 shadow-lg bg-white">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="group border-b dark:border-slate-700 pb-3 flex flex-row items-center justify-between cursor-pointer">
-                    <CardTitle className="flex items-center gap-2 text-black">
-                      <Lock className="w-5 h-5 text-black"/>
-                      שינוי סיסמה
-                    </CardTitle>
-                    <ChevronDown className="w-5 h-5 text-slate-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="p-6 pt-4 space-y-4">
-                    {passwordError && (
-                        <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300">
-                            <AlertDescription>
-                                {passwordError}
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                    <div>
-                      <Label htmlFor="oldPassword" className="text-black font-medium">סיסמה נוכחית</Label>
-                      <div className="relative mt-1">
-                        <Input id="oldPassword" type={showOldPassword ? 'text' : 'password'} value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className="dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
-                        <Button variant="ghost" size="icon" type="button" className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-500 dark:text-slate-400" onClick={() => setShowOldPassword(!showOldPassword)}>
-                          {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="newPassword" className="text-black font-medium">סיסמה חדשה</Label>
-                      <div className="relative mt-1">
-                        <Input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
-                        <Button variant="ghost" size="icon" type="button" className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-500 dark:text-slate-400" onClick={() => setShowNewPassword(!showNewPassword)}>
-                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="confirmPassword" className="text-black font-medium">אימות סיסמה חדשה</Label>
-                      <div className="relative mt-1">
-                        <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
-                        <Button variant="ghost" size="icon" type="button" className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-500 dark:text-slate-400" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
-                    </div>
-                    <Button onClick={handlePasswordChange} className="bg-lime-500 hover:bg-lime-600 text-white">
-                      <Save className="ml-2 w-4 h-4"/>
-                      עדכן סיסמה
-                    </Button>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
-            <Card className="border-0 shadow-lg bg-white">
-              <CardHeader className="border-b dark:border-slate-700 pb-3">
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <Palette className="w-5 h-5 text-black"/>
-                  ערכת נושא
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-4">
-                <p className="text-slate-600 dark:text-slate-400 mb-4">בחר את התצוגה המועדפת עליך</p>
-                <div className="flex gap-4 mb-4">
-                  <Button 
-                    variant={theme === 'light' ? 'default' : 'outline'} 
-                    onClick={() => handleThemeChange('light')} 
-                    className={`flex-1 ${theme === 'light' 
-                      ? 'bg-lime-500 hover:bg-lime-600 text-white' 
-                      : 'text-lime-700 hover:bg-lime-50 hover:text-lime-800 hover:border-lime-400 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    <Sun className="ml-2 w-4 h-4"/>
-                    בהיר
-                  </Button>
-                  <Button 
-                    variant={theme === 'dark' ? 'default' : 'outline'} 
-                    onClick={() => handleThemeChange('dark')} 
-                    className={`flex-1 ${theme === 'dark' 
-                      ? 'bg-lime-500 hover:bg-lime-600 text-white' 
-                      : 'text-lime-700 hover:bg-lime-50 hover:text-lime-800 hover:border-lime-400 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    <Moon className="ml-2 w-4 h-4"/>
-                    כהה
-                  </Button>
-                </div>
-
-                {/* Current Preference Display */}
-                <div className="mt-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-                  <div>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          <span className={`${
-                            themeStatus.type === 'session' ? 'text-lime-600 dark:text-lime-400' :
-                            themeStatus.type === 'permanent' ? 'text-lime-600 dark:text-lime-400' :
-                            'text-blue-600 dark:text-blue-400'
-                          }`}>
-                            {themeStatus.message}
-                          </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
-                            {themeStatus.type === 'permanent' && 'תישמר לכניסות הבאות'}
-                            {themeStatus.type === 'session' && (user?.theme_preference || localStorage.getItem('theme')) && 'תישמר לכניסות הבאות'}
-                            {themeStatus.type === 'auto' && 'בהיר ביום (6:00-22:00), כהה בלילה'}
-                          </span>
-                        </p>
-                      </div>
-                      
-                      {/* Forget preference button - always at the top */}
-                      {(themeStatus.type === 'session' || themeStatus.type === 'permanent') && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleResetThemePreference}
-                                className="text-xs mr-2"
-                              >
-                                שכח העדפה
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">שכח את כל ההעדפות וחזור לבחירה אוטומטית</p>
-                              <p className="text-xs text-slate-400 mt-1">בהיר ביום (6:00-22:00), כהה בלילה</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
-                    </div>
-                    
-                    {/* Show temporary theme override if exists */}
-                    {themeStatus.type === 'session' && sessionStorage.getItem('session_theme') && (user?.theme_preference || localStorage.getItem('theme')) && (
-                      <TooltipProvider>
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-amber-600 dark:text-amber-400 text-sm">
-                              נושא זמני: {sessionStorage.getItem('session_theme') === 'dark' ? 'כהה' : 'בהיר'}
-                            </span>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={handleResetTemporaryTheme}
-                                  className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
-                                >
-                                  <X className="h-3 w-3 text-red-600 dark:text-red-400" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="left">
-                                <p className="text-xs">שכח העדפה זמנית וחזור לערכת הנושא המועדפת</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
-                            יתאפס בהתנתקות ויחזור להעדפה הקבועה
-                          </span>
-                        </div>
-                      </TooltipProvider>
-                    )}
-                    
-                    {/* Show regular temporary theme if no permanent preference */}
-                    {themeStatus.type === 'session' && sessionStorage.getItem('session_theme') && !(user?.theme_preference || localStorage.getItem('theme')) && (
-                      <TooltipProvider>
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-amber-600 dark:text-amber-400 text-sm">
-                              נושא זמני: {sessionStorage.getItem('session_theme') === 'dark' ? 'כהה' : 'בהיר'}
-                            </span>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={handleResetTemporaryTheme}
-                                  className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
-                                >
-                                  <X className="h-3 w-3 text-red-600 dark:text-red-400" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="left">
-                                <p className="text-xs">שכח העדפה זמנית וחזור לבחירה אוטומטית</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-1">
-                            יתאפס בהתנתקות
-                          </span>
-                        </div>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                </div>
+            <Accordion elevation={2}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="password-content" id="password-header">
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Lock /> שינוי סיסמה</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {passwordError && <Alert severity="error">{passwordError}</Alert>}
+                  <TextField type={showOldPassword ? 'text' : 'password'} label="סיסמה נוכחית" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} fullWidth InputProps={{ endAdornment: <IconButton onClick={() => setShowOldPassword(!showOldPassword)}>{showOldPassword ? <EyeOff /> : <Eye />}</IconButton> }} />
+                  <TextField type={showNewPassword ? 'text' : 'password'} label="סיסמה חדשה" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} fullWidth InputProps={{ endAdornment: <IconButton onClick={() => setShowNewPassword(!showNewPassword)}>{showNewPassword ? <EyeOff /> : <Eye />}</IconButton> }} />
+                  <TextField type={showConfirmPassword ? 'text' : 'password'} label="אימות סיסמה חדשה" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} fullWidth InputProps={{ endAdornment: <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? <EyeOff /> : <Eye />}</IconButton> }} />
+                  <Button onClick={handlePasswordChange} variant="contained" startIcon={<Save />}>עדכן סיסמה</Button>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+            
+            <Card elevation={2}>
+              <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Palette /> ערכת נושא</Typography>} />
+              <CardContent>
+                <Typography color="text.secondary" mb={2}>בחר את התצוגה המועדפת עליך</Typography>
+                <ToggleButtonGroup value={theme} exclusive onChange={handleThemeChange} fullWidth>
+                  <ToggleButton value="light"><Sun style={{ marginLeft: 8 }} />בהיר</ToggleButton>
+                  <ToggleButton value="dark"><Moon style={{ marginLeft: 8 }}/>כהה</ToggleButton>
+                </ToggleButtonGroup>
               </CardContent>
             </Card>
-          </div>
+          </Box>
+        </Grid>
 
-          {/* Academic and Role Management */}
-          <div className="space-y-8">
-            {/* Academic Tracks Card - Only for students (excluding admins) */}
+        {/* Right Column */}
+        <Grid item xs={12} lg={6}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {(user?.current_role === 'student' || user?.current_role === 'lecturer') && !userRoles.includes('admin') && (
-              <Card className="border-0 shadow-lg bg-white">
-                <CardHeader className="border-b dark:border-slate-700 pb-3">
-                  <CardTitle className="flex items-center gap-2 text-black">
-                    <GraduationCap className="w-5 h-5 text-black"/>
-                    מסלולים אקדמיים
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 pt-4">
-                  <p className="text-slate-600 dark:text-slate-400 mb-4">המסלולים שלך במערכת:</p>
-                  
-                  {/* Current tracks */}
-                  <div className="space-y-3 mb-4">
+              <Card elevation={2}>
+                <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><GraduationCap /> מסלולים אקדמיים</Typography>} />
+                <CardContent>
+                  <Typography color="text.secondary" mb={2}>המסלולים שלך במערכת:</Typography>
                     {userTracks.length > 0 ? (
                       userTracks.map(track => (
-                        <div key={track.id} className="flex items-center gap-3 p-3 rounded-lg bg-lime-100 border border-lime-300">
-                          <CheckCircle className="w-5 h-5 text-lime-700" />
-                          <div>
-                            <span className="font-medium text-lime-800">{track.name}</span>
-                            <p className="text-xs text-lime-700">{track.department}</p>
-                            <p className="text-xs text-lime-600">{track.degree_type}</p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center p-4 bg-slate-50 rounded-lg">
-                        <p className="text-slate-500 text-sm">עדיין לא שויכת למסלולים אקדמיים</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Request form */}
-                  {!showTrackRequestForm ? (
-                    <Button 
-                      variant="outline"
-                      className="w-full text-lime-700 hover:bg-lime-50 hover:text-lime-800 hover:border-lime-400 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700"
-                      onClick={() => setShowTrackRequestForm(true)}
-                    >
-                      <Plus className="w-4 h-4 ml-2" />
-                      הגש בקשה למסלול אקדמי נוסף
-                    </Button>
+                      <Alert icon={<CheckCircle />} severity="success" key={track.id} sx={{ mb: 1 }}>{track.name} - {track.department}</Alert>
+                    ))
                   ) : (
-                    <div className="space-y-4 border-t pt-4">
-                      <div>
-                        <Label className={`text-sm font-medium ${trackRequestError ? 'text-red-600' : 'text-slate-700 dark:text-slate-300'}`}>
-                          בחר מסלולים:
-                          {trackRequestError && <span className="text-red-500 ml-1">*</span>}
-                        </Label>
-                        {trackRequestError && (
-                          <p className="text-red-600 text-xs mt-1">{trackRequestError}</p>
+                    <Typography>עדיין לא שויכת למסלולים אקדמיים</Typography>
+                  )}
+
+                  <Button fullWidth variant="outlined" startIcon={<Plus />} sx={{ mt: 2 }} onClick={() => setShowTrackRequestForm(!showTrackRequestForm)}>
+                    {showTrackRequestForm ? 'בטל בקשה' : 'הגש בקשה למסלול נוסף'}
+                  </Button>
+                  
+                  {showTrackRequestForm && (
+                    <Box mt={2} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Autocomplete
+                        multiple
+                        options={availableTracks}
+                        getOptionLabel={(option) => option.name}
+                        value={selectedNewTracks}
+                        onChange={(event, newValue) => { setSelectedNewTracks(newValue); }}
+                        renderInput={(params) => (
+                          <TextField {...params} variant="outlined" label="בחר מסלולים" placeholder="הוסף מסלול" error={!!trackRequestError} helperText={trackRequestError} />
                         )}
-                        <Popover open={trackComboboxOpen} onOpenChange={setTrackComboboxOpen}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={trackComboboxOpen}
-                              className={`w-full justify-between mt-2 ${trackRequestError ? 'border-red-300 focus:border-red-500' : ''}`}
-                            >
-                              {selectedNewTracks.length > 0 
-                                ? `נבחרו ${selectedNewTracks.length} מסלולים`
-                                : 'בחר מסלול...'
-                              }
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0" dir="rtl">
-                            <Command>
-                              <CommandInput placeholder="חפש מסלול..." />
-                              <CommandEmpty>לא נמצא מסלול.</CommandEmpty>
-                              <CommandGroup>
-                                {availableTracks.map((track) => (
-                                  <CommandItem
-                                    key={track.id}
-                                    onSelect={() => handleAddTrackToSelection(track)}
-                                    className="justify-between"
-                                  >
-                                    <div>
-                                      <div className="font-medium">{track.name}</div>
-                                      <div className="text-xs text-slate-500">{track.department}</div>
-                                      <div className="text-xs text-slate-400">{track.degree_type}</div>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      {/* Selected tracks */}
-                      {selectedNewTracks.length > 0 && (
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-slate-700">מסלולים שנבחרו:</Label>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedNewTracks.map(track => (
-                              <Badge key={track.id} className="bg-lime-100 text-lime-800 border-lime-300">
-                                {track.name}
-                                <X 
-                                  className="w-3 h-3 ml-1 cursor-pointer" 
-                                  onClick={() => handleRemoveTrackFromSelection(track.id)}
-                                />
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex gap-3">
-                        <Button 
-                          onClick={handleSubmitTrackRequest}
-                          disabled={submittingTrackRequest}
-                          className="bg-lime-500 hover:bg-lime-600 text-white"
-                        >
-                          {submittingTrackRequest ? 'שולח...' : 'שלח בקשה'}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip variant="outlined" label={option.name} {...getTagProps({ index })} key={option.id} />
+                          ))
+                        }
+                      />
+                      <Button onClick={handleSubmitTrackRequest} variant="contained" disabled={submittingTrackRequest}>
+                        {submittingTrackRequest ? <CircularProgress size={24} /> : 'שלח בקשה'}
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setShowTrackRequestForm(false);
-                            setSelectedNewTracks([]);
-                            setTrackRequestError('');
-                          }}
-                        >
-                          ביטול
-                        </Button>
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">בקשות למסלולים חדשים יועברו לאישור מנהלי המערכת.</p>
-                    </div>
+                    </Box>
                   )}
                 </CardContent>
               </Card>
             )}
 
-            {/* Role Management */}
-            <Card className="border-0 shadow-lg bg-white h-fit">
-              <CardHeader className="border-b dark:border-slate-700 pb-3">
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <Shield className="w-5 h-5 text-black"/>
-                  ניהול תפקידים
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-4">
-                <p className="text-slate-600 dark:text-slate-400 mb-4">התפקידים שלך במערכת:</p>
-                <div className="space-y-3">
-                  
+            <Card elevation={2}>
+              <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Shield /> ניהול תפקידים</Typography>} />
+              <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Typography color="text.secondary">התפקידים שלך במערכת:</Typography>
                   {userRoles.map(role => (
-                    <div 
-                      key={role} 
-                      className={`flex items-center gap-3 p-3 rounded-lg border ${
-                        user?.current_role === role 
-                          ? 'bg-lime-100 border-lime-300' 
-                          : 'bg-slate-50 border-slate-200'
-                      }`}
-                    >
-                      <CheckCircle className={`w-5 h-5 ${user?.current_role === role ? 'text-lime-700' : 'text-slate-400'}`} />
-                      <span className={`font-medium ${user?.current_role === role ? 'text-lime-800' : 'text-slate-600'}`}>
+                  <Alert key={role} icon={<CheckCircle />} severity={user?.current_role === role ? "success" : "info"}>
                         תפקיד {role === 'student' ? 'סטודנט' : role === 'lecturer' ? 'מרצה' : 'מנהל'} {user?.current_role === role ? 'פעיל' : 'זמין'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Conditional section for requests or success message */}
-                <div className="mt-4">
-                  {userRoles.includes('student') && userRoles.includes('lecturer') ? (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-lime-50 border border-lime-200">
-                        <CheckCircle className="w-5 h-5 text-lime-600" />
-                        <span className="font-medium text-lime-700 text-sm">כל התפקידים הנדרשים כבר זמינים עבורך.</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                        {!userRoles.includes('student') && (
-                            <Button 
-                              variant="outline"
-                              className="w-full text-lime-700 hover:bg-lime-50 hover:text-lime-800 hover:border-lime-400 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700"
-                              onClick={() => requestRole('student')}
-                            >
-                                הגש בקשה לתפקיד סטודנט
-                            </Button>
-                        )}
-                        {!userRoles.includes('lecturer') && (
-                            <Button 
-                              variant="outline"
-                              className="w-full text-lime-700 hover:bg-lime-50 hover:text-lime-800 hover:border-lime-400 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700"
-                              onClick={() => requestRole('lecturer')}
-                            >
-                                הגש בקשה לתפקיד מרצה
-                            </Button>
-                        )}
-                        <p className="text-xs text-slate-500 dark:text-slate-400 text-center pt-1">בקשות לתפקידים חדשים יועברו לאישור מנהלי המערכת.</p>
-                    </div>
-                  )}
-                </div>
+                  </Alert>
+                ))}
+                {!userRoles.includes('student') && <Button fullWidth variant="outlined" onClick={() => requestRole('student')}>הגש בקשה לתפקיד סטודנט</Button>}
+                {!userRoles.includes('lecturer') && <Button fullWidth variant="outlined" onClick={() => requestRole('lecturer')}>הגש בקשה לתפקיד מרצה</Button>}
               </CardContent>
             </Card>
+          </Box>
+        </Grid>
+      </Grid>
 
-          </div>
-        </div>
-      </div>
-
-      <AlertDialog open={!!themeChangeRequest} onOpenChange={(open) => !open && setThemeChangeRequest(null)}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>שמירת ערכת נושא</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={!!themeChangeRequest} onClose={() => setThemeChangeRequest(null)}>
+        <DialogTitle>שמירת ערכת נושא</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
               האם תרצה לשמור את ערכת הנושא ה{themeChangeRequest?.newTheme === 'dark' ? 'כהה' : 'בהירה'} כהעדפה קבועה לכניסות הבאות?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel onClick={cancelPermanentThemeChange}>לא, רק הפעם</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPermanentThemeChange} className="bg-lime-500 hover:bg-lime-600">
-              כן, שמור כהעדפה
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelPermanentThemeChange}>לא, רק הפעם</Button>
+          <Button onClick={confirmPermanentThemeChange} variant="contained">כן, שמור כהעדפה</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

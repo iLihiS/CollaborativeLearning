@@ -1,11 +1,21 @@
 /* eslint-disable react/prop-types */
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Button,
+  TextField,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  IconButton,
+  InputAdornment,
+  CircularProgress,
+  Box,
+  Divider,
+  Grid,
+} from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { User } from '@/api/entities';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export function LoginForm({ onLoginSuccess, onLoginError }) {
   const [formData, setFormData] = useState({
@@ -37,6 +47,11 @@ export function LoginForm({ onLoginSuccess, onLoginError }) {
     }
   };
 
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   // Demo users for easy access
   const demoUsers = [
     { email: 'student@ono.ac.il', label: 'סטודנט בלבד' },
@@ -52,90 +67,87 @@ export function LoginForm({ onLoginSuccess, onLoginError }) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">התחברות למערכת</CardTitle>
-        <CardDescription>
-          הזן את כתובת המייל והסיסמה שלך כדי להתחבר
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">כתובת מייל</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="example@ono.ac.il"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              dir="ltr"
-              className="text-left"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">סיסמה</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="הזן סיסמה"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                className="pr-10"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute left-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full" 
+    <Card sx={{ maxWidth: 450, margin: 'auto' }}>
+      <CardHeader
+        title={<Typography variant="h5" component="h1" align="center" fontWeight="bold">התחברות למערכת</Typography>}
+        subheader={<Typography variant="body2" align="center">הזן את כתובת המייל והסיסמה שלך כדי להתחבר</Typography>}
+      />
+      <CardContent sx={{ p: 4 }}>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="כתובת מייל"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={formData.email}
+            onChange={handleInputChange}
+            dir="ltr"
+            sx={{ '& .MuiInputBase-input': { textAlign: 'left' } }}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="סיסמה"
+            type={showPassword ? 'text' : 'password'}
+            id="password"
+            autoComplete="current-password"
+            value={formData.password}
+            onChange={handleInputChange}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2, bgcolor: '#84cc16', '&:hover': { bgcolor: '#65a30d' } }}
             disabled={loading || !formData.email || !formData.password}
           >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            התחבר
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'התחבר'}
           </Button>
-        </form>
+        </Box>
 
-        <div className="mt-6 pt-6 border-t">
-          <p className="text-sm text-gray-600 mb-3 text-center">משתמשי דמו לבדיקה:</p>
-          <div className="grid gap-2">
-            {demoUsers.map((user) => (
+        <Divider sx={{ my: 3 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>משתמשי דמו לבדיקה</Typography>
+        </Divider>
+
+        <Grid container spacing={1}>
+          {demoUsers.map((user) => (
+            <Grid item xs={12} key={user.email}>
               <Button
-                key={user.email}
-                variant="outline"
-                size="sm"
-                className="justify-start text-xs"
+                fullWidth
+                variant="outlined"
+                size="small"
                 onClick={() => fillDemoUser(user.email)}
-                type="button"
+                sx={{ justifyContent: 'space-between', textTransform: 'none' }}
               >
-                <span className="font-medium">{user.label}</span>
-                <span className="ml-2 text-gray-500" dir="ltr">{user.email}</span>
+                <Typography component="span" fontWeight="medium">{user.label}</Typography>
+                <Typography component="span" sx={{ color: 'text.secondary', direction: 'ltr' }}>{user.email}</Typography>
               </Button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            סיסמה לכל המשתמשים: 123456
-          </p>
-        </div>
+            </Grid>
+          ))}
+        </Grid>
+        <Typography variant="caption" display="block" align="center" sx={{ mt: 2, color: 'text.secondary' }}>
+          סיסמה לכל המשתמשים: 123456
+        </Typography>
       </CardContent>
     </Card>
   );

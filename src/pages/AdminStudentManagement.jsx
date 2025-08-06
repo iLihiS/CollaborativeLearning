@@ -1,17 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import { Student, AcademicTrack } from '@/api/entities';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+    Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
+    Dialog, DialogContent, DialogTitle, DialogActions, TextField,
+    Checkbox, FormControlLabel, FormGroup, Box, Typography, Paper,
+    IconButton, CircularProgress, Chip, Avatar
+} from '@mui/material';
 import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AdminStudentManagement() {
   const [students, setStudents] = useState([]);
@@ -60,18 +58,14 @@ export default function AdminStudentManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (student) => {
-    handleOpenDialog(student);
-  };
-
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingStudent(null);
   };
 
   const handleFormChange = (e) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleTrackToggle = (trackId) => {
@@ -112,168 +106,101 @@ export default function AdminStudentManagement() {
   };
   
   const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc, track) => {
-    if(track) acc[track.id] = track.name;
+    if (track) acc[track.id] = track.name;
     return acc;
   }, {});
 
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
-      <style>{`
-        .table-row-hover:hover {
-          background-color: #64748b !important;
-          color: white !important;
-        }
-        .table-row-hover:hover * {
-          color: white !important;
-        }
-      `}</style>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <Link to={createPageUrl("AdminPanel")}>
-            <Button variant="outline" className="hover:bg-slate-100 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700">
-              <ArrowRight className="w-4 h-4 ml-2" />
-              חזרה לפאנל הניהול
-            </Button>
-          </Link>
-        </div>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
+        חזרה לפאנל הניהול
+      </Button>
 
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">ניהול סטודנטים</h1>
-            </div>
-            <p className="text-slate-500 dark:text-slate-400">הוספה, עריכה ומחיקה של סטודנטים רשומים</p>
-          </div>
-          <div>
-            <Button onClick={() => handleOpenDialog()} className="bg-lime-500 hover:bg-lime-600 text-white">
-              <Plus className="w-4 h-4 ml-2" />
-              הוסף סטודנט חדש
-            </Button>
-          </div>
-        </div>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Users /></Avatar>
+            <Typography variant="h4" fontWeight="bold">ניהול סטודנטים</Typography>
+          </Box>
+          <Typography color="text.secondary">הוספה, עריכה ומחיקה של סטודנטים רשומים</Typography>
+        </Box>
+        <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
+          הוסף סטודנט חדש
+        </Button>
+      </Box>
 
-        <Card className="border-0 shadow-lg bg-white overflow-hidden">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div>
-                <p className="mt-4 text-slate-500">טוען סטודנטים...</p>
-              </div>
-            ) : (
-              <div className="max-h-96 overflow-y-auto">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10">
-                    <TableRow className="hover:bg-[#ebeced]" style={{backgroundColor: '#ebeced'}}>
-                      <TableHead className="text-right text-black">שם מלא</TableHead>
-                      <TableHead className="text-right text-black">מספר ת.ז</TableHead>
-                      <TableHead className="text-right text-black">כתובת מייל</TableHead>
-                      <TableHead className="text-right text-black">מסלול אקדמי</TableHead>
-                      <TableHead className="text-right text-black w-32">פעולות</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.length > 0 ? (
-                      students.map((student) => (
-                        <TableRow key={student.id} className="table-row-hover">
-                          <TableCell className="font-medium text-right">{student.full_name}</TableCell>
-                          <TableCell className="text-right">{student.student_id}</TableCell>
-                          <TableCell className="text-right">{student.email}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex flex-wrap gap-1 justify-start">
-                              {student.academic_track_ids && student.academic_track_ids.length > 0 ? (
-                                student.academic_track_ids.map(trackId => (
-                                  <Badge key={trackId} variant="secondary" className="text-xs">
-                                    <GraduationCap className="w-3 h-3 ml-1" />
-                                    {tracksMap[trackId] || trackId}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <span className="text-slate-400 text-sm">לא שויך</span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex gap-2 justify-start">
-                              <Button variant="outline" size="icon" onClick={() => handleEdit(student)}>
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button variant="destructive" size="icon" onClick={() => handleDelete(student.id)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-slate-500">
-                          אין סטודנטים במערכת
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <Paper elevation={2}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>שם מלא</TableCell>
+                <TableCell>מספר ת.ז</TableCell>
+                <TableCell>כתובת מייל</TableCell>
+                <TableCell>מסלול אקדמי</TableCell>
+                <TableCell align="left">פעולות</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center"><CircularProgress /></TableCell>
+                </TableRow>
+              ) : students.map((student) => (
+                <TableRow key={student.id} hover>
+                  <TableCell>{student.full_name}</TableCell>
+                  <TableCell>{student.student_id}</TableCell>
+                  <TableCell>{student.email}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(student.academic_track_ids || []).map(trackId => (
+                        <Chip key={trackId} label={tracksMap[trackId] || trackId} size="small" icon={<GraduationCap />} />
+                      ))}
+                    </Box>
+                  </TableCell>
+                  <TableCell align="left">
+                    <IconButton onClick={() => handleOpenDialog(student)}><Edit /></IconButton>
+                    <IconButton onClick={() => handleDelete(student.id)} color="error"><Trash2 /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent dir="rtl" className="sm:max-w-[525px]">
-            <DialogHeader className="text-right pl-10">
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <DialogTitle className="text-right">{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
-                  <DialogDescription className="text-right mt-2">
-                    {editingStudent ? 'ערוך את פרטי הסטודנט.' : 'מלא את פרטי הסטודנט החדש.'}
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="full_name">שם מלא</Label>
-                <Input id="full_name" value={formData.full_name} onChange={handleFormChange} required />
-              </div>
-              <div>
-                <Label htmlFor="student_id">מספר ת.ז</Label>
-                <Input id="student_id" value={formData.student_id} onChange={handleFormChange} required />
-              </div>
-              <div>
-                <Label htmlFor="email">אימייל</Label>
-                <Input type="email" id="email" value={formData.email} onChange={handleFormChange} required />
-              </div>
-              <div>
-                <Label className="text-base font-medium">מסלולים אקדמיים</Label>
-                <div className="mt-2 space-y-2 border rounded-md p-3 max-h-32 overflow-y-auto">
-                  {(Array.isArray(academicTracks) ? academicTracks : []).map(track => (
-                    track && <div key={track.id} className="flex items-center space-x-2">
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+        <DialogTitle>{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
+        <DialogContent>
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField name="full_name" label="שם מלא" value={formData.full_name} onChange={handleFormChange} required fullWidth />
+            <TextField name="student_id" label="מספר ת.ז" value={formData.student_id} onChange={handleFormChange} required fullWidth />
+            <TextField name="email" type="email" label="אימייל" value={formData.email} onChange={handleFormChange} required fullWidth />
+            <FormGroup>
+              <Typography component="legend" variant="body1" sx={{ mb: 1 }}>מסלולים אקדמיים</Typography>
+              <Box sx={{ maxHeight: 150, overflowY: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
+                {(Array.isArray(academicTracks) ? academicTracks : []).map(track => (
+                  track && <FormControlLabel
+                    key={track.id}
+                    control={
                       <Checkbox
-                        id={track.id}
                         checked={formData.academic_track_ids.includes(track.id)}
-                        onCheckedChange={() => handleTrackToggle(track.id)}
+                        onChange={() => handleTrackToggle(track.id)}
+                        name={track.id}
                       />
-                      <Label 
-                        htmlFor={track.id} 
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        {track.name} ({track.department})
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>ביטול</Button>
-                <Button type="submit" className="bg-lime-500 hover:bg-lime-600 text-white">שמור</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
+                    }
+                    label={`${track.name} (${track.department})`}
+                  />
+                ))}
+              </Box>
+            </FormGroup>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>ביטול</Button>
+          <Button onClick={handleSubmit} variant="contained">שמור</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

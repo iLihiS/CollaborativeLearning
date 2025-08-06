@@ -1,15 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { User } from "@/api/entities";
-import { Student } from "@/api/entities";
-import { File } from "@/api/entities";
-import { Course } from "@/api/entities";
-import { Lecturer } from "@/api/entities";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { FileText, Edit, Trash2, Clock, CheckCircle, XCircle, Plus, Filter, BookOpen, Calendar } from "lucide-react";
+import { User, Student, File, Course, Lecturer } from "@/api/entities";
+import {
+    Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
+    Box, Typography, Paper, CircularProgress, Button, IconButton, Chip,
+    Card, CardContent, CardActions, ToggleButtonGroup, ToggleButton, Avatar
+} from '@mui/material';
+import { FileText, Trash2, Clock, CheckCircle, XCircle, Plus, Filter, BookOpen, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -86,11 +83,13 @@ export default function MyFiles() {
     setLoading(false);
   };
   
-  const handleFilterChange = (newFilter) => {
-    setFilter(newFilter);
-    const url = newFilter === 'all' ? createPageUrl("MyFiles") : createPageUrl(`MyFiles?status=${newFilter}`);
-    navigate(url, { replace: true });
-  }
+  const handleFilterChange = (event, newFilter) => {
+    if (newFilter !== null) {
+      setFilter(newFilter);
+      const url = newFilter === 'all' ? createPageUrl("MyFiles") : createPageUrl(`MyFiles?status=${newFilter}`);
+      navigate(url, { replace: true });
+    }
+  };
 
   const handleDelete = async (fileId) => {
     if (window.confirm("האם אתה בטוח שברצונך למחוק קובץ זה?")) {
@@ -106,182 +105,118 @@ export default function MyFiles() {
 
   const getStatusComponent = (status) => {
     switch (status) {
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 ml-1" />אושר</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800 border-red-200"><XCircle className="w-3 h-3 ml-1" />נדחה</Badge>;
-      default:
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200"><Clock className="w-3 h-3 ml-1" />ממתין</Badge>;
+      case 'approved': return <Chip icon={<CheckCircle />} label="אושר" color="success" size="small" />;
+      case 'rejected': return <Chip icon={<XCircle />} label="נדחה" color="error" size="small" />;
+      default: return <Chip icon={<Clock />} label="ממתין" color="warning" size="small" />;
     }
   };
 
-  const filteredFiles = files.filter(file => {
-    if (filter === 'all') return true;
-    return file.status === filter;
-  });
+  const filteredFiles = files.filter(file => filter === 'all' || file.status === filter);
   
   const emptyStateMessages = {
       all: 'עדיין לא העליתם קבצים.',
       pending: 'אין קבצים הממתינים לאישור.',
       approved: 'אין קבצים שאושרו.',
       rejected: 'אין קבצים שנדחו.'
-  }
+  };
 
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between md:items-end mb-8 gap-4">
-            <div>
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                        <FileText className="w-6 h-6 text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">הקבצים שלי</h1>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 mt-3">נהלו את הקבצים שהעליתם למערכת</p>
-            </div>
-            <div>
-                <Link to={createPageUrl("UploadFile")}>
-                    <Button className="bg-lime-500 hover:bg-lime-600 text-white w-full md:w-auto">
-                        <Plus className="w-4 h-4 ml-2" />
-                        העלאת קובץ חדש
-                    </Button>
-                </Link>
-            </div>
-        </div>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><FileText /></Avatar>
+          <Box>
+            <Typography variant="h4" fontWeight="bold">הקבצים שלי</Typography>
+            <Typography color="text.secondary">נהלו את הקבצים שהעליתם למערכת</Typography>
+          </Box>
+        </Box>
+        <Button component={Link} to={createPageUrl("UploadFile")} variant="contained" startIcon={<Plus />}>
+          העלאת קובץ חדש
+        </Button>
+      </Box>
 
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-            <Filter className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-            <p className="font-medium text-slate-800 dark:text-slate-200">סנן לפי סטטוס:</p>
-            <Button size="sm" variant={filter === 'all' ? 'default' : 'outline'} className={filter === 'all' ? 'bg-lime-500 hover:bg-lime-600 text-white' : 'dark:text-slate-200 dark:border-slate-600'} onClick={() => handleFilterChange('all')}>הכל</Button>
-            <Button size="sm" variant={filter === 'pending' ? 'default' : 'outline'} className={filter === 'pending' ? 'bg-lime-500 hover:bg-lime-600 text-white' : 'dark:text-slate-200 dark:border-slate-600'} onClick={() => handleFilterChange('pending')}>ממתין</Button>
-            <Button size="sm" variant={filter === 'approved' ? 'default' : 'outline'} className={filter === 'approved' ? 'bg-lime-500 hover:bg-lime-600 text-white' : 'dark:text-slate-200 dark:border-slate-600'} onClick={() => handleFilterChange('approved')}>אושר</Button>
-            <Button size="sm" variant={filter === 'rejected' ? 'default' : 'outline'} className={filter === 'rejected' ? 'bg-lime-500 hover:bg-lime-600 text-white' : 'dark:text-slate-200 dark:border-slate-600'} onClick={() => handleFilterChange('rejected')}>נדחה</Button>
-        </div>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+        <Filter />
+        <Typography>סנן לפי סטטוס:</Typography>
+        <ToggleButtonGroup value={filter} exclusive onChange={handleFilterChange}>
+          <ToggleButton value="all">הכל</ToggleButton>
+          <ToggleButton value="pending">ממתין</ToggleButton>
+          <ToggleButton value="approved">אושר</ToggleButton>
+          <ToggleButton value="rejected">נדחה</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
-        {/* Desktop Table View */}
-        <div className="hidden md:block">
-          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800 overflow-hidden">
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="text-center py-16">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div>
-                  <p className="mt-4 text-slate-500 dark:text-slate-400">טוען קבצים...</p>
-                </div>
-              ) : (
-                  <div className="max-h-96 overflow-y-auto">
-                    <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-700">
-                            <TableRow className="hover:bg-slate-100 dark:hover:bg-slate-600">
-                              <TableHead className="text-right text-slate-800 dark:text-slate-300">שם הקובץ</TableHead>
-                              <TableHead className="text-right text-slate-800 dark:text-slate-300">קורס</TableHead>
-                              <TableHead className="text-right text-slate-800 dark:text-slate-300">סוג</TableHead>
-                              <TableHead className="text-right text-slate-800 dark:text-slate-300">תאריך העלאה</TableHead>
-                              <TableHead className="text-right text-slate-800 dark:text-slate-300">סטטוס</TableHead>
-                              <TableHead className="text-right text-slate-800 dark:text-slate-300">פעולות</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody className="dark:text-slate-200">
-                            {filteredFiles.length > 0 ? (
-                              filteredFiles.map((file) => (
-                                <TableRow key={file.id} className="dark:border-slate-700">
-                                  <TableCell className="font-medium">{file.title}</TableCell>
-                                  <TableCell>{courses[file.course_id]?.course_name || 'לא ידוע'}</TableCell>
-                                  <TableCell>{fileTypeToHebrew[file.file_type] || file.file_type}</TableCell>
-                                  <TableCell>{format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
-                                  <TableCell>{getStatusComponent(file.status)}</TableCell>
-                                  <TableCell>
-                                    {file.status === 'pending' && (
-                                      <div className="flex gap-2">
-                                        <Button variant="outline" size="icon" disabled className="cursor-not-allowed">
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="destructive" size="icon" onClick={() => handleDelete(file.id)}>
-                                          <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
-                              ))
-                            ) : (
-                              <TableRow>
-                                <TableCell colSpan={6} className="text-center py-16 text-slate-500 dark:text-slate-400">
-                                  {emptyStateMessages[filter]}
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                    </div>
-                  </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Mobile Card View */}
-        <div className="md:hidden space-y-4">
-           {loading ? (
-              <div className="text-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-700 mx-auto"></div>
-                <p className="mt-4 text-slate-500">טוען קבצים...</p>
-              </div>
-           ) : filteredFiles.length > 0 ? (
-             filteredFiles.map((file) => (
-                <Card key={file.id} className="border-0 shadow-lg bg-white dark:bg-slate-800">
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-start">
-                      <span className="text-slate-900 dark:text-slate-100 text-base leading-tight">{file.title}</span>
-                      {getStatusComponent(file.status)}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                      <BookOpen className="w-4 h-4"/>
-                      <span>{courses[file.course_id]?.course_name || 'לא ידוע'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                      <FileText className="w-4 h-4"/>
-                      <span>{fileTypeToHebrew[file.file_type] || file.file_type}</span>
-                    </div>
-                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                      <Calendar className="w-4 h-4"/>
-                      <span>{format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</span>
-                    </div>
-                  </CardContent>
-                  {file.status === 'pending' && (
-                    <CardFooter>
-                      <div className="flex gap-2 w-full">
-                        <Button variant="outline" size="sm" disabled className="w-full cursor-not-allowed">
-                          <Edit className="w-4 h-4 ml-2" />
-                          עריכה
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDelete(file.id)} className="w-full">
-                          <Trash2 className="w-4 h-4 ml-2" />
-                          מחיקה
-                        </Button>
-                      </div>
-                    </CardFooter>
+      {loading ? <CircularProgress /> : (
+        <>
+          {/* Desktop Table View */}
+          <Paper elevation={2} sx={{ display: { xs: 'none', md: 'block' } }}>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>שם הקובץ</TableCell>
+                    <TableCell>קורס</TableCell>
+                    <TableCell>סוג</TableCell>
+                    <TableCell>תאריך העלאה</TableCell>
+                    <TableCell>סטטוס</TableCell>
+                    <TableCell align="left">פעולות</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredFiles.length > 0 ? filteredFiles.map((file) => (
+                    <TableRow key={file.id} hover>
+                      <TableCell>{file.title}</TableCell>
+                      <TableCell>{courses[file.course_id]?.course_name || 'לא ידוע'}</TableCell>
+                      <TableCell>{fileTypeToHebrew[file.file_type] || file.file_type}</TableCell>
+                      <TableCell>{format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                      <TableCell>{getStatusComponent(file.status)}</TableCell>
+                      <TableCell align="left">
+                        {file.status === 'pending' && (
+                          <IconButton onClick={() => handleDelete(file.id)} color="error"><Trash2 /></IconButton>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">{emptyStateMessages[filter]}</TableCell>
+                    </TableRow>
                   )}
-                </Card>
-             ))
-           ) : (
-            <div className="text-center py-16 text-slate-500 dark:text-slate-400">
-              <FileText className="w-12 h-12 mx-auto text-slate-400 mb-4" />
-              <p>{emptyStateMessages[filter]}</p>
-            </div>
-           )}
-        </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
 
+          {/* Mobile Card View */}
+          <Box sx={{ display: { xs: 'block', md: 'none' }, spaceY: 2 }}>
+            {filteredFiles.length > 0 ? filteredFiles.map((file) => (
+              <Card key={file.id} sx={{ mb: 2 }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="h6">{file.title}</Typography>
+                    {getStatusComponent(file.status)}
+                  </Box>
+                  <Typography color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}><BookOpen size={16} /> {courses[file.course_id]?.course_name || 'לא ידוע'}</Typography>
+                  <Typography color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><FileText size={16} /> {fileTypeToHebrew[file.file_type] || file.file_type}</Typography>
+                  <Typography color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Calendar size={16} /> {format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</Typography>
+                </CardContent>
+                {file.status === 'pending' && (
+                  <CardActions>
+                    <Button onClick={() => handleDelete(file.id)} color="error" startIcon={<Trash2 />}>מחיקה</Button>
+                  </CardActions>
+                )}
+              </Card>
+            )) : (
+              <Typography sx={{ textAlign: 'center', py: 8 }}>{emptyStateMessages[filter]}</Typography>
+            )}
+          </Box>
+        </>
+      )}
 
-        <div className="mt-6 text-sm text-slate-600 dark:text-slate-400 text-right space-y-1">
-            <p><span className="font-bold">הערה:</span> ניתן לערוך או למחוק קבצים רק כל עוד הם במצב &quot;ממתין לאישור&quot;.</p>
-            <p>קבצים שנדחו יציגו את הערת המרצה (אם קיימת) בדף הקובץ.</p>
-        </div>
-
-      </div>
-    </div>
+      <Box sx={{ mt: 6, textAlign: 'right', direction: 'ltr' }}>
+        <Typography variant="body2" color="text.secondary">הערה:</Typography>
+        <Typography variant="body2" color="text.secondary">ניתן לערוך או למחוק קבצים רק כל עוד הם במצב &quot;ממתין לאישור&quot;.</Typography>
+        <Typography variant="body2" color="text.secondary">קבצים שנדחו יציגו את הערת המרצה (אם קיימת) בדף הקובץ.</Typography>
+      </Box>
+    </Box>
   );
 }

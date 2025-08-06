@@ -1,16 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { User } from '@/api/entities';
-import { Lecturer } from '@/api/entities';
-import { File } from '@/api/entities';
-import { Course } from '@/api/entities';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from '@/components/ui/button';
+import { User, Lecturer, File, Course } from '@/api/entities';
+import {
+    Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
+    Box, Typography, Paper, CircularProgress, Button, Avatar
+} from '@mui/material';
 import { Download, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
-
 
 export default function LecturerApprovedFiles() {
   const [approvedFiles, setApprovedFiles] = useState([]);
@@ -64,60 +61,64 @@ export default function LecturerApprovedFiles() {
   }
 
   return (
-    <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-start mb-8">
-            <div>
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                    <CheckCircle className="w-6 h-6 text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">קבצים שאושרו</h1>
-                </div>
-                <p className="text-white mt-3">רשימת כל חומרי הלימוד שאושרו על ידך</p>
-            </div>
-        </div>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 48, height: 48 }}><CheckCircle /></Avatar>
+          <Box>
+            <Typography variant="h4" fontWeight="bold">קבצים שאושרו</Typography>
+            <Typography color="text.secondary">רשימת כל חומרי הלימוד שאושרו</Typography>
+          </Box>
+        </Box>
+      </Box>
 
-        <Card className="border-0 shadow-lg bg-white">
-          <CardContent className="p-0">
-            {loading ? <p className="p-6 text-center">טוען קבצים...</p> : approvedFiles.length > 0 ? (
-               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead>שם קובץ</TableHead>
-                      <TableHead>קורס</TableHead>
-                      <TableHead>תאריך אישור</TableHead>
-                      <TableHead className="text-left">פעולות</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {approvedFiles.map(file => (
-                      <TableRow key={file.id}>
-                        <TableCell className="font-medium">{file.title}</TableCell>
-                        <TableCell>{coursesMap[file.course_id] || 'לא ידוע'}</TableCell>
-                        <TableCell>{format(new Date(file.updated_date), 'd MMM yyyy', { locale: he })}</TableCell>
-                        <TableCell className="text-left">
-                            <Button variant="outline" size="sm" onClick={() => handleDownload(file.file_url)}>
-                                <Download className="w-4 h-4 ml-2" />
-                                הורדה
-                            </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-                <div className="text-center py-12">
-                    <CheckCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-slate-800">אין קבצים מאושרים</h3>
-                    <p className="text-slate-500 mt-2">עדיין לא אישרת קבצים.</p>
-                </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
+      <Paper elevation={2}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>שם קובץ</TableCell>
+                <TableCell>קורס</TableCell>
+                <TableCell>תאריך אישור</TableCell>
+                <TableCell align="left">פעולות</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center"><CircularProgress /></TableCell>
+                </TableRow>
+              ) : approvedFiles.length > 0 ? (
+                approvedFiles.map(file => (
+                  <TableRow key={file.id} hover>
+                    <TableCell>{file.title}</TableCell>
+                    <TableCell>{coursesMap[file.course_id] || 'לא ידוע'}</TableCell>
+                    <TableCell>{format(new Date(file.updated_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                    <TableCell align="left">
+                      <Button
+                        variant="outlined"
+                        startIcon={<Download />}
+                        onClick={() => handleDownload(file.file_url)}
+                      >
+                        הורדה
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    <Box sx={{ py: 6, textAlign: 'center' }}>
+                      <CheckCircle sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+                      <Typography variant="h6">אין קבצים מאושרים</Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Box>
+  );
 }

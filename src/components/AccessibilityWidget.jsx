@@ -1,22 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import {
+    Fab, Card, CardContent, CardHeader, Typography, IconButton, Button,
+    ToggleButtonGroup, ToggleButton, Box, Divider
+} from '@mui/material';
 import { 
-  Accessibility, 
-  Plus, 
-  Minus, 
-  Eye, 
-  EyeOff, 
-  Contrast,
-  Search,
-  Keyboard,
-  Volume2,
-  RotateCcw,
-  X,
-  Sun,
-  Moon
+  Accessibility, Plus, Minus, Eye, EyeOff, Contrast, Keyboard,
+  RotateCcw, X, Sun, Moon
 } from 'lucide-react';
 import { User } from '@/api/entities';
 
@@ -90,7 +80,7 @@ export default function AccessibilityWidget() {
     
     try {
       await User.updateMyUserData({ theme_preference: newTheme });
-    } catch (error) {
+    } catch {
       console.log("Could not save theme preference to user profile");
     }
   };
@@ -183,195 +173,102 @@ export default function AccessibilityWidget() {
         }
       `}</style>
 
-      <div className="accessibility-widget">
-        {/* Main Accessibility Button */}
-        <Button
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center"
-          aria-label="פתח תפריט נגישות"
-        >
-          <Accessibility className="w-6 h-6 accessibility-keep" />
-        </Button>
+      <Box sx={{ position: 'fixed', left: 20, bottom: 20, zIndex: 9999 }}>
+        <Fab color="primary" aria-label="accessibility" onClick={() => setIsOpen(!isOpen)}>
+          <Accessibility />
+        </Fab>
 
-        {/* Accessibility Panel */}
         {isOpen && (
-          <Card className="accessibility-panel shadow-2xl border-2 border-blue-200">
-            <CardHeader className="pb-3" dir="rtl">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Accessibility className="w-5 h-5 text-blue-600 accessibility-keep" />
-                  נגישות
-                </CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsOpen(false)}
-                  className="h-6 w-6"
-                >
-                  <X className="w-4 h-4 accessibility-keep" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4" dir="rtl">
-              
-              {/* Theme Toggle */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">ערכת נושא</h4>
-                <Button
-                  variant="outline"
-                  onClick={handleThemeChange}
-                  className="w-full justify-start gap-2 h-9"
-                >
-                  {theme === 'light' ? (
-                    <>
-                      <Moon className="w-4 h-4 accessibility-keep" />
-                      מעבר למצב כהה
-                    </>
-                  ) : (
-                    <>
-                      <Sun className="w-4 h-4 accessibility-keep" />
-                      מעבר למצב בהיר
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              <hr />
-
-              {/* Font Size Controls */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">גודל טקסט</span>
-                  <Badge variant="outline">{settings.fontSize}%</Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => adjustFontSize('decrease')}
-                    disabled={settings.fontSize <= 85}
-                    className="h-8 w-8"
-                  >
-                    <Minus className="w-4 h-4 accessibility-keep" />
-                  </Button>
-                  <div className="flex-1 text-center text-sm">
-                    {settings.fontSize === 100 ? 'רגיל' : settings.fontSize > 100 ? 'גדול' : 'קטן'}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => adjustFontSize('increase')}
-                    disabled={settings.fontSize >= 130}
-                    className="h-8 w-8"
-                  >
-                    <Plus className="w-4 h-4 accessibility-keep" />
-                  </Button>
-                </div>
-              </div>
-
-              <hr />
-
-              {/* Visual Settings */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold">הגדרות ויזואליות</h4>
-                
-                <div className="space-y-2">
-                  <Button
-                    variant={settings.highContrast ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleSetting('highContrast')}
-                    className="w-full justify-start gap-2 h-9"
-                  >
-                    <Contrast className="w-4 h-4 accessibility-keep" />
-                    ניגודיות גבוהה
-                  </Button>
-                  
-                  <Button
-                    variant={settings.grayscale ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleSetting('grayscale')}
-                    className="w-full justify-start gap-2 h-9"
-                  >
-                    <Eye className="w-4 h-4 accessibility-keep" />
-                    גווני אפור
-                  </Button>
-                  
-                  <Button
-                    variant={settings.hideImages ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleSetting('hideImages')}
-                    className="w-full justify-start gap-2 h-9"
-                  >
-                    <EyeOff className="w-4 h-4 accessibility-keep" />
-                    הסתר תמונות
-                  </Button>
-                </div>
-              </div>
-
-              <hr />
-
-              {/* Navigation Settings */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold">הגדרות ניווט</h4>
-                
-                <div className="space-y-2">
-                  <Button
-                    variant={settings.highlightLinks ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleSetting('highlightLinks')}
-                    className="w-full justify-start gap-2 h-9"
-                  >
-                    <Keyboard className="w-4 h-4 accessibility-keep" />
-                    הדגש קישורים
-                  </Button>
-                </div>
-              </div>
-
-              <hr />
-
-              {/* Reading Settings */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold">הגדרות קריאה</h4>
-                
-                <div className="space-y-2">
-                  <Button
-                    variant={settings.readableFont ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleSetting('readableFont')}
-                    className="w-full justify-start gap-2 h-9"
-                  >
-                    <span className="w-4 h-4 text-center font-bold accessibility-keep">Aa</span>
-                    גופן קריא
-                  </Button>
-                  
-                  <Button
-                    variant={settings.textSpacing ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleSetting('textSpacing')}
-                    className="w-full justify-start gap-2 h-9"
-                  >
-                    <span className="w-4 h-4 text-center accessibility-keep">| |</span>
-                    ריווח טקסט
-                  </Button>
-                </div>
-              </div>
-
-              <hr />
-
-              {/* Reset Button */}
+          <Card sx={{ position: 'absolute', bottom: 70, left: 0, width: 320 }}>
+            <CardHeader
+              title="נגישות"
+              action={
+                <IconButton onClick={() => setIsOpen(false)}>
+                  <X />
+                </IconButton>
+              }
+            />
+            <CardContent>
               <Button
-                variant="outline"
-                onClick={resetSettings}
-                className="w-full gap-2"
+                fullWidth
+                variant="outlined"
+                onClick={handleThemeChange}
+                startIcon={theme === 'light' ? <Moon /> : <Sun />}
               >
-                <RotateCcw className="w-4 h-4 accessibility-keep" />
+                {theme === 'light' ? 'מצב כהה' : 'מצב בהיר'}
+              </Button>
+              <Divider sx={{ my: 2 }} />
+              <Typography>גודל טקסט</Typography>
+              <ToggleButtonGroup value={settings.fontSize} exclusive>
+                <ToggleButton onClick={() => adjustFontSize('decrease')} value={settings.fontSize - 5} disabled={settings.fontSize <= 85}>
+                  <Minus />
+                </ToggleButton>
+                <ToggleButton onClick={() => adjustFontSize('increase')} value={settings.fontSize + 5} disabled={settings.fontSize >= 130}>
+                  <Plus />
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <Divider sx={{ my: 2 }} />
+              <Typography>הגדרות ויזואליות</Typography>
+              <ToggleButton
+                value="highContrast"
+                selected={settings.highContrast}
+                onChange={() => toggleSetting('highContrast')}
+                fullWidth
+              >
+                <Contrast /> ניגודיות גבוהה
+              </ToggleButton>
+              <ToggleButton
+                value="grayscale"
+                selected={settings.grayscale}
+                onChange={() => toggleSetting('grayscale')}
+                fullWidth
+              >
+                <Eye /> גווני אפור
+              </ToggleButton>
+              <ToggleButton
+                value="hideImages"
+                selected={settings.hideImages}
+                onChange={() => toggleSetting('hideImages')}
+                fullWidth
+              >
+                <EyeOff /> הסתר תמונות
+              </ToggleButton>
+              <Divider sx={{ my: 2 }} />
+              <Typography>הגדרות ניווט</Typography>
+              <ToggleButton
+                value="highlightLinks"
+                selected={settings.highlightLinks}
+                onChange={() => toggleSetting('highlightLinks')}
+                fullWidth
+              >
+                <Keyboard /> הדגש קישורים
+              </ToggleButton>
+              <Divider sx={{ my: 2 }} />
+              <Typography>הגדרות קריאה</Typography>
+              <ToggleButton
+                value="readableFont"
+                selected={settings.readableFont}
+                onChange={() => toggleSetting('readableFont')}
+                fullWidth
+              >
+                Aa גופן קריא
+              </ToggleButton>
+              <ToggleButton
+                value="textSpacing"
+                selected={settings.textSpacing}
+                onChange={() => toggleSetting('textSpacing')}
+                fullWidth
+              >
+                | | ריווח טקסט
+              </ToggleButton>
+              <Divider sx={{ my: 2 }} />
+              <Button fullWidth variant="outlined" onClick={resetSettings} startIcon={<RotateCcw />}>
                 איפוס הגדרות
               </Button>
-              
             </CardContent>
           </Card>
         )}
-      </div>
+      </Box>
     </>
   );
 }

@@ -1,8 +1,10 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import {
+    Card, CardContent, Typography, Accordion, AccordionSummary,
+    AccordionDetails, Box, Avatar, Grid, Button, Paper
+} from '@mui/material';
 import { HelpCircle, Upload, CheckSquare, BarChart3 } from 'lucide-react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -11,20 +13,17 @@ export default function Help() {
     {
       title: "1. העלאת קבצים",
       description: "סטודנטים מעלים חומרי לימוד כמו סיכומים, מבחנים ודפי נוסחאות ומשייכים אותם לקורס הרלוונטי.",
-      icon: <Upload className="w-6 h-6 text-lime-700 dark:text-lime-300" />,
-      color: "bg-lime-100 dark:bg-lime-900/50"
+      icon: <Upload />,
     },
     {
       title: "2. אישור מרצה",
       description: "כל קובץ עובר בדיקה ואישור של המרצה המלמד בקורס כדי להבטיח את איכות ודיוק התכנים.",
-      icon: <CheckSquare className="w-6 h-6 text-lime-700 dark:text-lime-300" />,
-      color: "bg-lime-100 dark:bg-lime-900/50"
+      icon: <CheckSquare />,
     },
     {
       title: "3. שיתוף ולימוד",
       description: "לאחר האישור, הקבצים זמינים לכלל הסטודנטים בקורס, ויוצרים מאגר ידע קהילתי עשיר.",
-      icon: <BarChart3 className="w-6 h-6 text-lime-700 dark:text-lime-300" />,
-      color: "bg-lime-100 dark:bg-lime-900/50"
+      icon: <BarChart3 />,
     }
   ];
 
@@ -48,114 +47,75 @@ export default function Help() {
   ];
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex flex-col" dir="rtl">
-       <style>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(100%) skewX(-15deg);
-          }
-          100% {
-            transform: translateX(-100%) skewX(-15deg);
-          }
-        }
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+        <Box sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><HelpCircle /></Avatar>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold">מרכז העזרה</Typography>
+                    <Typography color="text.secondary">מצאו תשובות לשאלות נפוצות ומדריכים לשימוש במערכת.</Typography>
+                </Box>
+            </Box>
+        </Box>
 
-        .shimmer-effect::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          transform: translateX(100%) skewX(-15deg);
-          background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0) 100%);
-          animation: shimmer 4s infinite linear;
-          z-index: 1;
-        }
+        <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>איך המערכת עובדת?</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {howItWorks.map((step) => (
+                        <Paper key={step.title} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>{step.icon}</Avatar>
+                            <Box>
+                                <Typography variant="h6">{step.title}</Typography>
+                                <Typography color="text.secondary">{step.description}</Typography>
+                            </Box>
+                        </Paper>
+                    ))}
+                </Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>שאלות נפוצות</Typography>
+                {faqs.map((faq, index) => (
+                    <Accordion key={index}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography>{faq.question}</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Typography color="text.secondary">{faq.answer}</Typography>
+                        </AccordionDetails>
+                    </Accordion>
+                ))}
+            </Grid>
+        </Grid>
 
-        .shimmer-effect > * {
-          position: relative;
-          z-index: 2;
-        }
-      `}</style>
-      <div className="max-w-7xl mx-auto flex-1 flex flex-col">
-        {/* Header */}
-        <div className="mb-8">
-            <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                    <HelpCircle className="w-6 h-6 text-white" />
-                </div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-gray-200">מרכז העזרה</h1>
-            </div>
-            <p className="text-slate-500 mt-2 max-w-2xl dark:text-slate-300">
-                מצאו תשובות לשאלות נפוצות ומדריכים לשימוש במערכת.
-            </p>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 flex-1">
-          {/* How it works Section */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-800 text-right dark:text-gray-200">איך המערכת עובדת?</h2>
-            {howItWorks.map((step) => (
-              <div key={step.title} className="flex items-start gap-4 text-right">
-                <div className={`w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl ${step.color}`}>
-                    {step.icon}
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-slate-900 dark:text-gray-200">{step.title}</h3>
-                  <p className="text-slate-600 dark:text-gray-300">{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* FAQ Section */}
-          <div className="space-y-4">
-             <h2 className="text-2xl font-bold text-slate-800 text-right dark:text-gray-200">שאלות נפוצות</h2>
-             <Accordion type="single" collapsible className="w-full">
-              {faqs.map((faq, index) => (
-                <AccordionItem 
-                  value={`item-${index}`} 
-                  key={index}
-                  className="border-b dark:border-slate-700"
-                >
-                  <AccordionTrigger className="text-right font-semibold text-base text-slate-800 hover:no-underline py-4 dark:text-gray-200 dark:hover:text-gray-100">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm pb-4 dark:text-slate-300">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-        </div>
-
-        {/* Contact Section - Fixed to bottom */}
-        <div className="mt-auto pt-6">
-          <Card className="border-0 shadow-xl bg-gradient-to-r from-lime-500 to-lime-600 text-white relative overflow-hidden shimmer-effect">
-            <div className="absolute inset-0 bg-black/10 z-0"></div>
-            <CardContent className="p-6 text-center">
-              <h3 className="text-xl font-bold mb-3">צריך עזרה נוספת?</h3>
-              <p className="text-lime-100 mb-4">
-                אם לא מצאת את התשובה שחיפשת, אנחנו כאן לעזור
-              </p>
-              <div className="flex justify-center gap-4">
-                <button 
-                  onClick={() => window.open('tel:+972525551981', '_self')}
-                  className="bg-white text-lime-700 dark:bg-slate-800 dark:text-white hover:bg-lime-100 hover:text-lime-800 dark:hover:bg-lime-100 dark:hover:text-lime-800 border-2 border-transparent hover:border-lime-200 dark:hover:border-lime-200 px-5 py-2 rounded-lg font-semibold transition-all duration-300"
-                >
-                  צור קשר
-                </button>
-                <Link to={createPageUrl("TrackInquiries?new=true")}>
-                  <button className="border-2 border-white text-white px-5 py-2 rounded-lg font-semibold hover:bg-lime-100 hover:text-lime-800 hover:border-lime-200 dark:hover:bg-lime-100 dark:hover:text-lime-800 dark:hover:border-lime-200 transition-all duration-300">
-                    שלח פנייה
-                  </button>
-                </Link>
-              </div>
+        <Card sx={{
+            mt: 4, color: 'white',
+            background: 'linear-gradient(to right, #84cc16, #65a30d)',
+        }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>צריך עזרה נוספת?</Typography>
+                <Typography sx={{ mb: 2, opacity: 0.9 }}>
+                    אם לא מצאת את התשובה שחיפשת, אנחנו כאן לעזור
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                    <Button
+                        variant="contained"
+                        sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.200' } }}
+                        onClick={() => window.open('tel:+972525551981', '_self')}
+                    >
+                        צור קשר
+                    </Button>
+                    <Button
+                        component={Link}
+                        to={createPageUrl("TrackInquiries?new=true")}
+                        variant="outlined"
+                        sx={{ color: 'white', borderColor: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                    >
+                        שלח פנייה
+                    </Button>
+                </Box>
             </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+        </Card>
+    </Box>
   );
 }
