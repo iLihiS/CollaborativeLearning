@@ -4,6 +4,7 @@ import { User } from "@/api/entities";
 import { Course } from "@/api/entities";
 import { File } from "@/api/entities";
 import { Student } from "@/api/entities";
+import { Lecturer } from "@/api/entities";
 import { UploadFile as UploadFileIntegration } from "@/api/integrations";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ export default function UploadFilePage() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [user, setUser] = useState(null);
-  const [student, setStudent] = useState(null);
+  const [uploader, setUploader] = useState(null);
   const [courses, setCourses] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -35,6 +36,7 @@ export default function UploadFilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [courseComboboxOpen, setCourseComboboxOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
     loadInitialData();
@@ -45,35 +47,47 @@ export default function UploadFilePage() {
       const currentUser = await User.me();
       setUser(currentUser);
 
+      let userTrackIds = [];
+      let uploaderRecord = null;
+
+      // An admin might also be a student or lecturer, so we need to find an associated profile to upload files.
+      // We will prioritize the student profile if both exist.
       const students = await Student.filter({ email: currentUser.email });
-      const studentRecord = students[0];
-      setStudent(studentRecord);
-
-      if (studentRecord) {
-        const allCourses = await Course.list();
-        
-        // Filter courses based on student's academic tracks
-        let availableCourses = allCourses;
-        if (studentRecord.academic_track) {
-          const studentTracks = studentRecord.academic_track.split(', ').filter(Boolean);
-          // Show courses relevant to student's tracks
-          availableCourses = allCourses.filter(course => {
-            // For now, show all courses if student has tracks
-            // You can add specific filtering logic based on course-track relationships
-            return studentTracks.length > 0;
-          });
+      if (students.length > 0) {
+        uploaderRecord = students[0];
+        userTrackIds = uploaderRecord.academic_track_ids || [];
+      } else {
+        const lecturers = await Lecturer.filter({ email: currentUser.email });
+        if (lecturers.length > 0) {
+          uploaderRecord = lecturers[0];
+          userTrackIds = uploaderRecord.academic_track_ids || [];
         }
-        
-        setCourses(availableCourses);
+      }
+      setUploader(uploaderRecord);
 
-        const urlCourseId = new URLSearchParams(window.location.search).get('course_id');
-        if (urlCourseId) {
-            handleInputChange('course_id', urlCourseId);
+      const allCourses = await Course.list();
+      let availableCourses = allCourses;
+
+      // Admins see all courses, others see courses filtered by their tracks.
+      if (currentUser.current_role !== 'admin') {
+        if (userTrackIds.length > 0) {
+            availableCourses = allCourses.filter(course =>
+                course.academic_track_ids?.some(trackId => userTrackIds.includes(trackId))
+            );
+        } else {
+            availableCourses = [];
         }
+      }
+      
+      setCourses(availableCourses);
+
+      const urlCourseId = new URLSearchParams(window.location.search).get('course_id');
+      if (urlCourseId) {
+          handleInputChange('course_id', urlCourseId);
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      setError("שגיאה בטעינת הקורסים. אנא נסה שוב.");
+      setError("שגיאה בטעינת הנתונים. אנא נסה שוב.");
     }
   };
 
@@ -114,18 +128,31 @@ export default function UploadFilePage() {
     }
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.title.trim()) errors.title = "כותרת הקובץ היא שדה חובה";
+    if (!formData.description.trim()) errors.description = "תיאור הקובץ הוא שדה חובה";
+    if (!formData.course_id) errors.course_id = "שיוך לקורס הוא שדה חובה";
+    if (!formData.file_type) errors.file_type = "סוג הקובץ הוא שדה חובה";
+    if (!formData.file) errors.file = "בחירת קובץ היא שדה חובה";
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
-    try {
-      if (!formData.title || !formData.file_type || !formData.course_id || !formData.file) {
-        throw new Error("אנא מלא את כל שדות החובה");
-      }
+    if (!validateForm()) {
+      return;
+    }
 
-      if (!student) {
-        throw new Error("פרופיל הסטודנט לא נמצא. אנא פנה למנהל המערכת.");
+    setLoading(true);
+
+    try {
+      if (!uploader) {
+        throw new Error("פרופיל המשתמש לא נמצא. אנא פנה למנהל המערכת.");
       }
 
       const uploadResult = await UploadFileIntegration(formData.file);
@@ -140,8 +167,10 @@ export default function UploadFilePage() {
         file_type: formData.file_type,
         course_id: formData.course_id,
         file_url: uploadResult.file_url,
-        uploaded_by: student.student_id,
-        status: fileStatus
+        uploader_id: uploader.id,
+        status: fileStatus,
+        created_date: new Date().toISOString(),
+        download_count: 0
       });
 
       setSuccess(true);
@@ -176,24 +205,31 @@ export default function UploadFilePage() {
               <p className="text-slate-600 mb-6">
                 {user?.current_role === 'lecturer' 
                   ? "הקובץ שלך אושר אוטומטיות וזמין כעת לכלל הסטודנטים."
-                  : "הקובץ שלך הוגש לאישור המרצה. תקבל התראה ברגע שהוא ייבדק."
+                  : (
+                    <>
+                      הקובץ שלך הוגש לאישור המרצה.
+                      <br />
+                      תקבל התראה ברגע שהוא ייבדק.
+                    </>
+                  )
                 }
               </p>
               <div className="flex gap-3 justify-center">
                 <Button
                   variant="outline"
+                  onClick={() => navigate(createPageUrl("MyFiles"))}
+                  className="text-lime-700 hover:bg-lime-50 hover:text-lime-800 hover:border-lime-400"
+                >
+                  צפייה בקבצים שלי
+                </Button>
+                <Button
                   onClick={() => {
                     setSuccess(false);
                     setFormData({ title: "", description: "", file_type: "", course_id: "", file: null });
                   }}
+                  className="bg-lime-500 hover:bg-lime-600 text-white"
                 >
                   העלאת קובץ נוסף
-                </Button>
-                <Button
-                  onClick={() => navigate(createPageUrl("MyFiles"))}
-                  className="bg-slate-700 hover:bg-slate-800"
-                >
-                  צפייה בקבצים שלי
                 </Button>
               </div>
             </CardContent>
@@ -235,9 +271,11 @@ export default function UploadFilePage() {
                     placeholder="הכנס כותרת לקובץ"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
-                    required
-                    className="h-11 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2"
+                    className={`h-11 bg-white dark:bg-slate-700 border ${validationErrors.title ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}
                   />
+                  {validationErrors.title && (
+                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.title}</p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -248,7 +286,7 @@ export default function UploadFilePage() {
                         variant="outline"
                         role="combobox"
                         aria-expanded={courseComboboxOpen}
-                        className="w-full justify-between h-11 font-normal bg-white dark:bg-slate-50 border border-slate-300 text-slate-900 dark:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2"
+                        className={`w-full justify-between h-11 font-normal bg-white dark:bg-slate-700 border ${validationErrors.course_id ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}
                       >
                         <span className={`truncate ${!formData.course_id ? 'text-slate-500' : 'text-slate-900'}`}>
                           {formData.course_id
@@ -283,6 +321,9 @@ export default function UploadFilePage() {
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  {validationErrors.course_id && (
+                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.course_id}</p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
@@ -294,9 +335,12 @@ export default function UploadFilePage() {
                     onChange={(e) => handleInputChange("description", e.target.value)}
                     maxLength={200}
                     rows={4}
-                    className="resize-none bg-white dark:bg-slate-50 border border-slate-300 text-slate-900 dark:border-slate-400 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2"
+                    className={`resize-none bg-white dark:bg-slate-700 border ${validationErrors.description ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}
                   />
                   <p className="text-xs text-slate-500 dark:text-slate-600 text-right">{formData.description.length}/200</p>
+                  {validationErrors.description && (
+                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.description}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -304,9 +348,8 @@ export default function UploadFilePage() {
                   <Select 
                     value={formData.file_type} 
                     onValueChange={(value) => handleInputChange("file_type", value)}
-                    required
                   >
-                    <SelectTrigger id="file_type" className="h-11 justify-end gap-2 bg-white dark:bg-slate-50 border border-slate-300 text-slate-900 dark:border-slate-400 data-[placeholder]:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2">
+                    <SelectTrigger id="file_type" className={`h-11 justify-end gap-2 bg-white dark:bg-slate-700 border ${validationErrors.file_type ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} text-slate-900 dark:text-white data-[placeholder]:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2`}>
                       <SelectValue placeholder="בחר סוג" />
                     </SelectTrigger>
                     <SelectContent dir="rtl">
@@ -315,6 +358,9 @@ export default function UploadFilePage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {validationErrors.file_type && (
+                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.file_type}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -325,8 +371,7 @@ export default function UploadFilePage() {
                       type="file"
                       accept=".pdf,.docx,.png,.jpg,.jpeg"
                       onChange={handleFileChange}
-                      required
-                      className="hidden"
+                      className={`hidden ${validationErrors.file ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'}`}
                     />
                   {formData.file ? (
                     <div className="flex items-center justify-between p-2 pl-3 border-2 border-lime-300 dark:border-lime-400 bg-lime-50 dark:bg-lime-50/50 rounded-lg h-11">
@@ -346,7 +391,7 @@ export default function UploadFilePage() {
                   ) : (
                     <Label
                         htmlFor="file-upload"
-                        className="h-11 cursor-pointer border border-slate-300 dark:border-slate-400 hover:border-lime-300 dark:hover:border-lime-500 focus-within:ring-2 focus-within:ring-lime-500 focus-within:ring-offset-2 transition-colors rounded-lg flex items-center p-0 bg-white dark:bg-slate-50"
+                        className={`h-11 cursor-pointer border ${validationErrors.file ? 'border-red-500' : 'border-slate-300 dark:border-slate-600'} hover:border-lime-300 dark:hover:border-lime-500 focus-within:ring-2 focus-within:ring-lime-500 focus-within:ring-offset-2 transition-colors rounded-lg flex items-center p-0 bg-white dark:bg-slate-700`}
                         dir="rtl"
                     >
                         <div className="bg-lime-500 hover:bg-lime-600 text-white rounded-r-md px-4 text-sm font-medium h-full flex items-center">
@@ -358,6 +403,9 @@ export default function UploadFilePage() {
                     </Label>
                   )}
                   <p className="text-xs text-slate-500 dark:text-slate-600 text-right">רק קבצי PDF, DOCX, PNG, JPG מותרים.</p>
+                  {validationErrors.file && (
+                    <p className="text-xs text-red-500 dark:text-red-400">{validationErrors.file}</p>
+                  )}
                 </div>
               </div>
               

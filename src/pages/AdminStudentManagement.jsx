@@ -1,66 +1,72 @@
 
 import { useState, useEffect } from 'react';
-import { Student } from '@/api/entities';
+import { Student, AcademicTrack } from '@/api/entities';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Users, Plus, Edit, Trash2, ArrowRight } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AdminStudentManagement() {
   const [students, setStudents] = useState([]);
+  const [academicTracks, setAcademicTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState(null); // Renamed from currentStudent
+  const [editingStudent, setEditingStudent] = useState(null);
   const [formData, setFormData] = useState({
     full_name: '',
     student_id: '',
     email: '',
-    academic_track: '',
+    academic_track_ids: [],
   });
 
   useEffect(() => {
-    loadStudents();
+    loadData();
   }, []);
 
-  const loadStudents = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const studentList = await Student.list();
+      const [studentList, trackList] = await Promise.all([
+        Student.list(),
+        AcademicTrack.list()
+      ]);
       setStudents(studentList);
+      setAcademicTracks(trackList);
     } catch (error) {
-      console.error("Error loading students:", error);
+      console.error("Error loading data:", error);
     }
     setLoading(false);
   };
 
   const handleOpenDialog = (student = null) => {
-    setEditingStudent(student); // Renamed from setCurrentStudent
+    setEditingStudent(student);
     if (student) {
       setFormData({
         full_name: student.full_name,
         student_id: student.student_id,
         email: student.email,
-        academic_track: student.academic_track,
+        academic_track_ids: student.academic_track_ids || [],
       });
     } else {
-      setFormData({ full_name: '', student_id: '', email: '', academic_track: '' });
+      setFormData({ full_name: '', student_id: '', email: '', academic_track_ids: [] });
     }
     setIsDialogOpen(true);
   };
 
-  // Wrapper function to align with outline's requested naming for edit action
   const handleEdit = (student) => {
     handleOpenDialog(student);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    setEditingStudent(null); // Renamed from setCurrentStudent
+    setEditingStudent(null);
   };
 
   const handleFormChange = (e) => {
@@ -68,16 +74,25 @@ export default function AdminStudentManagement() {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
+  const handleTrackToggle = (trackId) => {
+    setFormData((prev) => ({
+      ...prev,
+      academic_track_ids: prev.academic_track_ids.includes(trackId)
+        ? prev.academic_track_ids.filter(id => id !== trackId)
+        : [...prev.academic_track_ids, trackId]
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editingStudent) { // Renamed from currentStudent
-        await Student.update(editingStudent.id, formData); // Renamed from currentStudent.id
+      if (editingStudent) {
+        await Student.update(editingStudent.id, formData);
       } else {
         await Student.create(formData);
       }
       handleCloseDialog();
-      loadStudents();
+      loadData();
     } catch (error) {
       console.error("Failed to save student:", error);
       alert('שגיאה בשמירת הסטודנט.');
@@ -88,13 +103,18 @@ export default function AdminStudentManagement() {
     if (window.confirm('האם אתה בטוח שברצונך למחוק סטודנט זה?')) {
       try {
         await Student.delete(studentId);
-        loadStudents();
+        loadData();
       } catch (error) {
         console.error("Failed to delete student:", error);
         alert('שגיאה במחיקת הסטודנט.');
       }
     }
   };
+  
+  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc, track) => {
+    if(track) acc[track.id] = track.name;
+    return acc;
+  }, {});
 
   return (
     <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
@@ -161,9 +181,22 @@ export default function AdminStudentManagement() {
                           <TableCell className="font-medium text-right">{student.full_name}</TableCell>
                           <TableCell className="text-right">{student.student_id}</TableCell>
                           <TableCell className="text-right">{student.email}</TableCell>
-                          <TableCell className="text-right">{student.academic_track}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex gap-2 justify-end">
+                            <div className="flex flex-wrap gap-1 justify-start">
+                              {student.academic_track_ids && student.academic_track_ids.length > 0 ? (
+                                student.academic_track_ids.map(trackId => (
+                                  <Badge key={trackId} variant="secondary" className="text-xs">
+                                    <GraduationCap className="w-3 h-3 ml-1" />
+                                    {tracksMap[trackId] || trackId}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-slate-400 text-sm">לא שויך</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-start">
                               <Button variant="outline" size="icon" onClick={() => handleEdit(student)}>
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -214,8 +247,24 @@ export default function AdminStudentManagement() {
                 <Input type="email" id="email" value={formData.email} onChange={handleFormChange} required />
               </div>
               <div>
-                <Label htmlFor="academic_track">מסלול לימודים</Label>
-                <Input id="academic_track" value={formData.academic_track} onChange={handleFormChange} required />
+                <Label className="text-base font-medium">מסלולים אקדמיים</Label>
+                <div className="mt-2 space-y-2 border rounded-md p-3 max-h-32 overflow-y-auto">
+                  {(Array.isArray(academicTracks) ? academicTracks : []).map(track => (
+                    track && <div key={track.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={track.id}
+                        checked={formData.academic_track_ids.includes(track.id)}
+                        onCheckedChange={() => handleTrackToggle(track.id)}
+                      />
+                      <Label 
+                        htmlFor={track.id} 
+                        className="text-sm font-normal cursor-pointer flex-1"
+                      >
+                        {track.name} ({track.department})
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleCloseDialog}>ביטול</Button>

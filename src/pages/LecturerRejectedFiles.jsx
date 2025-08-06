@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from '@/api/entities';
 import { Lecturer } from '@/api/entities';
 import { File } from '@/api/entities';
@@ -12,7 +11,6 @@ import { he } from 'date-fns/locale';
 
 
 export default function LecturerRejectedFiles() {
-  const [lecturer, setLecturer] = useState(null);
   const [rejectedFiles, setRejectedFiles] = useState([]);
   const [coursesMap, setCoursesMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -24,29 +22,35 @@ export default function LecturerRejectedFiles() {
   const loadData = async () => {
     try {
       const currentUser = await User.me();
-      const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
-      const currentLecturer = lecturerRecords[0];
-      setLecturer(currentLecturer);
 
-      if (currentLecturer) {
-        const [allFiles, allCourses] = await Promise.all([
-            File.filter({ status: 'rejected' }),
-            Course.list()
-        ]);
-        
-        const lecturerCourseIds = allCourses
-          .filter(c => c.lecturer_id === currentLecturer.id)
-          .map(c => c.id);
+      const [allFiles, allCourses] = await Promise.all([
+          File.filter({ status: 'rejected' }),
+          Course.list()
+      ]);
 
-        const lecturerRejectedFiles = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
-        setRejectedFiles(lecturerRejectedFiles);
+      let filesToDisplay = allFiles;
 
-        const cMap = allCourses.reduce((acc, course) => {
-            acc[course.id] = course.course_name;
-            return acc;
-        }, {});
-        setCoursesMap(cMap);
+      if (currentUser.current_role !== 'admin') {
+        const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
+        const currentLecturer = lecturerRecords[0];
+
+        if (currentLecturer) {
+          const lecturerCourseIds = allCourses
+            .filter(c => c.lecturer_id === currentLecturer.id)
+            .map(c => c.id);
+          filesToDisplay = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
+        } else {
+          filesToDisplay = [];
+        }
       }
+
+      setRejectedFiles(filesToDisplay);
+
+      const cMap = allCourses.reduce((acc, course) => {
+          acc[course.id] = course.course_name;
+          return acc;
+      }, {});
+      setCoursesMap(cMap);
     } catch (error) {
       console.error("Error loading rejected files:", error);
     }

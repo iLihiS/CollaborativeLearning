@@ -1,38 +1,62 @@
 [
   {
-    "id": "computer-science",
-    "name": "מדעי המחשב",
-    "department": "מדעי המחשב",
-    "degree_type": "תואר ראשון"
+    "id": "cs-undergrad",
+    "name": "מדעי המחשב - תואר ראשון",
+    "department": "מדעים והנדסה",
+    "degree_type": "B.Sc."
   },
   {
-    "id": "software-engineering",
-    "name": "הנדסת תוכנה",
-    "department": "מדעי המחשב",
-    "degree_type": "תואר ראשון"
+    "id": "swe-undergrad",
+    "name": "הנדסת תוכנה - תואר ראשון",
+    "department": "מדעים והנדסה",
+    "degree_type": "B.Sc."
   },
   {
-    "id": "economics",
-    "name": "כלכלה",
-    "department": "כלכלה",
-    "degree_type": "תואר ראשון"
+    "id": "math-undergrad",
+    "name": "מתמטיקה - תואר ראשון",
+    "department": "מדעים מדויקים",
+    "degree_type": "B.A."
   },
   {
-    "id": "economics-2",
-    "name": "כלכלה 2",
-    "department": "כלכלה 2",
-    "degree_type": "תואר שני"
+    "id": "physics-undergrad",
+    "name": "פיזיקה - תואר ראשון",
+    "department": "מדעים מדויקים",
+    "degree_type": "B.Sc."
   },
   {
-    "id": "business-administration",
-    "name": "מנהל עסקים",
-    "department": "מנהל עסקים",
-    "degree_type": "תואר ראשון"
+    "id": "law-undergrad",
+    "name": "משפטים - תואר ראשון",
+    "department": "משפטים",
+    "degree_type": "LL.B."
   },
   {
-    "id": "business-administration-2",
-    "name": "מנהל עסקים 2",
-    "department": "מנהל עסקים 2",
-    "degree_type": "תואר שני"
+    "id": "business-undergrad",
+    "name": "מנהל עסקים - תואר ראשון",
+    "department": "ניהול וכלכלה",
+    "degree_type": "B.A."
+  },
+  {
+    "id": "business-grad",
+    "name": "מנהל עסקים - תואר שני",
+    "department": "ניהול וכלכלה",
+    "degree_type": "M.B.A."
+  },
+  {
+    "id": "psychology-undergrad",
+    "name": "פסיכולוגיה - תואר ראשון",
+    "department": "מדעי החברה",
+    "degree_type": "B.A."
+  },
+  {
+    "id": "education-grad",
+    "name": "ייעוץ חינוכי - תואר שני",
+    "department": "מדעי החברה",
+    "degree_type": "M.A."
+  },
+  {
+    "id": "cs-grad",
+    "name": "מדעי המחשב - תואר שני",
+    "department": "מדעים והנדסה",
+    "degree_type": "M.Sc."
   }
 ] 

@@ -22,7 +22,7 @@ export default function AdminLecturerManagement() {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    academic_tracks: [],
+    academic_track_ids: [],
   });
 
   useEffect(() => {
@@ -50,13 +50,13 @@ export default function AdminLecturerManagement() {
       setFormData({
         full_name: lecturer.full_name,
         email: lecturer.email,
-        academic_tracks: lecturer.academic_tracks || [],
+        academic_track_ids: lecturer.academic_track_ids || [],
       });
     } else {
       setFormData({ 
         full_name: '', 
         email: '', 
-        academic_tracks: [] 
+        academic_track_ids: [] 
       });
     }
     setIsDialogOpen(true);
@@ -75,9 +75,9 @@ export default function AdminLecturerManagement() {
   const handleTrackToggle = (trackId) => {
     setFormData((prev) => ({
       ...prev,
-      academic_tracks: prev.academic_tracks.includes(trackId)
-        ? prev.academic_tracks.filter(id => id !== trackId)
-        : [...prev.academic_tracks, trackId]
+      academic_track_ids: prev.academic_track_ids.includes(trackId)
+        ? prev.academic_track_ids.filter(id => id !== trackId)
+        : [...prev.academic_track_ids, trackId]
     }));
   };
 
@@ -178,9 +178,9 @@ export default function AdminLecturerManagement() {
                           <TableCell className="font-medium text-right">{lecturer.full_name}</TableCell>
                           <TableCell className="text-right">{lecturer.email}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex flex-wrap gap-1 justify-end">
-                              {lecturer.academic_tracks && lecturer.academic_tracks.length > 0 ? (
-                                lecturer.academic_tracks.map(trackId => (
+                            <div className="flex flex-wrap gap-1 justify-start">
+                              {lecturer.academic_track_ids && lecturer.academic_track_ids.length > 0 ? (
+                                lecturer.academic_track_ids.map(trackId => (
                                   <Badge key={trackId} variant="secondary" className="text-xs">
                                     <GraduationCap className="w-3 h-3 ml-1" />
                                     {tracksMap[trackId] || trackId}
@@ -192,7 +192,7 @@ export default function AdminLecturerManagement() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex gap-2 justify-end">
+                            <div className="flex gap-2 justify-start">
                               <Button variant="outline" size="icon" onClick={() => handleOpenDialog(lecturer)}>
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -241,7 +241,7 @@ export default function AdminLecturerManagement() {
                     track && <div key={track.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={track.id}
-                        checked={formData.academic_tracks.includes(track.id)}
+                        checked={formData.academic_track_ids.includes(track.id)}
                         onCheckedChange={() => handleTrackToggle(track.id)}
                       />
                       <Label 

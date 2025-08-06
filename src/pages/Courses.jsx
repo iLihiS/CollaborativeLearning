@@ -1,22 +1,29 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Course } from "@/api/entities";
 import { Lecturer } from "@/api/entities";
 import { User } from "@/api/entities"; // New import: User entity
 import { Student } from "@/api/entities"; // New import: Student entity
+import { AcademicTrack } from "@/api/entities";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { BookOpen, User as UserIcon, Calendar, Search } from "lucide-react"; // Renamed User import from lucide-react to UserIcon to avoid conflict with User entity
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [lecturers, setLecturers] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [student, setStudent] = useState(null); // New state for current student
+  const [currentUser, setCurrentUser] = useState(null);
+  const [filterableTracks, setFilterableTracks] = useState([]);
+  
+  // Initialize state from URL params
+  const searchParams = new URLSearchParams(window.location.search);
+  const [selectedTrack, setSelectedTrack] = useState(searchParams.get('track') || null);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
 
   useEffect(() => {
     loadData();
@@ -24,58 +31,58 @@ export default function Courses() {
 
   const loadData = async () => {
     try {
-      // Fetch current user and student data
-      const currentUser = await User.me();
-      // Assuming Student entity has a filter method that accepts an object
-      const studentRecords = await Student.filter({ email: currentUser.email });
-      const currentStudent = studentRecords[0]; // Get the first student record
-      setStudent(currentStudent); // Set the student state
+      setLoading(true);
+      const user = await User.me();
+      setCurrentUser(user);
 
-      // Load all courses and lecturers concurrently
-      const [allCourses, allLecturers] = await Promise.all([
-        Course.list("-semester"), // Fetch courses, sorted by semester descending
-        Lecturer.list() // Fetch all lecturers
+      const [allCourses, allLecturers, allAcademicTracks] = await Promise.all([
+        Course.list("-semester"),
+        Lecturer.list(),
+        AcademicTrack.list(),
       ]);
-      
-      // Map lecturers by their ID for easy lookup
+
       const lecturersMap = allLecturers.reduce((acc, lec) => {
         acc[lec.id] = lec.full_name;
         return acc;
       }, {});
-      
-      // Filter courses based on student's academic tracks
-      let filteredCourses = allCourses; // Initialize with all courses
-      if (currentStudent?.academic_track) { // Check if the student has academic tracks defined
-        // Split the academic_track string into an array, filtering out empty strings
-        const studentTracks = currentStudent.academic_track.split(', ').filter(Boolean);
+      setLecturers(lecturersMap);
+
+      if (user.current_role === 'admin') {
+        setCourses(allCourses);
+        setFilterableTracks(allAcademicTracks);
+      } else {
+        let userTrackIds = [];
+        if (user.current_role === 'student') {
+          const studentRecords = await Student.filter({ email: user.email });
+          if (studentRecords.length > 0 && studentRecords[0].academic_track_ids) {
+            userTrackIds = studentRecords[0].academic_track_ids;
+          }
+        } else if (user.current_role === 'lecturer') {
+          const lecturerRecords = await Lecturer.filter({ email: user.email });
+          if (lecturerRecords.length > 0 && lecturerRecords[0].academic_track_ids) {
+            userTrackIds = lecturerRecords[0].academic_track_ids;
+          }
+        }
         
-        // Apply filtering logic based on the outline's specification
-        // The current logic stated in the outline is:
-        // "For now, we'll show all courses if student has tracks (you can add specific filtering logic here)"
-        // And the implementation for this placeholder is `return studentTracks.length > 0;` inside the filter.
-        // This means if studentTracks has any elements, all courses will pass the filter.
-        // If studentTracks is empty (after splitting and filtering Boolean), no courses will pass.
-        filteredCourses = allCourses.filter(course => {
-          // This condition ensures that if the student has any tracks listed, all courses are shown.
-          // If studentTracks is empty, no courses will be shown.
-          // This is a placeholder for more specific track-based filtering logic.
-          return studentTracks.length > 0;
-        });
+        const userCourses = userTrackIds.length > 0
+          ? allCourses.filter(course => course.academic_track_ids?.some(trackId => userTrackIds.includes(trackId)))
+          : [];
+        setCourses(userCourses);
+        
+        const tracksForFiltering = allAcademicTracks.filter(track => userTrackIds.includes(track.id));
+        setFilterableTracks(tracksForFiltering);
       }
-      
-      setCourses(filteredCourses); // Update courses state with the (potentially) filtered list
-      setLecturers(lecturersMap); // Update lecturers state
     } catch (error) {
-      console.error("Error loading courses:", error);
+      console.error("Error loading data:", error);
     }
-    setLoading(false); // Set loading to false once data is loaded or an error occurs
+    setLoading(false);
   };
   
-  // Filter courses based on the search term entered by the user
-  const filteredCourses = courses.filter(course =>
-    course.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.course_code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const searchFilteredCourses = courses.filter(course => {
+    const trackMatch = !selectedTrack || (course.academic_track_ids && course.academic_track_ids.includes(selectedTrack));
+    const searchMatch = !searchTerm || course.course_name.toLowerCase().includes(searchTerm.toLowerCase()) || course.course_code.toLowerCase().includes(searchTerm.toLowerCase());
+    return trackMatch && searchMatch;
+  });
 
   return (
     <div className="p-4 lg:p-8 bg-slate-50 min-h-screen" dir="rtl">
@@ -104,6 +111,28 @@ export default function Courses() {
           </div>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          <Button
+            size="sm"
+            variant={!selectedTrack ? 'default' : 'outline'}
+            onClick={() => setSelectedTrack(null)}
+            className={!selectedTrack ? 'bg-lime-600 hover:bg-lime-700 text-white' : 'text-slate-700'}
+          >
+            הצג הכל
+          </Button>
+          {filterableTracks.map((track) => (
+            <Button
+              size="sm"
+              key={track.id}
+              variant={selectedTrack === track.id ? 'default' : 'outline'}
+              onClick={() => setSelectedTrack(track.id)}
+              className={selectedTrack === track.id ? 'bg-lime-600 hover:bg-lime-700 text-white' : 'text-slate-700'}
+            >
+              {track.name}
+            </Button>
+          ))}
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array(8).fill(0).map((_, i) => (
@@ -128,8 +157,12 @@ export default function Courses() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCourses.map((course) => (
-              <Link to={createPageUrl(`Course?id=${course.id}`)} key={course.id} className="group block h-full">
+            {searchFilteredCourses.map((course) => (
+              <Link 
+                to={createPageUrl(`Course?id=${course.id}&track=${selectedTrack || ''}&search=${searchTerm || ''}`)} 
+                key={course.id} 
+                className="group block h-full"
+              >
                 <Card className="border border-transparent shadow-lg group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 h-full group-hover:bg-lime-50 group-hover:border-lime-200 bg-white">
                   <CardHeader>
                     <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-lime-200">
@@ -161,17 +194,20 @@ export default function Courses() {
             ))}
           </div>
         )}
-        {filteredCourses.length === 0 && !loading && searchTerm === "" && (
+        {searchFilteredCourses.length === 0 && !loading && searchTerm === "" && (
           <div className="text-center text-slate-600 p-8">
             <p className="text-lg font-semibold">לא נמצאו קורסים זמינים.</p>
-            {student && student.academic_track && student.academic_track.split(', ').filter(Boolean).length === 0 && (
-              <p className="text-sm mt-2">יתכן ואין קורסים המשויכים למסלולים האקדמיים שלך, או שמסלוליך אינם מוגדרים כראוי.</p>
-            )}
+            <p className="text-sm mt-2">
+              {currentUser?.current_role === 'admin'
+                ? 'נראה שעדיין לא הוספו קורסים למערכת.'
+                : 'יתכן ואין קורסים המשויכים למסלולים האקדמיים שלך עבור תפקידך הנוכחי.'
+              }
+            </p>
           </div>
         )}
-        {filteredCourses.length === 0 && !loading && searchTerm !== "" && (
+        {searchFilteredCourses.length === 0 && !loading && searchTerm !== "" && (
           <div className="text-center text-slate-600 p-8">
-            <p className="text-lg font-semibold">לא נמצאו קורסים עבור החיפוש "{searchTerm}".</p>
+            <p className="text-lg font-semibold">לא נמצאו קורסים עבור החיפוש &quot;{searchTerm}&quot;.</p>
             <p className="text-sm mt-2">נסה מונח חיפוש אחר.</p>
           </div>
         )}

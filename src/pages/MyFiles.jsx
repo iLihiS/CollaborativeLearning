@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@/api/entities";
 import { Student } from "@/api/entities";
 import { File } from "@/api/entities";
 import { Course } from "@/api/entities";
+import { Lecturer } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +24,6 @@ const fileTypeToHebrew = {
 };
 
 export default function MyFiles() {
-  const [student, setStudent] = useState(null);
   const [files, setFiles] = useState([]);
   const [courses, setCourses] = useState({});
   const [loading, setLoading] = useState(true);
@@ -49,13 +49,23 @@ export default function MyFiles() {
     setLoading(true);
     try {
       const currentUser = await User.me();
-      const students = await Student.filter({ email: currentUser.email });
-      const currentStudent = students[0];
-      setStudent(currentStudent);
+      let uploaderId = null;
 
-      if (currentStudent) {
+      if (currentUser.current_role === 'student') {
+          const students = await Student.filter({ email: currentUser.email });
+          if (students.length > 0) {
+              uploaderId = students[0].id;
+          }
+      } else if (currentUser.current_role === 'lecturer') {
+          const lecturers = await Lecturer.filter({ email: currentUser.email });
+          if (lecturers.length > 0) {
+              uploaderId = lecturers[0].id;
+          }
+      }
+
+      if (uploaderId) {
         const [userFiles, allCourses] = await Promise.all([
-          File.filter({ uploaded_by: currentStudent.student_id }, "-created_date"),
+          File.filter({ uploader_id: uploaderId }, "-created_date"),
           Course.list()
         ]);
         
@@ -66,6 +76,9 @@ export default function MyFiles() {
         
         setFiles(userFiles);
         setCourses(coursesMap);
+      } else {
+        setFiles([]);
+        setCourses({});
       }
     } catch (error) {
       console.error("Error loading files:", error);
@@ -264,7 +277,7 @@ export default function MyFiles() {
 
 
         <div className="mt-6 text-sm text-slate-600 dark:text-slate-400 text-right space-y-1">
-            <p><span className="font-bold">הערה:</span> ניתן לערוך או למחוק קבצים רק כל עוד הם במצב "ממתין לאישור".</p>
+            <p><span className="font-bold">הערה:</span> ניתן לערוך או למחוק קבצים רק כל עוד הם במצב &quot;ממתין לאישור&quot;.</p>
             <p>קבצים שנדחו יציגו את הערת המרצה (אם קיימת) בדף הקובץ.</p>
         </div>
 

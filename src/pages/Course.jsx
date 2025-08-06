@@ -1,15 +1,14 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Course as CourseEntity } from "@/api/entities";
 import { File as FileEntity } from "@/api/entities";
 import { Lecturer } from "@/api/entities";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BookOpen, User, Calendar, Upload, Download, File as FileIcon, FileText } from "lucide-react";
+import { User, Calendar, Upload, Download, FileText, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 
@@ -28,15 +27,20 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // New state for error handling
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const courseId = searchParams.get('id');
+  const fromTrack = searchParams.get('track');
+  const fromSearch = searchParams.get('search');
+
 
   useEffect(() => {
-    const courseId = new URLSearchParams(window.location.search).get('id');
     if (courseId) {
       loadCourseData(courseId);
     } else {
       navigate(createPageUrl("Courses"));
     }
-  }, []);
+  }, [courseId]);
 
   const loadCourseData = async (courseId) => {
     try {
@@ -148,6 +152,15 @@ export default function CoursePage() {
         }
       `}</style>
       <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <Link to={createPageUrl(`Courses?track=${fromTrack || ''}&search=${fromSearch || ''}`)}>
+            <Button variant="outline" className="hover:bg-slate-100 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700">
+              <ArrowRight className="w-4 h-4 ml-2" />
+              חזרה לרשימת הקורסים
+            </Button>
+          </Link>
+        </div>
+
         {/* Course Header */}
         <Card className="mb-8 border-0 shadow-lg bg-gradient-to-r from-lime-400 via-lime-500 to-lime-600 text-white relative overflow-hidden shimmer-effect">
           <div className="absolute inset-0 bg-black/10 z-0"></div>
@@ -178,14 +191,6 @@ export default function CoursePage() {
 
         {/* Files Card */}
         <Card className="border-0 shadow-lg bg-white">
-          <CardHeader className="border-b bg-slate-50 flex justify-end">
-            <Link to={createPageUrl(`UploadFile?course_id=${course.id}`)}>
-              <Button className="bg-lime-500 hover:bg-lime-600 text-white">
-                <Upload className="w-4 h-4 ml-2" />
-                העלה קובץ לקורס זה
-              </Button>
-            </Link>
-          </CardHeader>
           <CardContent className="p-0">
             {files.length > 0 ? (
               <div className="grid gap-4 p-6">

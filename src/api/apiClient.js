@@ -97,58 +97,42 @@ const initializeMockData = (key, initialData) => {
   }
 };
 
-// Force refresh function to reset mock data (useful for development)
-const forceRefreshMockData = () => {
+// This function will be called once when the app loads to seed mock data
+const seedMockData = () => {
   const initialCourses = [
-      { id: 'course-001', course_name: 'מבוא למדעי המחשב', course_code: 'CS101', lecturer_id: 'lecturer-001', academic_tracks: ['computer-science', 'software-engineering'] },
-      { id: 'course-002', course_name: 'מבני נתונים', course_code: 'CS201', lecturer_id: 'lecturer-002', academic_tracks: ['computer-science'] },
+    { id: 'course-001', course_name: 'מבוא למדעי המחשב', course_code: 'CS101', lecturer_id: 'lecturer-001', academic_track_ids: ['cs-undergrad', 'swe-undergrad'], description: 'קורס יסודות המציג עקרונות בסיסיים בתכנות, אלגוריתמיקה ומבנה המחשב.' },
+    { id: 'course-002', course_name: 'מבני נתונים', course_code: 'CS201', lecturer_id: 'lecturer-002', academic_track_ids: ['cs-undergrad', 'swe-undergrad'], description: 'קורס מתקדם הבוחן דרכים יעילות לארגון וניהול נתונים.' },
+    { id: 'course-003', course_name: 'אלגברה לינארית', course_code: 'MA101', lecturer_id: 'lecturer-003', academic_track_ids: ['math-undergrad', 'cs-undergrad', 'swe-undergrad'], description: 'עקרונות מתמטיים חיוניים למדעי המחשב וההנדסה.' },
+    { id: 'course-004', course_name: 'מבוא למשפט חוקתי', course_code: 'LAW101', lecturer_id: 'lecturer-004', academic_track_ids: ['law-undergrad'], description: 'יסודות המשפט הציבורי והחוקתי בישראל.' },
+    { id: 'course-005', course_name: 'מיקרו כלכלה', course_code: 'ECO101', lecturer_id: 'lecturer-005', academic_track_ids: ['business-undergrad'], description: 'ניתוח התנהגות צרכנים ופירמות בשוק.' },
+    { id: 'course-006', course_name: 'אסטרטגיה עסקית', course_code: 'BUS700', lecturer_id: 'lecturer-005', academic_track_ids: ['business-grad'], description: 'קורס מתקדם בפיתוח ויישום אסטרטגיות עסקיות.' },
+    { id: 'course-007', course_name: 'פסיכולוגיה קוגניטיבית', course_code: 'PSY202', lecturer_id: 'lecturer-006', academic_track_ids: ['psychology-undergrad', 'cs-grad'], description: 'חקר תהליכי עיבוד המידע במוח האנושי.' },
+    { id: 'course-008', course_name: 'למידת מכונה', course_code: 'CS550', lecturer_id: 'lecturer-001', academic_track_ids: ['cs-grad'], description: 'אלגוריתמים המאפשרים למערכות ללמוד מנתונים.' }
   ];
   const initialLecturers = [
-      { id: 'lecturer-001', full_name: 'ד"ר שרה לוי', email: 'sarah.levy@ono.ac.il', academic_tracks: ['computer-science'] },
-      { id: 'lecturer-002', full_name: 'פרופ׳ מיכאל כהן', email: 'michael.cohen@ono.ac.il', academic_tracks: ['computer-science', 'software-engineering'] },
-      { id: 'lecturer-003', full_name: 'ד"ר רחל אברמס', email: 'rachel.abrams@ono.ac.il', academic_tracks: ['mathematics', 'computer-science'] },
-      { id: 'lecturer-004', full_name: 'פרופ׳ דוד רוזנברג', email: 'david.rosenberg@ono.ac.il', academic_tracks: ['physics', 'engineering'] },
-      { id: 'lecturer-005', full_name: 'ד"ר מיכל גולדשטיין', email: 'michal.goldstein@ono.ac.il', academic_tracks: ['psychology', 'education'] },
+    { id: 'lecturer-001', full_name: 'ד"ר שרה לוי', email: 'sarah.levy@ono.ac.il', academic_track_ids: ['cs-undergrad', 'swe-undergrad', 'cs-grad'] },
+    { id: 'lecturer-002', full_name: 'פרופ׳ מיכאל כהן', email: 'michael.cohen@ono.ac.il', academic_track_ids: [] }, // No tracks
+    { id: 'lecturer-003', full_name: 'ד"ר רחל אברמס', email: 'rachel.abrams@ono.ac.il', academic_track_ids: ['math-undergrad'] },
+    { id: 'lecturer-004', full_name: 'עו"ד דוד רוזנברג', email: 'david.rosenberg@ono.ac.il', academic_track_ids: ['law-undergrad'] },
+    { id: 'lecturer-005', full_name: 'ד"ר מיכל גולדשטיין', email: 'michal.goldstein@ono.ac.il', academic_track_ids: ['business-undergrad', 'business-grad'] },
+    { id: 'lecturer-006', full_name: 'ד"ר יעל שחר', email: 'yael.shahar@ono.ac.il', academic_track_ids: ['psychology-undergrad', 'education-grad'] }
   ];
   const initialStudents = [
-      { id: 'student-001', full_name: 'אליה כהן', student_id: 'STU2024001', email: 'student@ono.ac.il', academic_track: 'מדעי המחשב' },
-      { id: 'student-002', full_name: 'שרה ישראלי', student_id: 'STU2024002', email: 'sarah.israeli@ono.ac.il', academic_track: 'הנדסת תוכנה' },
-      { id: 'student-003', full_name: 'יוסי חיים', student_id: 'STU2024003', email: 'yossi.haim@ono.ac.il', academic_track: 'מתמטיקה' },
-      { id: 'student-004', full_name: 'רונית גולד', student_id: 'STU2024004', email: 'ronit.gold@ono.ac.il', academic_track: 'פיזיקה' },
+    { id: 'student-001', full_name: 'אליהו כהן', student_id: 'STU001', email: 'eli.cohen@mail.com', academic_track_ids: ['cs-undergrad'] },
+    { id: 'student-002', full_name: 'שרה ישראלי', student_id: 'STU002', email: 'sara.israeli@mail.com', academic_track_ids: ['law-undergrad', 'business-undergrad'] },
+    { id: 'student-003', full_name: 'יוסי חיים', student_id: 'STU003', email: 'yossi.haim@mail.com', academic_track_ids: [] }, // No tracks
+    { id: 'student-004', full_name: 'רונית גולד', student_id: 'STU004', email: 'ronit.gold@mail.com', academic_track_ids: ['business-grad'] },
+    { id: 'student-005', full_name: 'דניאל לוי', student_id: 'STU005', email: 'daniel.levi@mail.com', academic_track_ids: ['psychology-undergrad'] },
   ];
   const initialFiles = [
-      { id: 'file-001', title: 'סיכום הרצאה 1', description: 'סיכום מעולה', course_id: 'course-001', uploader_id: 'student-001', created_date: new Date().toISOString(), status: 'approved', download_count: 12, file_url: '#' },
-      { id: 'file-002', title: 'תרגול למבחן', description: 'עם פתרונות', course_id: 'course-001', uploader_id: 'student-001', created_date: new Date().toISOString(), status: 'pending', download_count: 3, file_url: '#' },
-  ];
-
-  localStorage.setItem('mock_courses', JSON.stringify(initialCourses));
-  localStorage.setItem('mock_lecturers', JSON.stringify(initialLecturers));
-  localStorage.setItem('mock_students', JSON.stringify(initialStudents));
-  localStorage.setItem('mock_files', JSON.stringify(initialFiles));
-};
-
-// This function will be called once when the app loads
-const seedInitialData = () => {
-  const initialCourses = [
-      { id: 'course-001', course_name: 'מבוא למדעי המחשב', course_code: 'CS101', lecturer_id: 'lecturer-001', academic_tracks: ['computer-science', 'software-engineering'] },
-      { id: 'course-002', course_name: 'מבני נתונים', course_code: 'CS201', lecturer_id: 'lecturer-002', academic_tracks: ['computer-science'] },
-  ];
-  const initialLecturers = [
-      { id: 'lecturer-001', full_name: 'ד"ר שרה לוי', email: 'sarah.levy@ono.ac.il', academic_tracks: ['computer-science'] },
-      { id: 'lecturer-002', full_name: 'פרופ׳ מיכאל כהן', email: 'michael.cohen@ono.ac.il', academic_tracks: ['computer-science', 'software-engineering'] },
-      { id: 'lecturer-003', full_name: 'ד"ר רחל אברמס', email: 'rachel.abrams@ono.ac.il', academic_tracks: ['mathematics', 'computer-science'] },
-      { id: 'lecturer-004', full_name: 'פרופ׳ דוד רוזנברג', email: 'david.rosenberg@ono.ac.il', academic_tracks: ['physics', 'engineering'] },
-      { id: 'lecturer-005', full_name: 'ד"ר מיכל גולדשטיין', email: 'michal.goldstein@ono.ac.il', academic_tracks: ['psychology', 'education'] },
-  ];
-  const initialStudents = [
-      { id: 'student-001', full_name: 'אליה כהן', student_id: 'STU2024001', email: 'student@ono.ac.il', academic_track: 'מדעי המחשב' },
-      { id: 'student-002', full_name: 'שרה ישראלי', student_id: 'STU2024002', email: 'sarah.israeli@ono.ac.il', academic_track: 'הנדסת תוכנה' },
-      { id: 'student-003', full_name: 'יוסי חיים', student_id: 'STU2024003', email: 'yossi.haim@ono.ac.il', academic_track: 'מתמטיקה' },
-      { id: 'student-004', full_name: 'רונית גולד', student_id: 'STU2024004', email: 'ronit.gold@ono.ac.il', academic_track: 'פיזיקה' },
-  ];
-  const initialFiles = [
-      { id: 'file-001', title: 'סיכום הרצאה 1', description: 'סיכום מעולה', course_id: 'course-001', uploader_id: 'student-001', created_date: new Date().toISOString(), status: 'approved', download_count: 12, file_url: '#' },
-      { id: 'file-002', title: 'תרגול למבחן', description: 'עם פתרונות', course_id: 'course-001', uploader_id: 'student-001', created_date: new Date().toISOString(), status: 'pending', download_count: 3, file_url: '#' },
+    { id: 'file-001', title: 'סיכום הרצאה 1 - מבוא למדמ"ח', description: 'סיכום מעולה של ההרצאה הראשונה, כולל דוגמאות קוד.', course_id: 'course-001', uploader_id: 'student-001', created_date: '2023-10-15T10:00:00Z', status: 'approved', download_count: 120 },
+    { id: 'file-002', title: 'תרגול למבחן במבני נתונים', description: 'כולל פתרונות מלאים לשאלות קשות.', course_id: 'course-002', uploader_id: 'student-001', created_date: '2023-11-20T14:30:00Z', status: 'pending', download_count: 35 },
+    { id: 'file-003', title: 'מצגת שיעור - אלגברה', description: 'מצגת מהרצאה של ד"ר אברמס.', course_id: 'course-003', uploader_id: 'lecturer-003', created_date: '2023-10-22T09:00:00Z', status: 'approved', download_count: 250 },
+    { id: 'file-004', title: 'סיכום פסיקה - חוקתי', description: 'סיכום של פסקי הדין המרכזיים שנלמדו בסמסטר.', course_id: 'course-004', uploader_id: 'student-002', created_date: '2023-12-05T18:00:00Z', status: 'rejected', download_count: 10 },
+    { id: 'file-005', title: 'דוגמאות למבחן בכלכלה', description: 'מבחנים משנים קודמות עם פתרונות חלקיים.', course_id: 'course-005', uploader_id: 'student-002', created_date: '2024-01-10T12:00:00Z', status: 'approved', download_count: 180 },
+    { id: 'file-006', title: 'ניתוח אירוע - אסטרטגיה עסקית', description: 'קובץ עם ניתוח אירוע לדוגמא.', course_id: 'course-006', uploader_id: 'lecturer-005', created_date: '2024-02-01T11:00:00Z', status: 'approved', download_count: 95 },
+    { id: 'file-007', title: 'מחברת קורס למידת מכונה', description: 'מחברת ג\'ופייטר עם כל הקוד מהשיעורים.', course_id: 'course-008', uploader_id: 'lecturer-001', created_date: '2024-03-01T16:00:00Z', status: 'pending', download_count: 55 },
+    { id: 'file-008', title: 'סיכום שלי - פסיכולוגיה', description: 'סיכום אישי, לא בטוח כמה זה עוזר.', course_id: 'course-007', uploader_id: 'student-005', created_date: '2023-11-15T20:00:00Z', status: 'approved', download_count: 42 },
   ];
 
   initializeMockData('mock_courses', initialCourses);
@@ -157,10 +141,7 @@ const seedInitialData = () => {
   initializeMockData('mock_files', initialFiles);
 };
 
-seedInitialData(); // Run on script load
-
-// Call force refresh to ensure fresh data during development
-forceRefreshMockData();
+seedMockData(); // Run on script load
 
 class Entity {
   constructor(apiClient, entityName) {
@@ -280,6 +261,24 @@ class Auth {
     throw new Error('User not authenticated');
   }
 
+  async changePassword(oldPassword, newPassword) {
+    const mockUser = localStorage.getItem('mock_user');
+    if (mockUser && this.api.token) {
+        const user = JSON.parse(mockUser);
+        const storedPassword = user.password || '123456';
+
+        if (oldPassword !== storedPassword) {
+            throw new Error('הסיסמה הישנה אינה נכונה');
+        }
+
+        const updatedUser = { ...user, password: newPassword };
+        localStorage.setItem('mock_user', JSON.stringify(updatedUser));
+
+        return { success: true, message: 'הסיסמה עודכנה בהצלחה' };
+    }
+    throw new Error('User not authenticated');
+  }
+
   async login(credentials) {
     try {
       const response = await this.api.post('/auth/login', credentials);
@@ -298,31 +297,26 @@ class Auth {
         'student@ono.ac.il': {
           id: 'user-001',
           email: 'student@ono.ac.il',
-          full_name: 'אליה כהן',
+          full_name: 'אליהו כהן',
           roles: ['student'],
           current_role: 'student',
-          theme_preference: 'light',
-          student_id: 'STU2024001',
-          academic_track: 'מדעי המחשב'
+          student_id: 'STU001',
+          academic_track_ids: ['cs-undergrad']
         },
         'lecturer@ono.ac.il': {
           id: 'user-002', 
           email: 'lecturer@ono.ac.il',
-          full_name: 'ד"ר שרה לוי',
+          full_name: 'פרופ׳ מיכאל כהן',
           roles: ['lecturer'],
           current_role: 'lecturer',
-          theme_preference: 'light',
-          department: 'מדעי המחשב',
-          title: 'ד״ר'
+          academic_track_ids: []
         },
         'admin@ono.ac.il': {
           id: 'user-003',
           email: 'admin@ono.ac.il', 
           full_name: 'משה אדמיניסטרטור',
           roles: ['admin'],
-          current_role: 'admin',
-          theme_preference: 'dark',
-          department: 'מנהל מערכת'
+          current_role: 'admin'
         },
         'student.lecturer@ono.ac.il': {
           id: 'user-004',
@@ -330,11 +324,9 @@ class Auth {
           full_name: 'מיכל דוקטורנטית',
           roles: ['student', 'lecturer'],
           current_role: 'student',
-          theme_preference: 'light',
-          student_id: 'PhD2024002',
-          academic_track: 'מדעי המחשב - דוקטורט',
-          department: 'מדעי המחשב',
-          title: 'מרצה חיצונית'
+          student_id: 'PhD002',
+          lecturer_track_ids: ['cs-undergrad'], // As a lecturer
+          academic_track_ids: ['cs-grad'] // As a student
         },
         'lecturer.admin@ono.ac.il': {
           id: 'user-005',
@@ -342,10 +334,7 @@ class Auth {
           full_name: 'פרופ׳ דוד ראש המחלקה',
           roles: ['lecturer', 'admin'],
           current_role: 'lecturer',
-          theme_preference: 'light',
-          department: 'מדעי המחשב',
-          title: 'פרופ׳',
-          admin_permissions: ['manage_department', 'approve_courses']
+          academic_track_ids: ['law-undergrad', 'business-undergrad', 'business-grad']
         },
         'all.roles@ono.ac.il': {
           id: 'user-006',
@@ -353,32 +342,21 @@ class Auth {
           full_name: 'ד"ר רונה סופר יוזר',
           roles: ['student', 'lecturer', 'admin'],
           current_role: 'admin',
-          theme_preference: 'dark',
-          student_id: 'MBA2024003',
-          academic_track: 'מנהל עסקים - תואר שני',
-          department: 'מנהל עסקים וכלכלה',
-          title: 'ד״ר',
-          admin_permissions: ['full_access']
+          student_id: 'MBA003',
+          academic_track_ids: ['business-grad'], // For student role
+          lecturer_track_ids: [] // For lecturer role
         }
       };
-
-      // Check credentials
-      if (password !== '123456') {
-        throw new Error('סיסמה שגויה');
-      }
 
       const mockUser = mockUsers[email];
       if (!mockUser) {
         throw new Error('משתמש לא נמצא במערכת');
       }
       
-      // Create a mock token and store it
-      const mockToken = 'mock-token-' + Date.now();
-      this.api.setAuthToken(mockToken);
-      
       // Check if user data already exists in localStorage (with previous updates)
       const existingUserData = localStorage.getItem('mock_user');
       let userToStore = mockUser;
+      let correctPassword = '123456';
       
       if (existingUserData) {
         try {
@@ -386,11 +364,23 @@ class Auth {
           // If the existing user matches the email, merge the data to preserve updates
           if (parsedExistingData.email === email) {
             userToStore = { ...mockUser, ...parsedExistingData };
+            if (parsedExistingData.password) {
+              correctPassword = parsedExistingData.password;
+            }
           }
         } catch {
           console.log('Failed to parse existing user data, using fresh data');
         }
       }
+      
+      // Check credentials
+      if (password !== correctPassword) {
+        throw new Error('סיסמה שגויה');
+      }
+      
+      // Create a mock token and store it
+      const mockToken = 'mock-token-' + Date.now();
+      this.api.setAuthToken(mockToken);
       
       // Store user data (either fresh or merged with existing updates)
       localStorage.setItem('mock_user', JSON.stringify(userToStore));

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from '@/api/entities';
 import { Lecturer } from '@/api/entities';
 import { File } from '@/api/entities';
@@ -22,7 +21,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
 export default function LecturerPendingFiles() {
-  const [lecturer, setLecturer] = useState(null);
   const [pendingFiles, setPendingFiles] = useState([]);
   const [coursesMap, setCoursesMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -37,31 +35,35 @@ export default function LecturerPendingFiles() {
   const loadData = async () => {
     try {
       const currentUser = await User.me();
-
-      const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
       
-      const currentLecturer = lecturerRecords[0];
-      setLecturer(currentLecturer);
+      const [allFiles, allCourses] = await Promise.all([
+          File.filter({ status: 'pending' }),
+          Course.list()
+      ]);
+      
+      let filesToDisplay = allFiles;
 
-      if (currentLecturer) {
-        const [allFiles, allCourses] = await Promise.all([
-            File.filter({ status: 'pending' }),
-            Course.list()
-        ]);
-        
-        const lecturerCourseIds = allCourses
-          .filter(c => c.lecturer_id === currentLecturer.id)
-          .map(c => c.id);
+      if (currentUser.current_role !== 'admin') {
+        const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
+        const currentLecturer = lecturerRecords[0];
 
-        const lecturerPendingFiles = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
-        setPendingFiles(lecturerPendingFiles);
-
-        const cMap = allCourses.reduce((acc, course) => {
-            acc[course.id] = course.course_name;
-            return acc;
-        }, {});
-        setCoursesMap(cMap);
+        if (currentLecturer) {
+          const lecturerCourseIds = allCourses
+            .filter(c => c.lecturer_id === currentLecturer.id)
+            .map(c => c.id);
+          filesToDisplay = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
+        } else {
+          filesToDisplay = []; // Not a lecturer, show no files
+        }
       }
+
+      setPendingFiles(filesToDisplay);
+
+      const cMap = allCourses.reduce((acc, course) => {
+          acc[course.id] = course.course_name;
+          return acc;
+      }, {});
+      setCoursesMap(cMap);
     } catch (error) {
       console.error("Error loading lecturer dashboard:", error);
     }
@@ -172,7 +174,7 @@ export default function LecturerPendingFiles() {
             <div className="flex-1">
               <DialogTitle className="text-right">דחיית קובץ</DialogTitle>
               <DialogDescription className="text-right mt-2">
-                הקובץ "{fileToActOn?.title}" יידחה. ניתן להוסיף סיבה לדחייה (אופציונלי).
+                הקובץ &quot;{fileToActOn?.title}&quot; יידחה. ניתן להוסיף סיבה לדחייה (אופציונלי).
               </DialogDescription>
             </div>
           </div>

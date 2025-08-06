@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from '@/api/entities';
 import { Lecturer } from '@/api/entities';
 import { File } from '@/api/entities';
@@ -13,7 +13,6 @@ import { he } from 'date-fns/locale';
 
 
 export default function LecturerApprovedFiles() {
-  const [lecturer, setLecturer] = useState(null);
   const [approvedFiles, setApprovedFiles] = useState([]);
   const [coursesMap, setCoursesMap] = useState({});
   const [loading, setLoading] = useState(true);
@@ -25,29 +24,35 @@ export default function LecturerApprovedFiles() {
   const loadData = async () => {
     try {
       const currentUser = await User.me();
-      const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
-      const currentLecturer = lecturerRecords[0];
-      setLecturer(currentLecturer);
+      
+      const [allFiles, allCourses] = await Promise.all([
+          File.filter({ status: 'approved' }),
+          Course.list()
+      ]);
 
-      if (currentLecturer) {
-        const [allFiles, allCourses] = await Promise.all([
-            File.filter({ status: 'approved' }),
-            Course.list()
-        ]);
-        
-        const lecturerCourseIds = allCourses
-          .filter(c => c.lecturer_id === currentLecturer.id)
-          .map(c => c.id);
+      let filesToDisplay = allFiles;
 
-        const lecturerApprovedFiles = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
-        setApprovedFiles(lecturerApprovedFiles);
+      if (currentUser.current_role !== 'admin') {
+        const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
+        const currentLecturer = lecturerRecords[0];
 
-        const cMap = allCourses.reduce((acc, course) => {
-            acc[course.id] = course.course_name;
-            return acc;
-        }, {});
-        setCoursesMap(cMap);
+        if (currentLecturer) {
+          const lecturerCourseIds = allCourses
+            .filter(c => c.lecturer_id === currentLecturer.id)
+            .map(c => c.id);
+          filesToDisplay = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
+        } else {
+          filesToDisplay = [];
+        }
       }
+
+      setApprovedFiles(filesToDisplay);
+
+      const cMap = allCourses.reduce((acc, course) => {
+          acc[course.id] = course.course_name;
+          return acc;
+      }, {});
+      setCoursesMap(cMap);
     } catch (error) {
       console.error("Error loading approved files:", error);
     }

@@ -9,10 +9,11 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '../components/ui/command';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
-import { Sun, Moon, X, User as UserIcon, Palette, Save, CheckCircle, GraduationCap, Plus, ChevronsUpDown, Shield } from 'lucide-react';
+import { Sun, Moon, X, User as UserIcon, Palette, Save, CheckCircle, GraduationCap, Plus, ChevronsUpDown, Shield, Lock, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { User, Student, Lecturer, Message, AcademicTrack } from '../api/entities';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '../components/ui/collapsible';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,14 @@ export default function Settings() {
   const [theme, setTheme] = useState('light');
   const [userRoles, setUserRoles] = useState([]);
   
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [allTracks, setAllTracks] = useState([]);
   const [userTracks, setUserTracks] = useState([]);
   const [availableTracks, setAvailableTracks] = useState([]);
@@ -174,6 +183,30 @@ export default function Settings() {
       showSuccess("הפרופיל עודכן בהצלחה!");
     } catch (error) {
       console.error("Error updating profile:", error);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setPasswordError('');
+    setSuccessMessage('');
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('הסיסמאות החדשות אינן תואמות');
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setPasswordError('סיסמה חדשה חייבת להכיל לפחות 6 תווים');
+      return;
+    }
+
+    try {
+      await User.changePassword(oldPassword, newPassword);
+      showSuccess("הסיסמה עודכנה בהצלחה!");
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      setPasswordError(error.message || 'שגיאה בעדכון הסיסמה');
     }
   };
 
@@ -370,6 +403,62 @@ export default function Settings() {
               </CardContent>
             </Card>
 
+            <Collapsible>
+              <Card className="border-0 shadow-lg bg-white">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="group border-b dark:border-slate-700 pb-3 flex flex-row items-center justify-between cursor-pointer">
+                    <CardTitle className="flex items-center gap-2 text-black">
+                      <Lock className="w-5 h-5 text-black"/>
+                      שינוי סיסמה
+                    </CardTitle>
+                    <ChevronDown className="w-5 h-5 text-slate-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="p-6 pt-4 space-y-4">
+                    {passwordError && (
+                        <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300">
+                            <AlertDescription>
+                                {passwordError}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    <div>
+                      <Label htmlFor="oldPassword" className="text-black font-medium">סיסמה נוכחית</Label>
+                      <div className="relative mt-1">
+                        <Input id="oldPassword" type={showOldPassword ? 'text' : 'password'} value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className="dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
+                        <Button variant="ghost" size="icon" type="button" className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-500 dark:text-slate-400" onClick={() => setShowOldPassword(!showOldPassword)}>
+                          {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="newPassword" className="text-black font-medium">סיסמה חדשה</Label>
+                      <div className="relative mt-1">
+                        <Input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
+                        <Button variant="ghost" size="icon" type="button" className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-500 dark:text-slate-400" onClick={() => setShowNewPassword(!showNewPassword)}>
+                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword" className="text-black font-medium">אימות סיסמה חדשה</Label>
+                      <div className="relative mt-1">
+                        <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" />
+                        <Button variant="ghost" size="icon" type="button" className="absolute left-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-500 dark:text-slate-400" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    <Button onClick={handlePasswordChange} className="bg-lime-500 hover:bg-lime-600 text-white">
+                      <Save className="ml-2 w-4 h-4"/>
+                      עדכן סיסמה
+                    </Button>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
             <Card className="border-0 shadow-lg bg-white">
               <CardHeader className="border-b dark:border-slate-700 pb-3">
                 <CardTitle className="flex items-center gap-2 text-black">
@@ -518,7 +607,7 @@ export default function Settings() {
           {/* Academic and Role Management */}
           <div className="space-y-8">
             {/* Academic Tracks Card - Only for students (excluding admins) */}
-            {user?.current_role === 'student' && !userRoles.includes('admin') && (
+            {(user?.current_role === 'student' || user?.current_role === 'lecturer') && !userRoles.includes('admin') && (
               <Card className="border-0 shadow-lg bg-white">
                 <CardHeader className="border-b dark:border-slate-700 pb-3">
                   <CardTitle className="flex items-center gap-2 text-black">
@@ -714,6 +803,7 @@ export default function Settings() {
                 </div>
               </CardContent>
             </Card>
+
           </div>
         </div>
       </div>

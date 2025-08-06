@@ -355,12 +355,12 @@ export default function Layout({ children }) {
       {/* Mobile Header */}
       <div className="lg:hidden glass-effect border-b sticky top-0 z-50 dark:border-slate-700">
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-r from-lime-500 to-lime-600 rounded-lg flex items-center justify-center">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">למידה שיתופית</h1>
-          </div>
+          </Link>
           <Button
             variant="ghost"
             size="icon"
@@ -415,7 +415,7 @@ export default function Layout({ children }) {
         <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:right-0">
           <div className="flex flex-col flex-1 glass-effect border-l shadow-xl dark:bg-slate-800/80 dark:border-slate-700 overflow-hidden">
             {/* Logo */}
-            <div className="flex items-center gap-3 p-6 border-b border-slate-200/60 dark:border-slate-700 flex-shrink-0">
+            <Link to={createPageUrl("Dashboard")} className="flex items-center gap-3 p-6 border-b border-slate-200/60 dark:border-slate-700 flex-shrink-0">
               <div className="w-10 h-10 bg-gradient-to-r from-lime-500 to-lime-600 rounded-xl flex items-center justify-center shadow-lg">
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
@@ -423,7 +423,7 @@ export default function Layout({ children }) {
                 <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">למידה שיתופית</h1>
                 <p className="text-xs font-medium text-lime-600" style={{color: document.documentElement.classList.contains('dark') ? '#666262' : undefined}}>בקריה האקדמית אונו</p>
               </div>
-            </div>
+            </Link>
 
             {/* Navigation - with scroll */}
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
