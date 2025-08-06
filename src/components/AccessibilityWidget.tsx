@@ -268,7 +268,8 @@ export default function AccessibilityWidget() {
                 selected={settings.highContrast}
                 onChange={() => toggleSetting('highContrast')}
                 fullWidth
-                sx={{ mb: 0.5 }}
+                size="small"
+                sx={{ mb: 0.5, gap: 1 }}
               >
                 <Contrast /> ניגודיות גבוהה
               </ToggleButton>
@@ -277,7 +278,8 @@ export default function AccessibilityWidget() {
                 selected={settings.grayscale}
                 onChange={() => toggleSetting('grayscale')}
                 fullWidth
-                sx={{ mb: 0.5 }}
+                size="small"
+                sx={{ mb: 0.5, gap: 1 }}
               >
                 <Eye /> גווני אפור
               </ToggleButton>
@@ -286,7 +288,8 @@ export default function AccessibilityWidget() {
                 selected={settings.hideImages}
                 onChange={() => toggleSetting('hideImages')}
                 fullWidth
-                sx={{ mb: 1.5 }}
+                size="small"
+                sx={{ mb: 0.5, gap: 1 }}
               >
                 <EyeOff /> הסתר תמונות
               </ToggleButton>
@@ -297,7 +300,8 @@ export default function AccessibilityWidget() {
                 selected={settings.highlightLinks}
                 onChange={() => toggleSetting('highlightLinks')}
                 fullWidth
-                sx={{ mb: 1.5 }}
+                size="small"
+                sx={{ mb: 0.5, gap: 1 }}
               >
                 <Keyboard /> הדגש קישורים
               </ToggleButton>
@@ -308,7 +312,8 @@ export default function AccessibilityWidget() {
                 selected={settings.readableFont}
                 onChange={() => toggleSetting('readableFont')}
                 fullWidth
-                sx={{ mb: 0.5 }}
+                size="small"
+                sx={{ mb: 0.5, gap: 1 }}
               >
                 Aa גופן קריא
               </ToggleButton>
@@ -317,7 +322,8 @@ export default function AccessibilityWidget() {
                 selected={settings.textSpacing}
                 onChange={() => toggleSetting('textSpacing')}
                 fullWidth
-                sx={{ mb: 1.5 }}
+                size="small"
+                sx={{ mb: 0.5, gap: 1 }}
               >
                 | | ריווח טקסט
               </ToggleButton>
