@@ -1,104 +1,135 @@
 
-import { useState, useEffect } from 'react';
-import { User } from '@/api/entities';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { User, AcademicTrack } from '@/api/entities';
 import {
-    Button, TextField, Table, TableBody, TableCell, TableHead,
-    TableRow, TableContainer, Dialog, DialogTitle, DialogContent, DialogActions,
-    Box, Typography, Paper, IconButton, Chip, Select, MenuItem, InputLabel, FormControl,
-    Avatar
+    Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
+    Dialog, DialogContent, DialogTitle, DialogActions, TextField,
+    Checkbox, FormControlLabel, FormGroup, Box, Typography, Paper,
+    IconButton, CircularProgress, Chip, Avatar
 } from '@mui/material';
-import { Settings, Plus, Edit, Trash2, ArrowRight } from 'lucide-react';
+import { Shield, Plus, Edit, Trash2, ArrowRight, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+type AdminData = {
+  id: string;
+  full_name: string;
+  email: string;
+  academic_track_ids: string[];
+};
+
+type AcademicTrackData = {
+  id: string;
+  name: string;
+  department: string;
+};
+
+type FormData = {
+  full_name: string;
+  email: string;
+  academic_track_ids: string[];
+};
+
 export default function AdminManagement() {
-  const [admins, setAdmins] = useState([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
+  const [admins, setAdmins] = useState<AdminData[]>([]);
+  const [academicTracks, setAcademicTracks] = useState<AcademicTrackData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<AdminData | null>(null);
+  const [formData, setFormData] = useState<FormData>({
     full_name: '',
     email: '',
-    role: 'admin',
-    current_role: 'admin'
+    academic_track_ids: [],
   });
 
   useEffect(() => {
-    loadAdmins();
+    loadData();
   }, []);
 
-  const loadAdmins = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      // Load all users with admin role
-      const allUsers = await User.list();
-      const adminUsers = allUsers.filter((user: User) => user.roles.includes('admin'));
-      setAdmins(adminUsers);
+      const [adminList, trackList] = await Promise.all([
+        User.list(),
+        AcademicTrack.list()
+      ]);
+      // Filter only admin users
+      const filteredAdmins = Array.isArray(adminList) ? adminList.filter((user: any) => user.roles && user.roles.includes('admin')) : [];
+      setAdmins(filteredAdmins);
+      setAcademicTracks(Array.isArray(trackList) ? trackList : []);
     } catch (error) {
-      console.error("Error loading admins:", error);
+      console.error("Error loading data:", error);
+      setAdmins([]);
+      setAcademicTracks([]);
     }
+    setLoading(false);
   };
 
-  const handleAdd = () => {
-    setFormData({
-      full_name: '',
-      email: '',
-      role: 'admin',
-      current_role: 'admin'
-    });
-    setIsAddDialogOpen(true);
+  const handleOpenDialog = (admin: AdminData | null = null) => {
+    setEditingAdmin(admin);
+    if (admin) {
+      setFormData({
+        full_name: admin.full_name,
+        email: admin.email,
+        academic_track_ids: admin.academic_track_ids || [],
+      });
+    } else {
+      setFormData({ full_name: '', email: '', academic_track_ids: [] });
+    }
+    setIsDialogOpen(true);
   };
 
-  const handleEdit = (admin: User) => {
-    setSelectedAdmin(admin);
-    setFormData({
-      full_name: admin.full_name || '',
-      email: admin.email || '',
-      role: admin.roles.includes('admin') ? 'admin' : 'user',
-      current_role: admin.current_role || 'admin'
-    });
-    setIsEditDialogOpen(true);
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingAdmin(null);
   };
 
-  const handleSave = async () => {
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTrackToggle = (trackId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      academic_track_ids: prev.academic_track_ids.includes(trackId)
+        ? prev.academic_track_ids.filter(id => id !== trackId)
+        : [...prev.academic_track_ids, trackId]
+    }));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     try {
-      if (selectedAdmin) {
-        await User.update(selectedAdmin.id, formData);
+      if (editingAdmin) {
+        await User.update(editingAdmin.id, formData);
       } else {
         await User.create(formData);
       }
-      setIsAddDialogOpen(false);
-      setIsEditDialogOpen(false);
-      setSelectedAdmin(null);
-      loadAdmins();
+      handleCloseDialog();
+      loadData();
     } catch (error) {
-      console.error("Error saving admin:", error);
-      alert("שגיאה בשמירת המנהל");
+      console.error("Failed to save admin:", error);
+      alert('שגיאה בשמירת המנהל.');
     }
   };
 
   const handleDelete = async (adminId: string) => {
-    if (window.confirm("האם אתה בטוח שברצונך למחוק מנהל זה?")) {
+    if (window.confirm('האם אתה בטוח שברצונך למחוק מנהל זה?')) {
       try {
         await User.delete(adminId);
-        loadAdmins();
+        loadData();
       } catch (error) {
-        console.error("Error deleting admin:", error);
-        alert("שגיאה במחיקת המנהל");
+        console.error("Failed to delete admin:", error);
+        alert('שגיאה במחיקת המנהל.');
       }
     }
   };
 
-  const getRoleChip = (currentRole: string) => {
-    const roleText = currentRole === 'admin' ? 'מנהל פעיל' :
-                     currentRole === 'lecturer' ? 'מרצה פעיל' :
-                     currentRole === 'student' ? 'סטודנט פעיל' : 'מנהל';
-
-    const color = currentRole === 'admin' ? 'error' :
-                   currentRole === 'lecturer' ? 'primary' :
-                   currentRole === 'student' ? 'success' : 'default';
-
-    return <Chip label={roleText} color={color} size="small" />;
-  };
+  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc: { [key: string]: string }, track: AcademicTrackData) => {
+    if (track) acc[track.id] = track.name;
+    return acc;
+  }, {});
 
   return (
     <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
@@ -106,15 +137,15 @@ export default function AdminManagement() {
         בחזרה לפאנל הניהול
       </Button>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 48, height: 48 }}><Settings /></Avatar>
-          <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Shield /></Avatar>
             <Typography variant="h4" fontWeight="bold">ניהול מנהלים</Typography>
-            <Typography color="text.secondary">ניהול מנהלי המערכת והרשאותיהם</Typography>
           </Box>
+          <Typography color="text.secondary">יצירה, עריכה וניהול של מנהלי המערכת</Typography>
         </Box>
-        <Button onClick={handleAdd} variant="contained" startIcon={<Plus />}>
+        <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
           הוסף מנהל חדש
         </Button>
       </Box>
@@ -126,19 +157,31 @@ export default function AdminManagement() {
               <TableRow>
                 <TableCell>שם מלא</TableCell>
                 <TableCell>כתובת מייל</TableCell>
-                <TableCell>תפקיד נוכחי</TableCell>
-                <TableCell>תאריך הצטרפות</TableCell>
+                <TableCell>מסלולים אקדמיים</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {admins.map((admin: User) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center"><CircularProgress /></TableCell>
+                </TableRow>
+              ) : (Array.isArray(admins) ? admins : []).map((admin) => (
                 <TableRow key={admin.id} hover>
                   <TableCell>{admin.full_name || 'לא מוגדר'}</TableCell>
-                  <TableCell>{admin.email}</TableCell>
-                  <TableCell>{getRoleChip(admin.current_role)}</TableCell>
+                  <TableCell>{admin.email || 'לא מוגדר'}</TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(admin.academic_track_ids && admin.academic_track_ids.length > 0) ? 
+                        admin.academic_track_ids.map(trackId => (
+                          <Chip key={trackId} label={tracksMap[trackId] || trackId} size="small" icon={<GraduationCap />} />
+                        )) : 
+                        <Typography variant="body2" color="text.secondary">אין מסלולים</Typography>
+                      }
+                    </Box>
+                  </TableCell>
                   <TableCell align="left">
-                    <IconButton onClick={() => handleEdit(admin)}><Edit /></IconButton>
+                    <IconButton onClick={() => handleOpenDialog(admin)}><Edit /></IconButton>
                     <IconButton onClick={() => handleDelete(admin.id)} color="error"><Trash2 /></IconButton>
                   </TableCell>
                 </TableRow>
@@ -148,42 +191,34 @@ export default function AdminManagement() {
         </TableContainer>
       </Paper>
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={isAddDialogOpen || isEditDialogOpen} onClose={() => { setIsAddDialogOpen(false); setIsEditDialogOpen(false); }}>
-        <DialogTitle>{selectedAdmin ? 'ערוך מנהל' : 'הוסף מנהל חדש'}</DialogTitle>
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+        <DialogTitle>{editingAdmin ? 'עריכת מנהל' : 'הוספת מנהל חדש'}</DialogTitle>
         <DialogContent>
-          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              label="שם מלא"
-              value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="כתובת מייל"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              disabled={!!selectedAdmin}
-              fullWidth
-            />
-            <FormControl fullWidth>
-              <InputLabel>תפקיד נוכחי</InputLabel>
-              <Select
-                value={formData.current_role}
-                label="תפקיד נוכחי"
-                onChange={(e) => setFormData({ ...formData, current_role: e.target.value })}
-              >
-                <MenuItem value="admin">מנהל</MenuItem>
-                <MenuItem value="lecturer">מרצה</MenuItem>
-                <MenuItem value="student">סטודנט</MenuItem>
-              </Select>
-            </FormControl>
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField name="full_name" label="שם מלא" value={formData.full_name} onChange={handleFormChange} required fullWidth />
+            <TextField name="email" label="כתובת מייל" type="email" value={formData.email} onChange={handleFormChange} required fullWidth />
+            
+            <FormGroup>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>מסלולים אקדמיים</Typography>
+              {(Array.isArray(academicTracks) ? academicTracks : []).map(track => (
+                track && <FormControlLabel
+                  key={track.id}
+                  control={
+                    <Checkbox
+                      checked={formData.academic_track_ids.includes(track.id)}
+                      onChange={() => handleTrackToggle(track.id)}
+                      name={track.id}
+                    />
+                  }
+                  label={`${track.name} (${track.department})`}
+                />
+              ))}
+            </FormGroup>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setIsAddDialogOpen(false); setIsEditDialogOpen(false); }}>ביטול</Button>
-          <Button onClick={handleSave} variant="contained">שמור</Button>
+          <Button onClick={handleCloseDialog}>ביטול</Button>
+          <Button onClick={handleSubmit} variant="contained">שמור</Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -5,7 +5,7 @@ import {
     Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Dialog, DialogContent, DialogTitle, DialogActions, TextField,
     Checkbox, FormControlLabel, FormGroup, Box, Typography, Paper,
-    IconButton, CircularProgress, Chip, Avatar
+    IconButton, CircularProgress, Chip, Avatar, ToggleButtonGroup, ToggleButton
 } from '@mui/material';
 import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -34,10 +34,12 @@ type FormData = {
 
 export default function AdminStudentManagement() {
   const [students, setStudents] = useState<StudentData[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<StudentData[]>([]);
   const [academicTracks, setAcademicTracks] = useState<AcademicTrackData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
+  const [trackFilter, setTrackFilter] = useState('all');
   const [formData, setFormData] = useState<FormData>({
     full_name: '',
     student_id: '',
@@ -49,6 +51,16 @@ export default function AdminStudentManagement() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (trackFilter === 'all') {
+      setFilteredStudents(students);
+    } else {
+      setFilteredStudents(students.filter(student => 
+        student.academic_track_ids && student.academic_track_ids.includes(trackFilter)
+      ));
+    }
+  }, [trackFilter, students]);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -56,10 +68,18 @@ export default function AdminStudentManagement() {
         Student.list(),
         AcademicTrack.list()
       ]);
-      setStudents(studentList);
-      setAcademicTracks(trackList);
+      console.log('Students loaded:', studentList);
+      console.log('Academic tracks loaded:', trackList);
+      const validStudents = Array.isArray(studentList) ? studentList : [];
+      setStudents(validStudents);
+      setFilteredStudents(validStudents);
+      setAcademicTracks(Array.isArray(trackList) ? trackList : []);
+      console.log('Final academic tracks:', Array.isArray(trackList) ? trackList : []);
     } catch (error) {
       console.error("Error loading data:", error);
+      setStudents([]);
+      setFilteredStudents([]);
+      setAcademicTracks([]);
     }
     setLoading(false);
   };
@@ -96,6 +116,17 @@ export default function AdminStudentManagement() {
         ? prev.academic_track_ids.filter(id => id !== trackId)
         : [...prev.academic_track_ids, trackId]
     }));
+  };
+
+  const handleTrackFilterChange = (event: any, newTrack: string) => {
+    if (newTrack !== null) {
+      setTrackFilter(newTrack);
+    }
+  };
+
+  const getShortTrackName = (trackName: string) => {
+    // החזרת השמות המלאים במקום קיצורים
+    return trackName;
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -150,6 +181,50 @@ export default function AdminStudentManagement() {
         </Button>
       </Box>
 
+      <Box sx={{ mb: 3 }}>
+        <ToggleButtonGroup
+          value={trackFilter}
+          exclusive
+          onChange={handleTrackFilterChange}
+          aria-label="סינון לפי מסלול אקדמי"
+          sx={{ 
+            gap: 1,
+            flexWrap: 'wrap',
+            '& .MuiToggleButton-root': {
+              borderRadius: '12px',
+              border: '1px solid #d1d5db',
+              color: '#6b7280',
+              backgroundColor: '#f9fafb',
+              px: 3,
+              py: 0.5,
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                backgroundColor: '#f3f4f6',
+                borderColor: '#9ca3af'
+              },
+              '&.Mui-selected': {
+                backgroundColor: '#84cc16',
+                color: 'white',
+                borderColor: '#65a30d',
+                '&:hover': {
+                  backgroundColor: '#65a30d'
+                }
+              }
+            }
+          }}
+        >
+          <ToggleButton value="all" aria-label="כל הסטודנטים">
+            כל הסטודנטים
+          </ToggleButton>
+          {academicTracks.map((track) => (
+            <ToggleButton key={track.id} value={track.id} aria-label={track.name}>
+              {getShortTrackName(track.name)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
+
       <Paper elevation={2}>
         <TableContainer>
           <Table>
@@ -167,16 +242,19 @@ export default function AdminStudentManagement() {
                 <TableRow>
                   <TableCell colSpan={5} align="center"><CircularProgress /></TableCell>
                 </TableRow>
-              ) : students.map((student) => (
+              ) : (Array.isArray(filteredStudents) ? filteredStudents : []).map((student) => (
                 <TableRow key={student.id} hover>
-                  <TableCell>{student.full_name}</TableCell>
-                  <TableCell>{student.student_id}</TableCell>
-                  <TableCell>{student.email}</TableCell>
+                  <TableCell>{student.full_name || 'לא מוגדר'}</TableCell>
+                  <TableCell>{student.student_id || 'לא מוגדר'}</TableCell>
+                  <TableCell>{student.email || 'לא מוגדר'}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {(student.academic_track_ids || []).map(trackId => (
-                        <Chip key={trackId} label={tracksMap[trackId] || trackId} size="small" icon={<GraduationCap />} />
-                      ))}
+                      {(student.academic_track_ids && student.academic_track_ids.length > 0) ? 
+                        student.academic_track_ids.map(trackId => (
+                          <Chip key={trackId} label={tracksMap[trackId] || trackId} size="small" icon={<GraduationCap />} />
+                        )) : 
+                        <Typography variant="body2" color="text.secondary">אין מסלולים</Typography>
+                      }
                     </Box>
                   </TableCell>
                   <TableCell align="left">

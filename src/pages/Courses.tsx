@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
     Card, CardContent, CardActionArea, Typography, Box,
-    TextField, Button, Chip, Skeleton, InputAdornment, Avatar
+    TextField, Button, Chip, Skeleton, InputAdornment, Avatar, ToggleButton, ToggleButtonGroup
 } from "@mui/material";
 import Grid from '@mui/material/Grid';
 import { BookOpen, User as UserIcon, Calendar, Search } from "lucide-react";
@@ -131,22 +131,48 @@ export default function Courses() {
         }}
       />
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 4 }}>
-        <Button
-          variant={!selectedTrack ? 'contained' : 'outlined'}
-          onClick={() => setSelectedTrack(null)}
+      <Box sx={{ mb: 3 }}>
+        <ToggleButtonGroup
+          value={selectedTrack || 'all'}
+          exclusive
+          onChange={(_, newValue) => setSelectedTrack(newValue === 'all' ? null : newValue)}
+          aria-label="סינון לפי מסלול אקדמי"
+          sx={{ 
+            gap: 1,
+            flexWrap: 'wrap',
+            '& .MuiToggleButton-root': {
+              borderRadius: '12px',
+              border: '1px solid #d1d5db',
+              color: '#6b7280',
+              backgroundColor: '#f9fafb',
+              px: 3,
+              py: 0.5,
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                backgroundColor: '#f3f4f6',
+                borderColor: '#9ca3af'
+              },
+              '&.Mui-selected': {
+                backgroundColor: '#84cc16',
+                color: 'white',
+                borderColor: '#65a30d',
+                '&:hover': {
+                  backgroundColor: '#65a30d'
+                }
+              }
+            }
+          }}
         >
-          הצג הכל
-        </Button>
-        {filterableTracks.map((track) => (
-          <Button
-            key={track.id}
-            variant={selectedTrack === track.id ? 'contained' : 'outlined'}
-            onClick={() => setSelectedTrack(track.id)}
-          >
-            {track.name}
-          </Button>
-        ))}
+          <ToggleButton value="all" aria-label="הצג הכל">
+            הצג הכל
+          </ToggleButton>
+          {filterableTracks.map((track) => (
+            <ToggleButton key={track.id} value={track.id} aria-label={track.name}>
+              {track.name}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
       </Box>
 
       <Grid container spacing={3}>

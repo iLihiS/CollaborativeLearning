@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { User as UserEntity, Course, File, Student, Lecturer, Message, Notification } from "@/api/entities";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -30,7 +31,9 @@ import {
     LinearProgress,
     CircularProgress,
     Paper,
-    IconButton
+    IconButton,
+    Snackbar,
+    Alert
 } from "@mui/material";
 import Grid from '@mui/material/Grid';
 
@@ -59,6 +62,7 @@ const EVENING_START = 18;
 const NIGHT_START = 22;
 
 export default function Dashboard() {
+    const navigate = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [recentFiles, setRecentFiles] = useState<any[]>([]);
     const [recentInquiries, setRecentInquiries] = useState<any[]>([]);
@@ -74,6 +78,7 @@ export default function Dashboard() {
     const [userRoles, setUserRoles] = useState<string[]>([]);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+    const [toast, setToast] = useState({ open: false, message: '' });
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -81,6 +86,10 @@ export default function Dashboard() {
 
     const handleClose = () => {
         setAnchorEl(null);
+    };
+
+    const handleCloseToast = () => {
+        setToast({ open: false, message: '' });
     };
 
     useEffect(() => {
@@ -96,6 +105,15 @@ export default function Dashboard() {
         }
 
         loadDashboardData();
+    }, []);
+
+    useEffect(() => {
+        // Check for role change message after page reload
+        const roleChangeMessage = sessionStorage.getItem('roleChangeMessage');
+        if (roleChangeMessage) {
+            setToast({ open: true, message: roleChangeMessage });
+            sessionStorage.removeItem('roleChangeMessage');
+        }
     }, []);
 
     const loadDashboardData = async () => {
@@ -191,9 +209,14 @@ export default function Dashboard() {
         handleClose();
         try {
             await UserEntity.updateMyUserData({ current_role: newRole });
-            window.location.reload();
+            // Save toast message to sessionStorage to show after reload
+            const roleHebrew = newRole === 'student' ? 'סטודנט' : newRole === 'lecturer' ? 'מרצה' : 'מנהל';
+            sessionStorage.setItem('roleChangeMessage', `עברת בהצלחה לתצוגת ${roleHebrew}`);
+            // Navigate to Dashboard and reload immediately
+            window.location.href = createPageUrl("Dashboard");
         } catch (error) {
             console.error("Error switching role:", error);
+            setToast({ open: true, message: 'שגיאה במעבר בין תפקידים' });
         }
     };
 
@@ -213,18 +236,42 @@ export default function Dashboard() {
     };
 
 
-    const StatCard = ({ to, icon, title, value, subtitle, color }: { to: string, icon: React.ReactNode, title: string, value: string | number, subtitle: string, color: string }) => (
-        <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
-            <Paper component={Link} to={to} elevation={0} sx={{ p: 2, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, transition: 'all 0.2s', border: 1, borderColor: 'divider' }}>
-                <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.main`, mx: 'auto', mb: 1 }}>
-                    {icon}
-                </Avatar>
-                <Typography variant="h5" fontWeight="bold">{value}</Typography>
-                <Typography variant="body2" color="text.secondary">{title}</Typography>
-                <Typography variant="caption" color="text.secondary">{subtitle}</Typography>
-            </Paper>
-        </Grid>
-    );
+    const StatCard = ({ to, icon, title, value, subtitle, color }: { to: string, icon: React.ReactNode, title: string, value: string | number, subtitle: string, color: string }) => {
+        // Define pastel colors for each type
+        const pastelColors = {
+            error: { bg: '#fce4ec', color: '#e91e63' }, // Light pink background, pink icon for Heart (הורדות)
+            info: { bg: '#e3f2fd', color: '#1976d2' }, // Light blue
+            success: { bg: '#e8f5e8', color: '#388e3c' }, // Light green
+            warning: { bg: '#fff3e0', color: '#f57c00' }, // Light orange
+        };
+        
+        const colorConfig = pastelColors[color as keyof typeof pastelColors] || pastelColors.info;
+        
+        return (
+            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+                <Paper component={Link} to={to} elevation={0} sx={{ 
+                    p: 2, 
+                    textAlign: 'center', 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, 
+                    transition: 'all 0.2s', 
+                    border: 1, 
+                    borderColor: 'divider' 
+                }}>
+                    <Avatar sx={{ bgcolor: colorConfig.bg, color: colorConfig.color, mx: 'auto', mb: 1 }}>
+                        {icon}
+                    </Avatar>
+                    <Typography variant="h5" fontWeight="bold" sx={{ textAlign: 'center' }}>{value}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>{title}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>{subtitle}</Typography>
+                </Paper>
+            </Grid>
+        );
+    };
 
     StatCard.propTypes = {
         to: PropTypes.string.isRequired,
@@ -235,17 +282,42 @@ export default function Dashboard() {
         color: PropTypes.string.isRequired,
     };
 
-    const AdminQuickLink = ({ to, icon, title, subtitle, color }: { to: string, icon: React.ReactNode, title: string, subtitle: string, color: string }) => (
-        <Grid size={{ xs: 6, md: 3 }}>
-            <Paper component={Link} to={to} elevation={0} sx={{ p: 2, textAlign: 'center', height: '100%', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, transition: 'all 0.2s', border: 1, borderColor: 'divider' }}>
-                <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.main`, mx: 'auto', mb: 1 }}>
-                    {icon}
-                </Avatar>
-                <Typography variant="h6" fontWeight="bold">{title}</Typography>
-                <Typography variant="caption" color="text.secondary">{subtitle}</Typography>
-            </Paper>
-        </Grid>
-    );
+    const AdminQuickLink = ({ to, icon, title, subtitle, color }: { to: string, icon: React.ReactNode, title: string, subtitle: string, color: string }) => {
+        // Define pastel colors for admin links
+        const pastelColors = {
+            info: { bg: '#e3f2fd', color: '#1976d2' }, // Light blue for courses
+            success: { bg: '#e8f5e8', color: '#388e3c' }, // Light green for students
+            secondary: { bg: '#f3e5f5', color: '#7b1fa2' }, // Light purple for lecturers
+            warning: { bg: '#fff3e0', color: '#f57c00' }, // Light orange for files
+        };
+        
+        const colorConfig = pastelColors[color as keyof typeof pastelColors] || pastelColors.info;
+        
+        return (
+            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+                <Paper component={Link} to={to} elevation={0} sx={{ 
+                    p: 2, 
+                    textAlign: 'center', 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, 
+                    transition: 'all 0.2s', 
+                    border: 1, 
+                    borderColor: 'divider' 
+                }}>
+                    <Avatar sx={{ bgcolor: colorConfig.bg, color: colorConfig.color, mx: 'auto', mb: 1 }}>
+                        {icon}
+                    </Avatar>
+                    <Typography variant="h5" fontWeight="bold" sx={{ textAlign: 'center' }}>ניהול</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>{title}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>{subtitle}</Typography>
+                </Paper>
+            </Grid>
+        );
+    };
 
     AdminQuickLink.propTypes = {
         to: PropTypes.string.isRequired,
@@ -256,6 +328,7 @@ export default function Dashboard() {
     };
 
     return (
+        <>
         <Box sx={{ p: { xs: 2, lg: 3 }, bgcolor: 'background.default', minHeight: '100vh' }}>
             <Paper elevation={0} sx={{
                 borderRadius: '24px',
@@ -264,7 +337,21 @@ export default function Dashboard() {
                 color: 'white',
                 background: 'linear-gradient(to right, #84cc16, #65a30d)',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                    animation: 'shimmer 3s infinite',
+                },
+                '@keyframes shimmer': {
+                    '0%': { left: '-100%' },
+                    '100%': { left: '100%' }
+                }
             }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -322,7 +409,16 @@ export default function Dashboard() {
                 <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                     <Box>
                         <Typography sx={{ mb: 2, display: { xs: 'none', sm: 'block' } }}>ברוכים הבאים לשיתוף האקדמי שלכם</Typography>
-                        <Button component={Link} to={createPageUrl("UploadFile")} variant="contained" color="inherit" startIcon={<Upload />} sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}>
+                        <Button component={Link} to={createPageUrl("UploadFile")} variant="contained" color="inherit" startIcon={<Upload />} sx={{ 
+                            bgcolor: 'white', 
+                            color: 'primary.main', 
+                            border: '2px solid white',
+                            '&:hover': { 
+                                bgcolor: 'transparent', 
+                                color: 'white',
+                                borderColor: 'white'
+                            } 
+                        }}>
                             העלאת קובץ חדש
                         </Button>
                     </Box>
@@ -353,7 +449,15 @@ export default function Dashboard() {
             <Grid container spacing={3} sx={{ mt: 2 }}>
                 <Grid size={{ xs: 12, lg: 4 }}>
                      <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <CardHeader title="פעילויות אחרונות" />
+                        <CardHeader 
+                            title="פעילויות אחרונות" 
+                            sx={{ 
+                                textAlign: 'right',
+                                '& .MuiCardHeader-title': {
+                                    textAlign: 'right'
+                                }
+                            }}
+                        />
                         <CardContent sx={{ flexGrow: 1 }}>
                             {recentFiles.length > 0 ? (
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -382,10 +486,10 @@ export default function Dashboard() {
                                     ))}
                                 </Box>
                             ) : (
-                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                <Box sx={{ textAlign: 'center', py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <FileText sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
-                                    <Typography variant="h6">אין פעילות אחרונה</Typography>
-                                    <Typography color="text.secondary">התחל להעלות קבצים כדי לראות פעילות כאן</Typography>
+                                    <Typography variant="h6" sx={{ textAlign: 'center' }}>אין פעילות אחרונה</Typography>
+                                    <Typography color="text.secondary" sx={{ textAlign: 'center' }}>התחל להעלות קבצים כדי לראות פעילות כאן</Typography>
                                 </Box>
                             )}
                         </CardContent>
@@ -399,6 +503,12 @@ export default function Dashboard() {
                     <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <CardHeader
                             title="פניות אחרונות"
+                            sx={{ 
+                                textAlign: 'right',
+                                '& .MuiCardHeader-title': {
+                                    textAlign: 'right'
+                                }
+                            }}
                             action={
                                 <IconButton component={Link} to={createPageUrl("TrackInquiries?new=true")} size="small">
                                     <Plus />
@@ -426,10 +536,10 @@ export default function Dashboard() {
                                     ))}
                                 </Box>
                             ) : (
-                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                <Box sx={{ textAlign: 'center', py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                     <MessageSquare size={60} color="grey" />
-                                    <Typography variant="h6">אין פניות</Typography>
-                                    <Typography color="text.secondary">שלח פנייה חדשה למנהלי המערכת</Typography>
+                                    <Typography variant="h6" sx={{ textAlign: 'center' }}>אין פניות</Typography>
+                                    <Typography color="text.secondary" sx={{ textAlign: 'center' }}>שלח פנייה חדשה למנהלי המערכת</Typography>
                                 </Box>
                             )}
                         </CardContent>
@@ -442,7 +552,15 @@ export default function Dashboard() {
                 <Grid size={{ xs: 12, lg: 4 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Card elevation={2}>
-                            <CardHeader title="פעולות מהירות" />
+                            <CardHeader 
+                                title="פעולות מהירות" 
+                                sx={{ 
+                                    textAlign: 'right',
+                                    '& .MuiCardHeader-title': {
+                                        textAlign: 'right'
+                                    }
+                                }}
+                            />
                             <CardContent>
                                 <Grid container spacing={1.5}>
                                     <Grid size={12}>
@@ -458,7 +576,15 @@ export default function Dashboard() {
                             </CardContent>
                         </Card>
                         <Card elevation={2}>
-                             <CardHeader title="ביצועים" />
+                             <CardHeader 
+                                title="ביצועים" 
+                                sx={{ 
+                                    textAlign: 'right',
+                                    '& .MuiCardHeader-title': {
+                                        textAlign: 'right'
+                                    }
+                                }}
+                            />
                              <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                                     <Typography variant="body2" color="text.secondary">קבצים שאושרו</Typography>
@@ -478,5 +604,22 @@ export default function Dashboard() {
                 </Grid>
             </Grid>
         </Box>
+        
+        <Snackbar
+            open={toast.open}
+            autoHideDuration={3000}
+            onClose={handleCloseToast}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            sx={{ mt: 8 }}
+        >
+            <Alert 
+                onClose={handleCloseToast} 
+                severity="success" 
+                sx={{ width: '100%' }}
+            >
+                {toast.message}
+            </Alert>
+        </Snackbar>
+        </>
     );
 } 

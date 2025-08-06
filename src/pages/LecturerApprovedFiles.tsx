@@ -47,15 +47,22 @@ export default function LecturerApprovedFiles() {
     setLoading(true);
     try {
       const user = await User.me();
+      console.log('Current user:', user);
       setCurrentUser(user);
 
       const allFiles = await FileEntity.filter({ status: 'approved' });
+      console.log('All approved files:', allFiles);
       let relevantFiles = allFiles;
 
       if (user.current_role !== 'admin') {
-        const lecturerRecord = await Lecturer.filter({ user_id: user.id });
+        // Find lecturer by email instead of user_id
+        const lecturerRecord = await Lecturer.filter({ email: user.email });
+        console.log('Lecturer record:', lecturerRecord);
         if (lecturerRecord.length > 0) {
-          const lecturerCourses = await Course.filter({ lecturer_id: lecturerRecord[0].id });
+          const lecturerFullName = lecturerRecord[0].full_name;
+          // Find courses by lecturer name
+          const lecturerCourses = await Course.filter({ lecturer: lecturerFullName });
+          console.log('Lecturer courses:', lecturerCourses);
           const lecturerCourseIds = lecturerCourses.map((c: Course) => c.id);
           relevantFiles = allFiles.filter((file: File) => lecturerCourseIds.includes(file.course_id));
         } else {
@@ -63,6 +70,7 @@ export default function LecturerApprovedFiles() {
         }
       }
       
+      console.log('Relevant files:', relevantFiles);
       setFiles(relevantFiles);
       
       const [courseList, studentList] = await Promise.all([Course.list(), Student.list()]);
@@ -75,13 +83,25 @@ export default function LecturerApprovedFiles() {
 
     } catch (error) {
       console.error("Failed to load data:", error);
+      setFiles([]);
+      setCourses({});
+      setStudents({});
     }
     setLoading(false);
   };
   
   const handleDownload = async (file: File) => {
-    await FileEntity.update(file.id, { download_count: (file as any).download_count + 1 });
-    window.open(file.file_url, '_blank');
+    try {
+      const currentDownloadCount = (file as any).download_count || 0;
+      await FileEntity.update(file.id, { download_count: currentDownloadCount + 1 });
+      
+      // For demo purposes, just show an alert instead of opening a file
+      alert(`הורדת הקובץ: ${file.title}`);
+      // window.open(file.file_url, '_blank');
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert("שגיאה בהורדת הקובץ");
+    }
   }
 
   if (loading) {

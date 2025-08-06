@@ -57,13 +57,16 @@ export default function UploadFile() {
             const currentUser = await User.me();
             setUser(currentUser);
             const allCourses = await Course.list();
-
-            let relevantCourses = allCourses;
+            
+            const validCourses = Array.isArray(allCourses) ? allCourses : [];
+            let relevantCourses = validCourses;
+            
             if (currentUser.current_role === 'student') {
                 const studentProfile = await Student.filter({ user_id: currentUser.id });
-                if (studentProfile.length > 0 && studentProfile[0].academic_track_ids) {
+                if (Array.isArray(studentProfile) && studentProfile.length > 0 && studentProfile[0].academic_track_ids) {
                     const studentTrackIds = studentProfile[0].academic_track_ids;
-                    relevantCourses = allCourses.filter((course: CourseInfo) => 
+                    relevantCourses = validCourses.filter((course: CourseInfo) => 
+                        Array.isArray(course.academic_track_ids) && 
                         course.academic_track_ids.some((trackId: string) => studentTrackIds.includes(trackId))
                     );
                 }
@@ -77,20 +80,34 @@ export default function UploadFile() {
             }
         } catch (error) {
             console.error("Error loading initial data:", error);
+            setCourses([]);
         }
     };
 
     const validate = () => {
         const newErrors: FormErrors = {};
-        if (!formState.title.trim()) newErrors.title = "כותרת הקובץ היא שדה חובה";
-        if (!formState.description.trim()) newErrors.description = "תיאור הקובץ הוא שדה חובה";
-        if (!formState.course_id) newErrors.course_id = "חובה לבחור קורס";
-        if (!formState.file_type) newErrors.file_type = "חובה לבחור סוג קובץ";
+        
+        if (!formState.title.trim()) {
+            newErrors.title = 'שם הקובץ הוא שדה חובה';
+        }
+        
+        if (!formState.description.trim()) {
+            newErrors.description = 'תיאור הקובץ הוא שדה חובה';
+        }
+        
+        if (!formState.course_id) {
+            newErrors.course_id = 'יש לבחור קורס';
+        }
+        
+        if (!formState.file_type) {
+            newErrors.file_type = 'יש לבחור סוג קובץ';
+        }
+        
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.ChangeEvent<{ name?: string; value: unknown }>) => {
+    const handleChange = (e: any) => {
         const { name, value } = e.target;
         setFormState(prev => ({ ...prev, [name!]: value as string }));
     };
@@ -104,17 +121,17 @@ export default function UploadFile() {
             let uploaderRecord;
             if (currentUser.current_role === 'student') {
                 const studentRecords = await Student.filter({ user_id: currentUser.id });
-                if (studentRecords.length > 0) uploaderRecord = studentRecords[0];
+                if (Array.isArray(studentRecords) && studentRecords.length > 0) uploaderRecord = studentRecords[0];
             } else if (currentUser.current_role === 'lecturer') {
                 const lecturerRecords = await Lecturer.filter({ user_id: currentUser.id });
-                if (lecturerRecords.length > 0) uploaderRecord = lecturerRecords[0];
+                if (Array.isArray(lecturerRecords) && lecturerRecords.length > 0) uploaderRecord = lecturerRecords[0];
             } else { // Admin
                 const studentRecords = await Student.filter({ user_id: currentUser.id });
-                 if (studentRecords.length > 0) {
+                 if (Array.isArray(studentRecords) && studentRecords.length > 0) {
                     uploaderRecord = studentRecords[0];
                  } else {
                     const lecturerRecords = await Lecturer.filter({ user_id: currentUser.id });
-                    if (lecturerRecords.length > 0) uploaderRecord = lecturerRecords[0];
+                    if (Array.isArray(lecturerRecords) && lecturerRecords.length > 0) uploaderRecord = lecturerRecords[0];
                  }
             }
 
@@ -137,32 +154,45 @@ export default function UploadFile() {
             setIsSubmitted(true);
         } catch (error) {
             console.error("Failed to upload file:", error);
-            alert((error as Error).message || "שגיאה בהעלאת הקובץ. נסה שוב.");
+            alert('שגיאה בהעלאת הקובץ. אנא נסה שוב.');
+        } finally {
+            setIsSubmitting(false);
         }
-        setIsSubmitting(false);
     };
 
     if (isSubmitted) {
         return (
-            <Box sx={{ p: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-                <Paper sx={{ maxWidth: 400, textAlign: 'center' }}>
-                    <Box sx={{ p: 4 }}>
-                        <Avatar sx={{ bgcolor: 'success.light', color: 'success.dark', width: 64, height: 64, mx: 'auto', mb: 2 }}>
-                            <CheckCircleIcon sx={{ fontSize: 40 }} />
-                        </Avatar>
-                        <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>הקובץ הועלה בהצלחה!</Typography>
-                        <Typography color="text.secondary" sx={{ mb: 3 }}>
-                            {user?.current_role === 'student'
-                                ? <>הקובץ שלך הוגש לאישור המרצה.<br/>תקבל התראה ברגע שהוא ייבדק.</>
-                                : 'הקובץ זמין כעת לסטודנטים בקורס.'}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                            <Button variant="contained" onClick={() => navigate('/my-files')}>צפייה בקבצים שלי</Button>
-                            <Button variant="outlined" onClick={() => {
-                                setIsSubmitted(false);
-                                setFormState({ title: "", description: "", course_id: "", file_type: "note" });
-                            }}>העלאת קובץ נוסף</Button>
-                        </Box>
+            <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+                <Paper elevation={2} sx={{ p: 6, textAlign: 'center', maxWidth: 600, mx: 'auto', mt: 8 }}>
+                    <Avatar sx={{ bgcolor: 'success.main', width: 80, height: 80, mx: 'auto', mb: 3 }}>
+                        <CheckCircleIcon sx={{ fontSize: 48 }} />
+                    </Avatar>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        הקובץ הועלה בהצלחה!
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" paragraph>
+                        {user?.current_role === 'student' 
+                            ? 'הקובץ שלך נשלח לאישור מרצה.<br/>תקבל התראה כאשר הקובץ יאושר.'
+                            : 'הקובץ שלך אושר אוטומטית והוא זמין כעת לסטודנטים.'
+                        }
+                    </Typography>
+                    <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
+                        <Button 
+                            variant="contained" 
+                            onClick={() => setIsSubmitted(false)}
+                            sx={{ 
+                                bgcolor: 'success.main',
+                                '&:hover': { bgcolor: 'success.dark' }
+                            }}
+                        >
+                            העלה קובץ נוסף
+                        </Button>
+                        <Button 
+                            variant="outlined" 
+                            onClick={() => navigate('/courses')}
+                        >
+                            חזרה לקורסים
+                        </Button>
                     </Box>
                 </Paper>
             </Box>
@@ -171,82 +201,97 @@ export default function UploadFile() {
 
     return (
         <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
-            <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                    <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 48, height: 48 }}>
-                        <CloudUploadIcon />
-                    </Avatar>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+                    <CloudUploadIcon />
+                </Avatar>
+                <Box>
                     <Typography variant="h4" fontWeight="bold">העלאת קובץ חדש</Typography>
+                    <Typography color="text.secondary">העלה קבצים ללימוד ושיתוף עם הקהילה</Typography>
                 </Box>
-                <Typography color="text.secondary" sx={{ mb: 3 }}>שתפו חומרי לימוד עם סטודנטים אחרים</Typography>
-
-                <Paper elevation={2}>
-                    <Box sx={{ p: 3 }}>
-                        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            {/* Error and Success messages would go here if implemented */}
-                            <TextField
-                                label="כותרת הקובץ"
-                                name="title"
-                                value={formState.title}
-                                onChange={handleChange}
-                                error={!!errors.title}
-                                helperText={errors.title}
-                                required fullWidth
-                            />
-                            <Select
-                                label="שיוך לקורס"
-                                name="course_id"
-                                value={formState.course_id}
-                                onChange={handleChange as any}
-                                error={!!errors.course_id}
-                                required
-                            >
-                                {courses.map((course) => (
-                                    <MenuItem key={course.id} value={course.id}>{course.course_code} - {course.course_name}</MenuItem>
-                                ))}
-                            </Select>
-                            <TextField
-                                label="תיאור (עד 200 תווים)"
-                                name="description"
-                                value={formState.description}
-                                onChange={handleChange}
-                                error={!!errors.description}
-                                helperText={errors.description}
-                                required multiline rows={4} fullWidth
-                                inputProps={{ maxLength: 200 }}
-                            />
-                            <FormControl fullWidth error={!!errors.file_type}>
-                                <InputLabel id="file-type-label">סוג הקובץ</InputLabel>
-                                <Select
-                                    labelId="file-type-label"
-                                    name="file_type"
-                                    value={formState.file_type}
-                                    onChange={handleChange as any}
-                                    required
-                                >
-                                    <MenuItem value="note">הרצאות וסיכומים</MenuItem>
-                                    <MenuItem value="exam">מבחני תרגול</MenuItem>
-                                    <MenuItem value="formulas">דף נוסחאות</MenuItem>
-                                    <MenuItem value="assignment">מטלות</MenuItem>
-                                    <MenuItem value="other">אחר</MenuItem>
-                                </Select>
-                                {errors.file_type && <Typography color="error" variant="caption">{errors.file_type}</Typography>}
-                            </FormControl>
-                            <Box>
-                                <Button variant="contained" component="label">
-                                    בחר קובץ
-                                    <input type="file" hidden accept=".pdf,.docx,.png,.jpg,.jpeg" />
-                                </Button>
-                                {/* File preview would go here if implemented */}
-                                {errors.file && <Typography color="error" variant="caption">{errors.file}</Typography>}
-                            </Box>
-                            <Button type="submit" variant="contained" disabled={isSubmitting} startIcon={isSubmitting ? <CircularProgress size={20} /> : <CloudUploadIcon />}>
-                                {isSubmitting ? 'מעלה...' : 'העלאת הקובץ'}
-                            </Button>
-                        </Box>
-                    </Box>
-                </Paper>
             </Box>
+
+            <Paper elevation={2} sx={{ p: 4, maxWidth: 800, mx: 'auto' }}>
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <TextField
+                        name="title"
+                        label="שם הקובץ"
+                        value={formState.title}
+                        onChange={handleChange}
+                        error={!!errors.title}
+                        helperText={errors.title}
+                        required
+                        fullWidth
+                    />
+                    
+                    <TextField
+                        name="description"
+                        label="תיאור הקובץ"
+                        value={formState.description}
+                        onChange={handleChange}
+                        error={!!errors.description}
+                        helperText={errors.description}
+                        required
+                        multiline
+                        rows={3}
+                        fullWidth
+                    />
+                    
+                    <FormControl fullWidth error={!!errors.course_id} required>
+                        <InputLabel id="course-label">קורס</InputLabel>
+                        <Select
+                            labelId="course-label"
+                            name="course_id"
+                            value={formState.course_id}
+                            onChange={handleChange}
+                            label="קורס"
+                        >
+                            {courses.map((course) => (
+                                <MenuItem key={course.id} value={course.id}>
+                                    {course.course_name} ({course.course_code})
+                                </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.course_id && <Typography color="error" variant="caption">{errors.course_id}</Typography>}
+                    </FormControl>
+                    
+                    <FormControl fullWidth error={!!errors.file_type}>
+                        <InputLabel id="file-type-label">סוג הקובץ</InputLabel>
+                        <Select
+                            labelId="file-type-label"
+                            name="file_type"
+                            value={formState.file_type}
+                            onChange={handleChange}
+                            required
+                        >
+                            <MenuItem value="note">הרצאות וסיכומים</MenuItem>
+                            <MenuItem value="exam">מבחני תרגול</MenuItem>
+                            <MenuItem value="formulas">דף נוסחאות</MenuItem>
+                            <MenuItem value="assignment">מטלות</MenuItem>
+                            <MenuItem value="other">אחר</MenuItem>
+                        </Select>
+                        {errors.file_type && <Typography color="error" variant="caption">{errors.file_type}</Typography>}
+                    </FormControl>
+                    
+                    <Box>
+                        <Button variant="contained" component="label">
+                            בחר קובץ
+                            <input type="file" hidden accept=".pdf,.docx,.png,.jpg,.jpeg" />
+                        </Button>
+                        {errors.file && <Typography color="error" variant="caption">{errors.file}</Typography>}
+                    </Box>
+                    
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        size="large"
+                        disabled={isSubmitting}
+                        sx={{ mt: 2 }}
+                    >
+                        {isSubmitting ? <CircularProgress size={24} /> : 'העלה קובץ'}
+                    </Button>
+                </Box>
+            </Paper>
         </Box>
     );
 }

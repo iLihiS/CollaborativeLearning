@@ -89,8 +89,25 @@ export default function Help() {
         </Grid>
 
         <Card sx={{
-            mt: 4, color: 'white',
+            mt: 4, 
+            color: 'white',
             background: 'linear-gradient(to right, #84cc16, #65a30d)',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: '-100%',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                animation: 'shimmer 3s infinite',
+            },
+            '@keyframes shimmer': {
+                '0%': { left: '-100%' },
+                '100%': { left: '100%' }
+            }
         }}>
             <CardContent sx={{ textAlign: 'center' }}>
                 <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>צריך עזרה נוספת?</Typography>

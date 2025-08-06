@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { File as FileEntity, Course, Student, Lecturer, User } from "@/api/entities";
+import { File as FileEntity, Course, Student, Lecturer, User, AcademicTrack } from "@/api/entities";
 import {
     Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Box, Typography, Paper, CircularProgress, Button, IconButton, Chip,
@@ -32,9 +32,17 @@ type File = {
     rejection_reason?: string;
 };
 
+type AcademicTrackData = {
+    id: string;
+    name: string;
+    department: string;
+    degree_type: string;
+};
+
 type Course = {
-    id:string;
+    id: string;
     course_name: string;
+    academic_track_ids?: string[];
 }
 
 const fileTypeToHebrew: { [key: string]: string } = {
@@ -54,9 +62,12 @@ const filterToHebrew: { [key: string]: string } = {
 
 export default function MyFiles() {
   const [files, setFiles] = useState<File[]>([]);
+  const [filteredFiles, setFilteredFiles] = useState<File[]>([]);
   const [courses, setCourses] = useState<{ [key: string]: Course }>({});
+  const [academicTracks, setAcademicTracks] = useState<AcademicTrackData[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [trackFilter, setTrackFilter] = useState('all');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +83,25 @@ export default function MyFiles() {
         setFilter('all');
     }
   }, [window.location.search]);
+
+  useEffect(() => {
+    let filtered = files;
+    
+    // Filter by status
+    if (filter !== 'all') {
+      filtered = filtered.filter(file => file.status === filter);
+    }
+    
+    // Filter by academic track
+    if (trackFilter !== 'all') {
+      filtered = filtered.filter(file => {
+        const course = courses[file.course_id];
+        return course && course.academic_track_ids && course.academic_track_ids.includes(trackFilter);
+      });
+    }
+    
+    setFilteredFiles(filtered);
+  }, [filter, trackFilter, files, courses]);
 
   const loadFiles = async () => {
     setLoading(true);
@@ -91,9 +121,10 @@ export default function MyFiles() {
       }
 
       if (uploaderId) {
-        const [userFiles, allCourses] = await Promise.all([
+        const [userFiles, allCourses, trackList] = await Promise.all([
           FileEntity.filter({ uploader_id: uploaderId }),
-          Course.list()
+          Course.list(),
+          AcademicTrack.list()
         ]);
         
         const coursesData = allCourses.reduce((acc: { [key: string]: Course }, course: Course) => {
@@ -103,6 +134,7 @@ export default function MyFiles() {
         
         setFiles(userFiles);
         setCourses(coursesData);
+        setAcademicTracks(Array.isArray(trackList) ? trackList : []);
       }
     } catch (error) {
       console.error("Failed to load files:", error);
@@ -110,11 +142,15 @@ export default function MyFiles() {
     setLoading(false);
   };
   
-  const handleFilterChange = (event: React.MouseEvent<HTMLElement>, newFilter: string | null) => {
+  const handleFilterChange = (event: any, newFilter: string) => {
     if (newFilter !== null) {
       setFilter(newFilter);
-      const url = newFilter === 'all' ? createPageUrl("MyFiles") : createPageUrl(`MyFiles?status=${newFilter}`);
-      navigate(url, { replace: true });
+    }
+  };
+
+  const handleTrackFilterChange = (event: any, newTrack: string) => {
+    if (newTrack !== null) {
+      setTrackFilter(newTrack);
     }
   };
 
@@ -139,8 +175,6 @@ export default function MyFiles() {
     }
   };
 
-  const filteredFiles = files.filter(file => filter === 'all' || file.status === filter);
-  
   const emptyStateMessages = {
       all: 'עדיין לא העליתם קבצים.',
       pending: 'אין קבצים הממתינים לאישור.',
@@ -164,20 +198,93 @@ export default function MyFiles() {
         </Button>
       </Box>
 
+      <Box sx={{ mb: 3 }}>
+        <ToggleButtonGroup
+          value={filter}
+          exclusive
+          onChange={handleFilterChange}
+          aria-label="סינון לפי סטטוס"
+          sx={{ 
+            gap: 1,
+            flexWrap: 'wrap',
+            '& .MuiToggleButton-root': {
+              borderRadius: '12px',
+              border: '1px solid #d1d5db',
+              color: '#6b7280',
+              backgroundColor: '#f9fafb',
+              px: 3,
+              py: 1,
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                backgroundColor: '#f3f4f6',
+                borderColor: '#9ca3af'
+              },
+              '&.Mui-selected': {
+                backgroundColor: '#84cc16',
+                color: 'white',
+                borderColor: '#65a30d',
+                '&:hover': {
+                  backgroundColor: '#65a30d'
+                }
+              }
+            }
+          }}
+        >
+          {Object.entries(filterToHebrew).map(([key, value]) => (
+            <ToggleButton key={key} value={key} aria-label={value}>
+              {value}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
+
+      <Box sx={{ mb: 3 }}>
+        <ToggleButtonGroup
+          value={trackFilter}
+          exclusive
+          onChange={handleTrackFilterChange}
+          aria-label="סינון לפי מסלול אקדמי"
+          sx={{ 
+            gap: 1,
+            flexWrap: 'wrap',
+            '& .MuiToggleButton-root': {
+              borderRadius: '12px',
+              border: '1px solid #d1d5db',
+              color: '#6b7280',
+              backgroundColor: '#f9fafb',
+              px: 3,
+              py: 1,
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                backgroundColor: '#f3f4f6',
+                borderColor: '#9ca3af'
+              },
+              '&.Mui-selected': {
+                backgroundColor: '#84cc16',
+                color: 'white',
+                borderColor: '#65a30d',
+                '&:hover': {
+                  backgroundColor: '#65a30d'
+                }
+              }
+            }
+          }}
+        >
+          <ToggleButton value="all" aria-label="כל הקבצים">
+            כל הקבצים
+          </ToggleButton>
+          {academicTracks.map((track) => (
+            <ToggleButton key={track.id} value={track.id} aria-label={track.name}>
+              {track.name}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
+
       <Card>
         <CardContent>
-          <ToggleButtonGroup
-            value={filter}
-            exclusive
-            onChange={handleFilterChange}
-            aria-label="file filter"
-            sx={{ mb: 2 }}
-          >
-            {Object.entries(filterToHebrew).map(([key, value]) => (
-              <ToggleButton key={key} value={key}>{value}</ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-
           {/* Desktop View */}
           <TableContainer component={Paper} sx={{ display: { xs: 'none', md: 'block' } }}>
             <Table>

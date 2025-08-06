@@ -135,30 +135,42 @@ const initializeMockData = (key: string, initialData: any[]) => {
 // This function will be called once when the app loads to seed mock data
 const seedMockData = () => {
   const initialCourses = [
-    { id: 'course-001', course_name: 'מבוא למדעי המחשב', course_code: 'CS101', lecturer_id: 'lecturer-001', academic_track_ids: ['cs-undergrad', 'swe-undergrad'], description: 'קורס יסודות המציג עקרונות בסיסיים בתכנות, אלגוריתמיקה ומבנה המחשב.' },
-    { id: 'course-002', course_name: 'מבני נתונים', course_code: 'CS201', lecturer_id: 'lecturer-002', academic_track_ids: ['cs-undergrad', 'swe-undergrad'], description: 'קורס מתקדם הבוחן דרכים יעילות לארגון וניהול נתונים.' },
-    { id: 'course-003', course_name: 'אלגברה לינארית', course_code: 'MA101', lecturer_id: 'lecturer-003', academic_track_ids: ['math-undergrad', 'cs-undergrad', 'swe-undergrad'], description: 'עקרונות מתמטיים חיוניים למדעי המחשב וההנדסה.' },
-    { id: 'course-004', course_name: 'מבוא למשפט חוקתי', course_code: 'LAW101', lecturer_id: 'lecturer-004', academic_track_ids: ['law-undergrad'], description: 'יסודות המשפט הציבורי והחוקתי בישראל.' },
-    { id: 'course-005', course_name: 'מיקרו כלכלה', course_code: 'ECO101', lecturer_id: 'lecturer-005', academic_track_ids: ['business-undergrad'], description: 'ניתוח התנהגות צרכנים ופירמות בשוק.' },
-    { id: 'course-006', course_name: 'אסטרטגיה עסקית', course_code: 'BUS700', lecturer_id: 'lecturer-005', academic_track_ids: ['business-grad'], description: 'קורס מתקדם בפיתוח ויישום אסטרטגיות עסקיות.' },
-    { id: 'course-007', course_name: 'פסיכולוגיה קוגניטיבית', course_code: 'PSY202', lecturer_id: 'lecturer-006', academic_track_ids: ['psychology-undergrad', 'cs-grad'], description: 'חקר תהליכי עיבוד המידע במוח האנושי.' },
-    { id: 'course-008', course_name: 'למידת מכונה', course_code: 'CS550', lecturer_id: 'lecturer-001', academic_track_ids: ['cs-grad'], description: 'אלגוריתמים המאפשרים למערכות ללמוד מנתונים.' }
+    { id: 'course-001', course_name: 'מבוא למדעי המחשב', course_code: 'CS101', lecturer: 'ד"ר שרה לוי', credits: 3, academic_track_ids: ['cs-undergrad', 'swe-undergrad'], description: 'קורס יסודות המציג עקרונות בסיסיים בתכנות, אלגוריתמיקה ומבנה המחשב.' },
+    { id: 'course-002', course_name: 'מבני נתונים', course_code: 'CS201', lecturer: 'פרופ׳ מיכאל כהן', credits: 4, academic_track_ids: ['cs-undergrad', 'swe-undergrad'], description: 'קורס מתקדם הבוחן דרכים יעילות לארגון וניהול נתונים.' },
+    { id: 'course-003', course_name: 'אלגברה לינארית', course_code: 'MA101', lecturer: 'ד"ר רחל אברמס', credits: 3, academic_track_ids: ['math-undergrad', 'cs-undergrad', 'swe-undergrad'], description: 'עקרונות מתמטיים חיוניים למדעי המחשב וההנדסה.' },
+    { id: 'course-004', course_name: 'מבוא למשפט חוקתי', course_code: 'LAW101', lecturer: 'עו"ד דוד רוזנברג', credits: 2, academic_track_ids: ['law-undergrad'], description: 'יסודות המשפט הציבורי והחוקתי בישראל.' },
+    { id: 'course-005', course_name: 'מיקרו כלכלה', course_code: 'ECO101', lecturer: 'ד"ר מיכל גולדשטיין', credits: 3, academic_track_ids: ['business-undergrad'], description: 'ניתוח התנהגות צרכנים ופירמות בשוק.' },
+    { id: 'course-006', course_name: 'אסטרטגיה עסקית', course_code: 'BUS700', lecturer: 'ד"ר מיכל גולדשטיין', credits: 4, academic_track_ids: ['business-grad'], description: 'קורס מתקדם בפיתוח ויישום אסטרטגיות עסקיות.' },
+    { id: 'course-007', course_name: 'פסיכולוגיה קוגניטיבית', course_code: 'PSY202', lecturer: 'ד"ר יעל שחר', credits: 3, academic_track_ids: ['psychology-undergrad'], description: 'חקר תהליכי עיבוד המידע במוח האנושי.' },
+    { id: 'course-008', course_name: 'למידת מכונה', course_code: 'CS550', lecturer: 'ד"ר שרה לוי', credits: 4, academic_track_ids: ['cs-grad'], description: 'אלגוריתמים המאפשרים למערכות ללמוד מנתונים.' },
+    { id: 'course-009', course_name: 'ייעוץ חינוכי מתקדם', course_code: 'EDU600', lecturer: 'ד"ר יעל שחר', credits: 3, academic_track_ids: ['education-grad'], description: 'תיאוריות וטכניקות בייעוץ חינוכי.' },
+    { id: 'course-010', course_name: 'פיזיקה כללית', course_code: 'PHY101', lecturer: 'פרופ׳ מיכאל כהן', credits: 4, academic_track_ids: ['physics-undergrad'], description: 'יסודות הפיזיקה - מכניקה ותרמודינמיקה.' }
   ];
+  
   const initialLecturers = [
     { id: 'lecturer-001', full_name: 'ד"ר שרה לוי', email: 'sarah.levy@ono.ac.il', academic_track_ids: ['cs-undergrad', 'swe-undergrad', 'cs-grad'] },
-    { id: 'lecturer-002', full_name: 'פרופ׳ מיכאל כהן', email: 'michael.cohen@ono.ac.il', academic_track_ids: [] }, // No tracks
+    { id: 'lecturer-002', full_name: 'פרופ׳ מיכאל כהן', email: 'michael.cohen@ono.ac.il', academic_track_ids: ['swe-undergrad', 'physics-undergrad'] },
     { id: 'lecturer-003', full_name: 'ד"ר רחל אברמס', email: 'rachel.abrams@ono.ac.il', academic_track_ids: ['math-undergrad'] },
     { id: 'lecturer-004', full_name: 'עו"ד דוד רוזנברג', email: 'david.rosenberg@ono.ac.il', academic_track_ids: ['law-undergrad'] },
     { id: 'lecturer-005', full_name: 'ד"ר מיכל גולדשטיין', email: 'michal.goldstein@ono.ac.il', academic_track_ids: ['business-undergrad', 'business-grad'] },
-    { id: 'lecturer-006', full_name: 'ד"ר יעל שחר', email: 'yael.shahar@ono.ac.il', academic_track_ids: ['psychology-undergrad', 'education-grad'] }
+    { id: 'lecturer-006', full_name: 'ד"ר יעל שחר', email: 'yael.shahar@ono.ac.il', academic_track_ids: ['psychology-undergrad', 'education-grad'] },
+    { id: 'lecturer-007', full_name: 'ד"ר אבי נחמן', email: 'avi.nachman@ono.ac.il', academic_track_ids: ['cs-undergrad', 'cs-grad'] },
+    { id: 'lecturer-008', full_name: 'פרופ׳ תמר כהן', email: 'tamar.cohen@ono.ac.il', academic_track_ids: ['physics-undergrad'] }
   ];
+  
   const initialStudents = [
     { id: 'student-001', full_name: 'אליהו כהן', student_id: 'STU001', email: 'eli.cohen@mail.com', academic_track_ids: ['cs-undergrad'] },
-    { id: 'student-002', full_name: 'שרה ישראלי', student_id: 'STU002', email: 'sara.israeli@mail.com', academic_track_ids: ['law-undergrad', 'business-undergrad'] },
-    { id: 'student-003', full_name: 'יוסי חיים', student_id: 'STU003', email: 'yossi.haim@mail.com', academic_track_ids: [] }, // No tracks
+    { id: 'student-002', full_name: 'שרה ישראלי', student_id: 'STU002', email: 'sara.israeli@mail.com', academic_track_ids: ['law-undergrad'] },
+    { id: 'student-003', full_name: 'יוסי חיים', student_id: 'STU003', email: 'yossi.haim@mail.com', academic_track_ids: ['swe-undergrad'] },
     { id: 'student-004', full_name: 'רונית גולד', student_id: 'STU004', email: 'ronit.gold@mail.com', academic_track_ids: ['business-grad'] },
     { id: 'student-005', full_name: 'דניאל לוי', student_id: 'STU005', email: 'daniel.levi@mail.com', academic_track_ids: ['psychology-undergrad'] },
+    { id: 'student-006', full_name: 'מיכל רוזן', student_id: 'STU006', email: 'michal.rosen@mail.com', academic_track_ids: ['math-undergrad'] },
+    { id: 'student-007', full_name: 'עומר דהן', student_id: 'STU007', email: 'omer.dahan@mail.com', academic_track_ids: ['business-undergrad'] },
+    { id: 'student-008', full_name: 'נועה ברק', student_id: 'STU008', email: 'noa.barak@mail.com', academic_track_ids: ['education-grad'] },
+    { id: 'student-009', full_name: 'רון אשכנזי', student_id: 'STU009', email: 'ron.ashkenazi@mail.com', academic_track_ids: ['physics-undergrad'] },
+    { id: 'student-010', full_name: 'טליה שפירא', student_id: 'STU010', email: 'talia.shapira@mail.com', academic_track_ids: ['cs-grad'] }
   ];
+
   const initialFiles = [
     { id: 'file-001', title: 'סיכום הרצאה 1 - מבוא למדמ"ח', description: 'סיכום מעולה של ההרצאה הראשונה, כולל דוגמאות קוד.', course_id: 'course-001', uploader_id: 'student-001', created_date: '2023-10-15T10:00:00Z', status: 'approved', download_count: 120 },
     { id: 'file-002', title: 'תרגול למבחן במבני נתונים', description: 'כולל פתרונות מלאים לשאלות קשות.', course_id: 'course-002', uploader_id: 'student-001', created_date: '2023-11-20T14:30:00Z', status: 'pending', download_count: 35 },
@@ -245,6 +257,17 @@ const seedMockData = () => {
   initializeMockData('mock_files', initialFiles);
   initializeMockData('mock_messages', initialMessages);
   initializeMockData('mock_notifications', initialNotifications);
+
+  // Initialize admin/management users data
+  const initialAdmins = [
+    { id: 'admin-001', full_name: 'משה אדמיניסטרטור', email: 'admin@ono.ac.il', academic_track_ids: [] }, // All access
+    { id: 'admin-002', full_name: 'ד"ר רונה סופר יוזר', email: 'all.roles@ono.ac.il', academic_track_ids: ['business-grad'] },
+    { id: 'admin-003', full_name: 'פרופ׳ דוד ראש המחלקה', email: 'lecturer.admin@ono.ac.il', academic_track_ids: ['law-undergrad', 'business-undergrad', 'business-grad'] },
+    { id: 'admin-004', full_name: 'ד"ר מירי מנהלת', email: 'miri.manager@ono.ac.il', academic_track_ids: ['cs-undergrad', 'swe-undergrad', 'cs-grad'] },
+    { id: 'admin-005', full_name: 'גב׳ שרה ראש מזכירות', email: 'sara.secretary@ono.ac.il', academic_track_ids: ['education-grad', 'psychology-undergrad'] }
+  ];
+
+  initializeMockData('mock_users', initialAdmins);
 };
 
 seedMockData(); // Run on script load

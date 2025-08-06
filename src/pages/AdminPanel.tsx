@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { User, Student, Lecturer } from '@/api/entities';
 import {
@@ -11,7 +11,9 @@ import {
     Menu,
     MenuItem,
     Avatar,
-    Paper
+    Paper,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import {
     Users,
@@ -23,10 +25,12 @@ import {
 } from 'lucide-react';
 
 export default function AdminPanel() {
+    const navigate = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [userRoles, setUserRoles] = useState<string[]>([]);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+    const [toast, setToast] = useState({ open: false, message: '' });
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -34,6 +38,10 @@ export default function AdminPanel() {
 
     const handleClose = () => {
         setAnchorEl(null);
+    };
+
+    const handleCloseToast = () => {
+        setToast({ open: false, message: '' });
     };
 
     useEffect(() => {
@@ -65,9 +73,14 @@ export default function AdminPanel() {
         handleClose();
         try {
             await User.updateMyUserData({ current_role: newRole });
-            window.location.reload();
+            // Save toast message to sessionStorage to show after reload
+            const roleHebrew = newRole === 'student' ? 'סטודנט' : newRole === 'lecturer' ? 'מרצה' : 'מנהל';
+            sessionStorage.setItem('roleChangeMessage', `עברת בהצלחה לתצוגת ${roleHebrew}`);
+            // Navigate to Dashboard and reload immediately
+            window.location.href = createPageUrl("Dashboard");
         } catch (error) {
             console.error("Error switching role:", error);
+            setToast({ open: true, message: 'שגיאה במעבר בין תפקידים' });
         }
     };
 
@@ -80,6 +93,7 @@ export default function AdminPanel() {
   ];
 
   return (
+    <>
     <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -159,5 +173,22 @@ export default function AdminPanel() {
           ))}
         </Grid>
     </Box>
+    
+    <Snackbar
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ mt: 8 }}
+    >
+        <Alert 
+            onClose={handleCloseToast} 
+            severity="success" 
+            sx={{ width: '100%' }}
+        >
+            {toast.message}
+        </Alert>
+    </Snackbar>
+    </>
   );
 }

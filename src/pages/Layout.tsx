@@ -270,8 +270,17 @@ export default function Layout({ children, currentPageName }: { children: React.
           open={toast.open}
           autoHideDuration={6000}
           onClose={handleCloseToast}
-          message={toast.message}
-        />
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          sx={{ mt: 2 }}
+        >
+          <Alert 
+            onClose={handleCloseToast} 
+            severity="success" 
+            sx={{ width: '100%' }}
+          >
+            {toast.message}
+          </Alert>
+        </Snackbar>
       </div>
     );
   }
@@ -406,7 +415,7 @@ export default function Layout({ children, currentPageName }: { children: React.
         }}
       >
         <Toolbar sx={{ minHeight: '48px !important', py: 0, position: 'relative' }}>
-          {/* Left side - Logo and title */}
+          {/* Left side - Menu and Logo */}
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               color="inherit"
@@ -605,16 +614,17 @@ export default function Layout({ children, currentPageName }: { children: React.
       <Box
         component="footer"
         sx={{
-          py: 1,
+          py: 0.25,
           px: 2,
           backgroundColor: 'grey.100',
           borderTop: '1px solid',
           borderColor: 'divider',
           textAlign: 'center',
-          width: '100%'
+          width: '100%',
+          minHeight: 'auto'
         }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
           © {new Date().getFullYear()} מערכת זו נבנתה על ידי <Box component="span" sx={{ fontWeight: 'bold' }}>ליהי סער</Box>
         </Typography>
       </Box>
@@ -624,7 +634,8 @@ export default function Layout({ children, currentPageName }: { children: React.
         open={toast.open}
         autoHideDuration={6000}
         onClose={handleCloseToast}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ mt: 8 }}
       >
         <Alert 
           onClose={handleCloseToast} 
