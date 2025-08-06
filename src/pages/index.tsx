@@ -1,42 +1,42 @@
-import Layout from "./Layout.jsx";
+import Layout from "./Layout.tsx";
 
-import Dashboard from "./Dashboard";
+import Dashboard from "./Dashboard.tsx";
 
-import UploadFile from "./UploadFile";
+import UploadFile from "./UploadFile.tsx";
 
-import MyFiles from "./MyFiles";
+import MyFiles from "./MyFiles.tsx";
 
-import Courses from "./Courses";
+import Courses from "./Courses.tsx";
 
-import Course from "./Course";
+import Course from "./Course.tsx";
 
-import Insights from "./Insights";
+import Insights from "./Insights.tsx";
 
-import Help from "./Help";
+import Help from "./Help.tsx";
 
-import AdminPanel from "./AdminPanel";
+import AdminPanel from "./AdminPanel.tsx";
 
-import TrackInquiries from "./TrackInquiries";
+import TrackInquiries from "./TrackInquiries.tsx";
 
-import AdminStudentManagement from "./AdminStudentManagement";
+import AdminStudentManagement from "./AdminStudentManagement.tsx";
 
-import AdminCourseManagement from "./AdminCourseManagement";
+import AdminCourseManagement from "./AdminCourseManagement.tsx";
 
-import AdminFileManagement from "./AdminFileManagement";
+import AdminFileManagement from "./AdminFileManagement.tsx";
 
-import AdminLecturerManagement from "./AdminLecturerManagement";
+import AdminLecturerManagement from "./AdminLecturerManagement.tsx";
 
-import Notifications from "./Notifications";
+import Notifications from "./Notifications.tsx";
 
-import LecturerApprovedFiles from "./LecturerApprovedFiles";
+import LecturerApprovedFiles from "./LecturerApprovedFiles.tsx";
 
-import LecturerRejectedFiles from "./LecturerRejectedFiles";
+import LecturerRejectedFiles from "./LecturerRejectedFiles.tsx";
 
-import LecturerPendingFiles from "./LecturerPendingFiles";
+import LecturerPendingFiles from "./LecturerPendingFiles.tsx";
 
-import Settings from "./Settings";
+import Settings from "./Settings.tsx";
 
-import AdminManagement from "./AdminManagement";
+import AdminManagement from "./AdminManagement.tsx";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -82,16 +82,16 @@ const PAGES = {
     
 }
 
-function _getCurrentPage(url) {
+function _getCurrentPage(url: string) {
     if (url.endsWith('/')) {
         url = url.slice(0, -1);
     }
     let urlLastPart = url.split('/').pop();
-    if (urlLastPart.includes('?')) {
+    if (urlLastPart && urlLastPart.includes('?')) {
         urlLastPart = urlLastPart.split('?')[0];
     }
 
-    const pageName = Object.keys(PAGES).find(page => page.toLowerCase() === urlLastPart.toLowerCase());
+    const pageName = Object.keys(PAGES).find(page => page.toLowerCase() === urlLastPart?.toLowerCase());
     return pageName || Object.keys(PAGES)[0];
 }
 

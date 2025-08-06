@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Course, Lecturer, AcademicTrack } from '@/api/entities';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { Course as CourseEntity, Lecturer as LecturerEntity, AcademicTrack as AcademicTrackEntity } from '@/api/entities';
 import {
     Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Dialog, DialogContent, DialogTitle, DialogActions, TextField,
@@ -10,14 +10,44 @@ import { Book, Plus, Edit, Trash2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+type Course = {
+    id: string;
+    course_name: string;
+    course_code: string;
+    lecturer_id: string;
+    semester: string;
+    description: string;
+    academic_track_ids: string[];
+};
+
+type Lecturer = {
+    id: string;
+    full_name: string;
+};
+
+type AcademicTrack = {
+    id: string;
+    name: string;
+    department: string;
+};
+
+type FormData = {
+    course_name: string;
+    course_code: string;
+    lecturer_id: string;
+    semester: string;
+    description: string;
+    academic_track_ids: string[];
+};
+
 export default function AdminCourseManagement() {
-  const [courses, setCourses] = useState([]);
-  const [lecturers, setLecturers] = useState([]);
-  const [academicTracks, setAcademicTracks] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [lecturers, setLecturers] = useState<Lecturer[]>([]);
+  const [academicTracks, setAcademicTracks] = useState<AcademicTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentCourse, setCurrentCourse] = useState(null);
-  const [formData, setFormData] = useState({
+  const [currentCourse, setCurrentCourse] = useState<Course | null>(null);
+  const [formData, setFormData] = useState<FormData>({
     course_name: '',
     course_code: '',
     lecturer_id: '',
@@ -34,9 +64,9 @@ export default function AdminCourseManagement() {
     setLoading(true);
     try {
       const [courseList, lecturerList, trackList] = await Promise.all([
-        Course.list(), 
-        Lecturer.list(),
-        AcademicTrack.list()
+        CourseEntity.list(), 
+        LecturerEntity.list(),
+        AcademicTrackEntity.list()
       ]);
       setCourses(courseList);
       setLecturers(lecturerList);
@@ -47,7 +77,7 @@ export default function AdminCourseManagement() {
     setLoading(false);
   };
 
-  const handleOpenDialog = (course = null) => {
+  const handleOpenDialog = (course: Course | null = null) => {
     setCurrentCourse(course);
     if (course) {
       setFormData({
@@ -76,16 +106,16 @@ export default function AdminCourseManagement() {
     setCurrentCourse(null);
   };
 
-  const handleFormChange = (e) => {
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
   
-  const handleSelectChange = (e) => {
-    setFormData((prev) => ({ ...prev, lecturer_id: e.target.value }));
+  const handleSelectChange = (e: ChangeEvent<{ value: unknown }>) => {
+    setFormData((prev) => ({ ...prev, lecturer_id: e.target.value as string }));
   };
 
-  const handleTrackToggle = (trackId) => {
+  const handleTrackToggle = (trackId: string) => {
     setFormData((prev) => ({
       ...prev,
       academic_track_ids: prev.academic_track_ids.includes(trackId)
@@ -94,13 +124,13 @@ export default function AdminCourseManagement() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       if (currentCourse) {
-        await Course.update(currentCourse.id, formData);
+        await CourseEntity.update(currentCourse.id, formData);
       } else {
-        await Course.create(formData);
+        await CourseEntity.create(formData);
       }
       handleCloseDialog();
       loadData();
@@ -110,10 +140,10 @@ export default function AdminCourseManagement() {
     }
   };
 
-  const handleDelete = async (courseId) => {
+  const handleDelete = async (courseId: string) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק קורס זה?')) {
       try {
-        await Course.delete(courseId);
+        await CourseEntity.delete(courseId);
         loadData();
       } catch (error) {
         console.error("Failed to delete course:", error);
@@ -122,12 +152,12 @@ export default function AdminCourseManagement() {
     }
   };
 
-  const lecturersMap = (Array.isArray(lecturers) ? lecturers : []).reduce((acc, lec) => {
+  const lecturersMap = (Array.isArray(lecturers) ? lecturers : []).reduce((acc: { [key: string]: string }, lec: Lecturer) => {
     if(lec) acc[lec.id] = lec.full_name;
     return acc;
   }, {});
 
-  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc, track) => {
+  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc: { [key: string]: string }, track: AcademicTrack) => {
     if(track) acc[track.id] = track.name;
     return acc;
   }, {});
@@ -202,7 +232,7 @@ export default function AdminCourseManagement() {
             <TextField name="semester" label="סמסטר" value={formData.semester} onChange={handleFormChange} required fullWidth />
             <FormControl fullWidth>
               <InputLabel id="lecturer-select-label">מרצה</InputLabel>
-              <Select labelId="lecturer-select-label" name="lecturer_id" value={formData.lecturer_id} label="מרצה" onChange={handleSelectChange}>
+              <Select labelId="lecturer-select-label" name="lecturer_id" value={formData.lecturer_id} label="מרצה" onChange={handleSelectChange as any}>
                 {(Array.isArray(lecturers) ? lecturers : []).map(lecturer => (
                   lecturer && <MenuItem key={lecturer.id} value={lecturer.id}>{lecturer.full_name}</MenuItem>
                 ))}

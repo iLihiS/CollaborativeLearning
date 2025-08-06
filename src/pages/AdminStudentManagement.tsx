@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { Student, AcademicTrack } from '@/api/entities';
 import {
     Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
@@ -11,13 +11,34 @@ import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+type StudentData = {
+  id: string;
+  full_name: string;
+  student_id: string;
+  email: string;
+  academic_track_ids: string[];
+};
+
+type AcademicTrackData = {
+  id: string;
+  name: string;
+  department: string;
+};
+
+type FormData = {
+  full_name: string;
+  student_id: string;
+  email: string;
+  academic_track_ids: string[];
+};
+
 export default function AdminStudentManagement() {
-  const [students, setStudents] = useState([]);
-  const [academicTracks, setAcademicTracks] = useState([]);
+  const [students, setStudents] = useState<StudentData[]>([]);
+  const [academicTracks, setAcademicTracks] = useState<AcademicTrackData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState(null);
-  const [formData, setFormData] = useState({
+  const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
+  const [formData, setFormData] = useState<FormData>({
     full_name: '',
     student_id: '',
     email: '',
@@ -43,7 +64,7 @@ export default function AdminStudentManagement() {
     setLoading(false);
   };
 
-  const handleOpenDialog = (student = null) => {
+  const handleOpenDialog = (student: StudentData | null = null) => {
     setEditingStudent(student);
     if (student) {
       setFormData({
@@ -63,12 +84,12 @@ export default function AdminStudentManagement() {
     setEditingStudent(null);
   };
 
-  const handleFormChange = (e) => {
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleTrackToggle = (trackId) => {
+  const handleTrackToggle = (trackId: string) => {
     setFormData((prev) => ({
       ...prev,
       academic_track_ids: prev.academic_track_ids.includes(trackId)
@@ -77,7 +98,7 @@ export default function AdminStudentManagement() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       if (editingStudent) {
@@ -93,7 +114,7 @@ export default function AdminStudentManagement() {
     }
   };
 
-  const handleDelete = async (studentId) => {
+  const handleDelete = async (studentId: string) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק סטודנט זה?')) {
       try {
         await Student.delete(studentId);
@@ -105,7 +126,7 @@ export default function AdminStudentManagement() {
     }
   };
   
-  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc, track) => {
+  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc: { [key: string]: string }, track: AcademicTrackData) => {
     if (track) acc[track.id] = track.name;
     return acc;
   }, {});

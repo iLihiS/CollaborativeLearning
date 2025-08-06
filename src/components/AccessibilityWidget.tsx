@@ -10,9 +10,20 @@ import {
 } from 'lucide-react';
 import { User } from '@/api/entities';
 
+type Settings = {
+    fontSize: number;
+    highContrast: boolean;
+    grayscale: boolean;
+    highlightLinks: boolean;
+    readableFont: boolean;
+    hideImages: boolean;
+    textSpacing: boolean;
+    soundEnabled: boolean;
+};
+
 export default function AccessibilityWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<Settings>({
     fontSize: 100,
     highContrast: false,
     grayscale: false,
@@ -38,28 +49,33 @@ export default function AccessibilityWidget() {
     setTheme(currentTheme);
   }, []);
 
-  const saveSettings = (newSettings) => {
+  useEffect(() => {
+    applySettings(settings);
+    localStorage.setItem('accessibilitySettings', JSON.stringify(settings));
+  }, [settings]);
+
+  const saveSettings = (newSettings: Settings) => {
     localStorage.setItem('accessibilitySettings', JSON.stringify(newSettings));
     setSettings(newSettings);
     applySettings(newSettings);
   };
 
-  const applySettings = (settings) => {
+  const applySettings = (currentSettings: Settings) => {
     const root = document.documentElement;
     
     // Font size - This now controls the root font size via a CSS variable
-    root.style.setProperty('--accessibility-font-scale', `${settings.fontSize / 100}`);
+    root.style.setProperty('--accessibility-font-scale', `${currentSettings.fontSize / 100}`);
     
     // Apply CSS classes based on settings
-    root.classList.toggle('accessibility-high-contrast', settings.highContrast);
-    root.classList.toggle('accessibility-grayscale', settings.grayscale);
-    root.classList.toggle('accessibility-highlight-links', settings.highlightLinks);
-    root.classList.toggle('accessibility-readable-font', settings.readableFont);
-    root.classList.toggle('accessibility-hide-images', settings.hideImages);
-    root.classList.toggle('accessibility-text-spacing', settings.textSpacing);
+    root.classList.toggle('accessibility-high-contrast', currentSettings.highContrast);
+    root.classList.toggle('accessibility-grayscale', currentSettings.grayscale);
+    root.classList.toggle('accessibility-highlight-links', currentSettings.highlightLinks);
+    root.classList.toggle('accessibility-readable-font', currentSettings.readableFont);
+    root.classList.toggle('accessibility-hide-images', currentSettings.hideImages);
+    root.classList.toggle('accessibility-text-spacing', currentSettings.textSpacing);
   };
 
-  const adjustFontSize = (direction) => {
+  const adjustFontSize = (direction: 'increase' | 'decrease') => {
     const newSize = direction === 'increase' 
       ? Math.min(settings.fontSize + 5, 130)
       : Math.max(settings.fontSize - 5, 85);
@@ -67,7 +83,7 @@ export default function AccessibilityWidget() {
     saveSettings({ ...settings, fontSize: newSize });
   };
 
-  const toggleSetting = (key) => {
+  const toggleSetting = (key: keyof Settings) => {
     saveSettings({ ...settings, [key]: !settings[key] });
   };
 
@@ -98,6 +114,12 @@ export default function AccessibilityWidget() {
     };
     saveSettings(defaultSettings);
   };
+
+  const handleSettingChange = (setting: keyof Settings, value: any) => {
+    setSettings(prev => ({ ...prev, [setting]: value }));
+  };
+
+  const toggleWidget = () => setIsOpen(!isOpen);
 
   return (
     <>
@@ -174,7 +196,7 @@ export default function AccessibilityWidget() {
       `}</style>
 
       <Box sx={{ position: 'fixed', left: 20, bottom: 20, zIndex: 9999 }}>
-        <Fab color="primary" aria-label="accessibility" onClick={() => setIsOpen(!isOpen)}>
+        <Fab color="primary" aria-label="accessibility" onClick={toggleWidget}>
           <Accessibility />
         </Fab>
 
@@ -183,7 +205,7 @@ export default function AccessibilityWidget() {
             <CardHeader
               title="נגישות"
               action={
-                <IconButton onClick={() => setIsOpen(false)}>
+                <IconButton onClick={toggleWidget}>
                   <X />
                 </IconButton>
               }

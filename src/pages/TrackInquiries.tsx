@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { User, Message } from '@/api/entities';
+import { Message, User } from '@/api/entities';
 import {
     Card, CardContent, CardHeader, Typography, Button, TextField, Chip, Alert,
     Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
@@ -11,18 +11,38 @@ import { MessagesSquare, Plus, Send, CheckCircle, Clock, Eye } from 'lucide-reac
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 
+type Message = {
+    id: string;
+    subject: string;
+    content: string;
+    sender_name: string;
+    sender_email: string;
+    status: 'pending' | 'handled';
+    created_date: string;
+    admin_response?: string;
+};
+
+type FormState = {
+    subject: string;
+    content: string;
+    sender_name: string;
+    sender_email: string;
+};
+
 export default function TrackInquiries() {
-  const [user, setUser] = useState(null);
-  const [inquiries, setInquiries] = useState([]);
+  const [user, setUser] = useState<any>(null);
+  const [inquiries, setInquiries] = useState<Message[]>([]);
   const [showNewInquiry, setShowNewInquiry] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormState>({
     subject: '',
-    content: ''
+    content: '',
+    sender_name: '',
+    sender_email: ''
   });
-  const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<Message | null>(null);
 
   useEffect(() => {
     loadData();
@@ -33,18 +53,21 @@ export default function TrackInquiries() {
           const roleHe = urlParams.get('role_he');
           setFormData({
               subject: `בקשה להוספת תפקיד: ${roleHe}`,
-              content: `שלום, אני מבקש/ת לקבל הרשאות "${roleHe}" במערכת. תודה.`
+              content: `שלום, אני מבקש/ת לקבל הרשאות "${roleHe}" במערכת. תודה.`,
+              sender_name: user?.full_name || '',
+              sender_email: user?.email || ''
           });
       }
     }
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const currentUser = await User.me();
       setUser(currentUser);
       
-      const userInquiries = await Message.filter({ sender_email: currentUser.email }, '-created_date');
+      const userInquiries = await Message.filter({ sender_email: currentUser.email });
       setInquiries(userInquiries);
     } catch (error) {
       console.error('Error loading inquiries:', error);
@@ -52,7 +75,7 @@ export default function TrackInquiries() {
     setLoading(false);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     
@@ -66,10 +89,10 @@ export default function TrackInquiries() {
       });
       
       setSuccess(true);
-      setFormData({ subject: '', content: '' });
+      setFormData({ subject: '', content: '', sender_name: '', sender_email: '' });
       setShowNewInquiry(false);
       
-      const userInquiries = await Message.filter({ sender_email: user.email }, '-created_date');
+      const userInquiries = await Message.filter({ sender_email: user.email });
       setInquiries(userInquiries);
       
       setTimeout(() => setSuccess(false), 3000);
@@ -79,7 +102,7 @@ export default function TrackInquiries() {
     setSubmitting(false);
   };
 
-  const getStatusChip = (status) => {
+  const getStatusChip = (status: 'pending' | 'handled') => {
     if (status === 'handled') {
       return <Chip icon={<CheckCircle />} label="טופל" color="success" size="small" />;
     }
@@ -108,8 +131,8 @@ export default function TrackInquiries() {
           <CardHeader title="פנייה חדשה" />
           <CardContent>
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField label="נושא הפנייה" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} required fullWidth />
-              <TextField label="תוכן הפנייה" value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} required multiline rows={4} fullWidth />
+              <TextField label="נושא הפנייה" value={formData.subject} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData({ ...formData, subject: e.target.value })} required fullWidth />
+              <TextField label="תוכן הפנייה" value={formData.content} onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormData({ ...formData, content: e.target.value })} required multiline rows={4} fullWidth />
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button type="submit" variant="contained" disabled={submitting} startIcon={submitting ? <CircularProgress size={20} /> : <Send />}>
                   {submitting ? 'שולח...' : 'שלח פנייה'}

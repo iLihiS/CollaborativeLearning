@@ -59,7 +59,7 @@ export default function Help() {
         </Box>
 
         <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>איך המערכת עובדת?</Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {howItWorks.map((step) => (
@@ -73,7 +73,7 @@ export default function Help() {
                     ))}
                 </Box>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>שאלות נפוצות</Typography>
                 {faqs.map((faq, index) => (
                     <Accordion key={index}>

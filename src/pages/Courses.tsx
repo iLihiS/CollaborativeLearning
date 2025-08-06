@@ -4,17 +4,38 @@ import { Course, Lecturer, User, Student, AcademicTrack } from "@/api/entities";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
-    Card, CardContent, CardActionArea, Typography, Grid, Box,
+    Card, CardContent, CardActionArea, Typography, Box,
     TextField, Button, Chip, Skeleton, InputAdornment, Avatar
 } from "@mui/material";
+import Grid from '@mui/material/Grid';
 import { BookOpen, User as UserIcon, Calendar, Search } from "lucide-react";
 
+type CourseInfo = {
+    id: string;
+    course_name: string;
+    course_code: string;
+    description: string;
+    lecturer_id: string;
+    semester: string;
+    academic_track_ids: string[];
+};
+
+type LecturerInfo = {
+    id: string;
+    full_name: string;
+};
+
+type AcademicTrackInfo = {
+    id: string;
+    name: string;
+};
+
 export default function Courses() {
-  const [courses, setCourses] = useState([]);
-  const [lecturers, setLecturers] = useState({});
+  const [courses, setCourses] = useState<CourseInfo[]>([]);
+  const [lecturers, setLecturers] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [filterableTracks, setFilterableTracks] = useState([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [filterableTracks, setFilterableTracks] = useState<AcademicTrackInfo[]>([]);
   
   // Initialize state from URL params
   const searchParams = new URLSearchParams(window.location.search);
@@ -32,12 +53,12 @@ export default function Courses() {
       setCurrentUser(user);
 
       const [allCourses, allLecturers, allAcademicTracks] = await Promise.all([
-        Course.list("-semester"),
+        Course.list(),
         Lecturer.list(),
         AcademicTrack.list(),
       ]);
 
-      const lecturersMap = allLecturers.reduce((acc, lec) => {
+      const lecturersMap = allLecturers.reduce((acc: { [key: string]: string }, lec: LecturerInfo) => {
         acc[lec.id] = lec.full_name;
         return acc;
       }, {});
@@ -47,7 +68,7 @@ export default function Courses() {
         setCourses(allCourses);
         setFilterableTracks(allAcademicTracks);
       } else {
-        let userTrackIds = [];
+        let userTrackIds: string[] = [];
         if (user.current_role === 'student') {
           const studentRecords = await Student.filter({ email: user.email });
           if (studentRecords.length > 0 && studentRecords[0].academic_track_ids) {
@@ -61,11 +82,11 @@ export default function Courses() {
         }
         
         const userCourses = userTrackIds.length > 0
-          ? allCourses.filter(course => course.academic_track_ids?.some(trackId => userTrackIds.includes(trackId)))
+          ? allCourses.filter((course: CourseInfo) => course.academic_track_ids?.some((trackId: string) => userTrackIds.includes(trackId)))
           : [];
         setCourses(userCourses);
         
-        const tracksForFiltering = allAcademicTracks.filter(track => userTrackIds.includes(track.id));
+        const tracksForFiltering = allAcademicTracks.filter((track: AcademicTrackInfo) => userTrackIds.includes(track.id));
         setFilterableTracks(tracksForFiltering);
       }
     } catch (error) {
@@ -74,7 +95,7 @@ export default function Courses() {
     setLoading(false);
   };
   
-  const searchFilteredCourses = courses.filter(course => {
+  const searchFilteredCourses = courses.filter((course: CourseInfo) => {
     const trackMatch = !selectedTrack || (course.academic_track_ids && course.academic_track_ids.includes(selectedTrack));
     const searchMatch = !searchTerm || course.course_name.toLowerCase().includes(searchTerm.toLowerCase()) || course.course_code.toLowerCase().includes(searchTerm.toLowerCase());
     return trackMatch && searchMatch;
@@ -131,38 +152,30 @@ export default function Courses() {
       <Grid container spacing={3}>
         {loading ? (
           Array.from(new Array(8)).map((_, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={index}>
               <Skeleton variant="rectangular" height={250} sx={{ borderRadius: 2 }} />
             </Grid>
           ))
         ) : (
           searchFilteredCourses.map((course) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={course.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={course.id}>
               <Card component={Link} to={createPageUrl(`Course?id=${course.id}&track=${selectedTrack || ''}&search=${searchTerm || ''}`)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', textDecoration: 'none', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                 <CardActionArea sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <CardContent>
                     <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', mb: 2 }}>
                       <BookOpen />
                     </Avatar>
-                    <Typography variant="h6" component="div" gutterBottom>{course.course_name}</Typography>
-                    <Chip label={course.course_code} size="small" sx={{ mb: 1 }} />
-                    <Typography variant="body2" color="text.secondary" sx={{
-                      mb: 2,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}>
-                      {course.description || 'אין תיאור זמין לקורס זה.'}
-                    </Typography>
-                    <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2, width: '100%' }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                        <UserIcon size={16} /> {lecturers[course.lecturer_id] || 'מרצה לא ידוע'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Calendar size={16} /> {course.semester}
-                      </Typography>
+                    <Typography gutterBottom variant="h6" component="h2">{course.course_name}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{course.course_code}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{course.description}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <UserIcon size={16} />
+                      <Typography variant="body2" color="text.secondary">{lecturers[course.lecturer_id] || "מרצה לא ידוע"}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(course.academic_track_ids || []).map(trackId => (
+                        <Chip key={trackId} label={lecturers[trackId] || trackId} size="small" variant="outlined" />
+                      ))}
                     </Box>
                   </CardContent>
                 </CardActionArea>

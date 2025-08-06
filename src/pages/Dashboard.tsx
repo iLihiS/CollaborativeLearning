@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Course, File, Student, Lecturer, Message, Notification } from "@/api/entities";
+import { User as UserEntity, Course, File, Student, Lecturer, Message, Notification } from "@/api/entities";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -22,7 +22,6 @@ import {
     CardHeader,
     Typography,
     Button,
-    Grid,
     Box,
     Avatar,
     Menu,
@@ -33,6 +32,8 @@ import {
     Paper,
     IconButton
 } from "@mui/material";
+import Grid from '@mui/material/Grid';
+
 import {
     MenuBook as BookOpen,
     Description as FileText,
@@ -43,6 +44,14 @@ import {
 } from "@mui/icons-material";
 import PropTypes from 'prop-types';
 
+type User = {
+    id: string;
+    full_name: string;
+    email: string;
+    roles: string[];
+    current_role: string;
+    theme_preference: string;
+};
 
 const MORNING_START = 5;
 const AFTERNOON_START = 12;
@@ -50,9 +59,9 @@ const EVENING_START = 18;
 const NIGHT_START = 22;
 
 export default function Dashboard() {
-    const [user, setUser] = useState(null);
-    const [recentFiles, setRecentFiles] = useState([]);
-    const [recentInquiries, setRecentInquiries] = useState([]);
+    const [user, setUser] = useState<User | null>(null);
+    const [recentFiles, setRecentFiles] = useState<any[]>([]);
+    const [recentInquiries, setRecentInquiries] = useState<any[]>([]);
     const [stats, setStats] = useState({
         totalFiles: 0,
         approvedFiles: 0,
@@ -60,13 +69,13 @@ export default function Dashboard() {
         rejectedFiles: 0,
         totalDownloads: 0
     });
-    const [greeting, setGreeting] = useState({ text: "", icon: null });
+    const [greeting, setGreeting] = useState<{ text: string, icon: React.ReactNode }>({ text: "", icon: null });
     const [loading, setLoading] = useState(true);
-    const [userRoles, setUserRoles] = useState([]);
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [userRoles, setUserRoles] = useState<string[]>([]);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
-    const handleClick = (event) => {
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
 
@@ -91,7 +100,7 @@ export default function Dashboard() {
 
     const loadDashboardData = async () => {
         try {
-            const currentUser = await User.me();
+            const currentUser = await UserEntity.me();
             setUser(currentUser);
 
             let roles = currentUser.roles || [];
@@ -135,27 +144,27 @@ export default function Dashboard() {
             if (!currentUser.current_role) {
                 const defaultRole = roles.includes('student') ? 'student' :
                     roles.includes('lecturer') ? 'lecturer' : 'admin';
-                const updatedUser = await User.updateMyUserData({ current_role: defaultRole });
+                const updatedUser = await UserEntity.updateMyUserData({ current_role: defaultRole });
                 setUser(updatedUser);
             }
 
             if (currentUser.current_role !== 'admin') {
                 const [userFiles, userInquiries, userNotifications, allFiles, allCourses] = await Promise.all([
                     File.filter({ uploader_id: studentRecord?.student_id }),
-                    Message.filter({ sender_email: currentUser.email }, '-created_date'),
-                    Notification.filter({ user_email: currentUser.email }, '-created_date', 5),
+                    Message.filter({ sender_email: currentUser.email, sortBy: '-created_date' }),
+                    Notification.filter({ user_email: currentUser.email, sortBy: '-created_date', limit: 5 }),
                     File.filter({ status: 'pending' }),
                     Course.list()
                 ]);
 
-                const totalDownloads = userFiles.reduce((sum, file) => sum + (file.download_count || 0), 0);
+                const totalDownloads = userFiles.reduce((sum: number, file: any) => sum + (file.download_count || 0), 0);
 
                 let pendingFilesForLecturer = 0;
                 if (currentUser.current_role === 'lecturer' && lecturerRecords.length > 0) {
                     const lecturerCourseIds = allCourses
-                        .filter(c => c.lecturer_id === lecturerRecords[0].id)
-                        .map(c => c.id);
-                    pendingFilesForLecturer = allFiles.filter(f => lecturerCourseIds.includes(f.course_id)).length;
+                        .filter((c: any) => c.lecturer_id === lecturerRecords[0].id)
+                        .map((c: any) => c.id);
+                    pendingFilesForLecturer = allFiles.filter((f: any) => lecturerCourseIds.includes(f.course_id)).length;
                 }
 
                 setRecentFiles(userNotifications);
@@ -163,25 +172,25 @@ export default function Dashboard() {
 
                 setStats({
                     totalFiles: userFiles.length,
-                    approvedFiles: userFiles.filter(f => f.status === 'approved').length,
-                    pendingFiles: currentUser.current_role === 'student' ? userFiles.filter(f => f.status === 'pending').length : pendingFilesForLecturer,
-                    rejectedFiles: userFiles.filter(f => f.status === 'rejected').length,
+                    approvedFiles: userFiles.filter((f: any) => f.status === 'approved').length,
+                    pendingFiles: currentUser.current_role === 'student' ? userFiles.filter((f: any) => f.status === 'pending').length : pendingFilesForLecturer,
+                    rejectedFiles: userFiles.filter((f: any) => f.status === 'rejected').length,
                     totalDownloads: totalDownloads
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error loading dashboard data:", error);
             if (error.message?.includes('not authenticated')) {
-                await User.login();
+                await UserEntity.login('', '');
             }
         }
         setLoading(false);
     };
 
-    const switchRole = async (newRole) => {
+    const switchRole = async (newRole: string) => {
         handleClose();
         try {
-            await User.updateMyUserData({ current_role: newRole });
+            await UserEntity.updateMyUserData({ current_role: newRole });
             window.location.reload();
         } catch (error) {
             console.error("Error switching role:", error);
@@ -196,7 +205,7 @@ export default function Dashboard() {
         );
     }
 
-    const getInquiryStatusBadge = (status) => {
+    const getInquiryStatusBadge = (status: string) => {
         if (status === 'handled') {
             return <Chip icon={<CheckCircle />} label="טופל" color="success" size="small" />;
         }
@@ -204,8 +213,8 @@ export default function Dashboard() {
     };
 
 
-    const StatCard = ({ to, icon, title, value, subtitle, color }) => (
-        <Grid item xs={6} sm={4} md={2.4}>
+    const StatCard = ({ to, icon, title, value, subtitle, color }: { to: string, icon: React.ReactNode, title: string, value: string | number, subtitle: string, color: string }) => (
+        <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
             <Paper component={Link} to={to} elevation={0} sx={{ p: 2, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, transition: 'all 0.2s', border: 1, borderColor: 'divider' }}>
                 <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.main`, mx: 'auto', mb: 1 }}>
                     {icon}
@@ -226,8 +235,8 @@ export default function Dashboard() {
         color: PropTypes.string.isRequired,
     };
 
-    const AdminQuickLink = ({ to, icon, title, subtitle, color }) => (
-        <Grid item xs={6} md={3}>
+    const AdminQuickLink = ({ to, icon, title, subtitle, color }: { to: string, icon: React.ReactNode, title: string, subtitle: string, color: string }) => (
+        <Grid size={{ xs: 6, md: 3 }}>
             <Paper component={Link} to={to} elevation={0} sx={{ p: 2, textAlign: 'center', height: '100%', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, transition: 'all 0.2s', border: 1, borderColor: 'divider' }}>
                 <Avatar sx={{ bgcolor: `${color}.light`, color: `${color}.main`, mx: 'auto', mb: 1 }}>
                     {icon}
@@ -342,7 +351,7 @@ export default function Dashboard() {
             )}
 
             <Grid container spacing={3} sx={{ mt: 2 }}>
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                      <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <CardHeader title="פעילויות אחרונות" />
                         <CardContent sx={{ flexGrow: 1 }}>
@@ -386,7 +395,7 @@ export default function Dashboard() {
                     </Card>
                 </Grid>
 
-                 <Grid item xs={12} lg={4}>
+                 <Grid size={{ xs: 12, lg: 4 }}>
                     <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <CardHeader
                             title="פניות אחרונות"
@@ -418,7 +427,7 @@ export default function Dashboard() {
                                 </Box>
                             ) : (
                                 <Box sx={{ textAlign: 'center', py: 4 }}>
-                                    <MessageSquare sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+                                    <MessageSquare size={60} color="grey" />
                                     <Typography variant="h6">אין פניות</Typography>
                                     <Typography color="text.secondary">שלח פנייה חדשה למנהלי המערכת</Typography>
                                 </Box>
@@ -430,19 +439,19 @@ export default function Dashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} lg={4}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Card elevation={2}>
                             <CardHeader title="פעולות מהירות" />
                             <CardContent>
                                 <Grid container spacing={1.5}>
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Button component={Link} to={createPageUrl("UploadFile")} fullWidth variant="contained" startIcon={<Upload />}>העלאת קובץ חדש</Button>
                                     </Grid>
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Button component={Link} to={createPageUrl("Courses")} fullWidth variant="outlined" startIcon={<BookOpen />}>עיון בקורסים</Button>
                                     </Grid>
-                                    <Grid item xs={12}>
+                                    <Grid size={12}>
                                         <Button component={Link} to={createPageUrl("MyFiles")} fullWidth variant="outlined" startIcon={<FileText />}>הקבצים שלי</Button>
                                     </Grid>
                                 </Grid>

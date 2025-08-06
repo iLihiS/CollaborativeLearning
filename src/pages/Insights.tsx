@@ -8,7 +8,38 @@ import {
 } from '@mui/material';
 import { TrendingUp, Download, FileText, Crown } from 'lucide-react';
 
-const fileTypeToHebrew = {
+type FileData = {
+  id: string;
+  title: string;
+  file_type: string;
+  status: string;
+  course_id: string;
+  uploaded_by: string;
+  download_count: number;
+  file_url: string;
+};
+
+type CourseData = {
+  id: string;
+  course_name: string;
+  course_code: string;
+  fileCount?: number;
+};
+
+type StudentData = {
+  id: string;
+  student_id: string;
+  full_name: string;
+  email: string;
+};
+
+type TopStudent = {
+  id: string;
+  name: string;
+  count: number;
+};
+
+const fileTypeToHebrew: { [key: string]: string } = {
   note: "סיכומים",
   exam: "מבחני תרגול",
   formulas: "דף נוסחאות",
@@ -17,9 +48,9 @@ const fileTypeToHebrew = {
 };
 
 export default function Insights() {
-  const [popularFiles, setPopularFiles] = useState([]);
-  const [popularCourses, setPopularCourses] = useState([]);
-  const [topStudents, setTopStudents] = useState([]);
+  const [popularFiles, setPopularFiles] = useState<FileData[]>([]);
+  const [popularCourses, setPopularCourses] = useState<CourseData[]>([]);
+  const [topStudents, setTopStudents] = useState<TopStudent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,18 +60,18 @@ export default function Insights() {
   const loadInsights = async () => {
     try {
       const [allFiles, allCourses, allStudents, currentUser] = await Promise.all([
-        File.list('-download_count'),
+        File.list(),
         Course.list(),
         Student.list(),
         User.me(),
       ]);
 
       // Popular Files - only approved files
-      const approvedFiles = allFiles.filter(file => file.status === 'approved');
+      const approvedFiles = allFiles.filter((file: FileData) => file.status === 'approved');
       setPopularFiles(approvedFiles.slice(0, 8));
 
       // Popular Courses
-      const courseFileCounts = approvedFiles.reduce((acc, file) => {
+      const courseFileCounts = approvedFiles.reduce((acc: { [key: string]: number }, file: FileData) => {
         acc[file.course_id] = (acc[file.course_id] || 0) + 1;
         return acc;
       }, {});
@@ -48,24 +79,24 @@ export default function Insights() {
       const sortedCourseIds = Object.keys(courseFileCounts).sort((a, b) => courseFileCounts[b] - courseFileCounts[a]);
       
       const popularCoursesData = sortedCourseIds.slice(0, 8).map(courseId => {
-        const course = allCourses.find(c => c.id === courseId);
+        const course = allCourses.find((c: CourseData) => c.id === courseId);
         return {
           ...course,
           fileCount: courseFileCounts[courseId]
         };
-      }).filter(course => course && course.course_name);
+      }).filter((course): course is CourseData => course && course.course_name);
 
       setPopularCourses(popularCoursesData);
 
       // Top 3 Students
-      const uploadCounts = allFiles.reduce((acc, file) => {
+      const uploadCounts = allFiles.reduce((acc: { [key: string]: number }, file: FileData) => {
         if (file.uploaded_by) {
             acc[file.uploaded_by] = (acc[file.uploaded_by] || 0) + 1;
         }
         return acc;
       }, {});
 
-      const studentsMap = allStudents.reduce((acc, student) => {
+      const studentsMap = allStudents.reduce((acc: { [key: string]: string }, student: StudentData) => {
           acc[student.student_id] = student.full_name;
           return acc;
       }, {});
@@ -80,7 +111,7 @@ export default function Insights() {
       setTopStudents(topStudentsData);
       
       // Current user stats
-      const currentStudent = allStudents.find(s => s.email === currentUser.email);
+      const currentStudent = allStudents.find((s: StudentData) => s.email === currentUser.email);
       if(currentStudent) {
           // const count = uploadCounts[currentStudent.student_id] || 0;
       }
@@ -91,7 +122,7 @@ export default function Insights() {
     setLoading(false);
   };
 
-  const handleDownload = async (file) => {
+  const handleDownload = async (file: FileData) => {
     // Increment download count
     await File.update(file.id, { download_count: (file.download_count || 0) + 1 });
     // Open file url

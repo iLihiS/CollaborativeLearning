@@ -17,7 +17,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { User } from '@/api/entities';
 
-export function LoginForm({ onLoginSuccess, onLoginError }) {
+export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (user: User) => void, onLoginError: (error: string) => void }) {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -25,21 +25,21 @@ export function LoginForm({ onLoginSuccess, onLoginError }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await User.login(formData);
+      const response = await User.login(formData.email, formData.password);
       onLoginSuccess(response);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
       onLoginError(error.message || 'שגיאה בהתחברות. אנא בדוק את הפרטים וחזור שוב.');
     } finally {
@@ -48,7 +48,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }) {
   };
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
-  const handleMouseDownPassword = (event) => {
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
   };
 
@@ -62,7 +62,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }) {
     { email: 'all.roles@ono.ac.il', label: 'כל התפקידים' }
   ];
 
-  const fillDemoUser = (email) => {
+  const fillDemoUser = (email: string) => {
     setFormData({ email, password: '123456' });
   };
 
@@ -131,7 +131,7 @@ export function LoginForm({ onLoginSuccess, onLoginError }) {
 
         <Grid container spacing={1}>
           {demoUsers.map((user) => (
-            <Grid item xs={12} key={user.email}>
+            <Grid size={12} key={user.email}>
               <Button
                 fullWidth
                 variant="outlined"

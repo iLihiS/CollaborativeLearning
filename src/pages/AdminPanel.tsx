@@ -1,19 +1,17 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { User, Student, Lecturer } from '@/api/entities';
 import {
-    Card,
-    CardContent,
-    CardHeader,
     Typography,
     Grid,
     Box,
     Button,
     Menu,
     MenuItem,
-    Avatar
+    Avatar,
+    Paper
 } from '@mui/material';
 import {
     Users,
@@ -25,53 +23,53 @@ import {
 } from 'lucide-react';
 
 export default function AdminPanel() {
-  const [userRoles, setUserRoles] = useState([]);
-  const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+    const [user, setUser] = useState<User | null>(null);
+    const [userRoles, setUserRoles] = useState<string[]>([]);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
 
-  useEffect(() => {
-    loadUserRoles();
-  }, []);
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
 
-  const loadUserRoles = async () => {
-    try {
-      const currentUser = await User.me();
-      const [studentRecords, lecturerRecords] = await Promise.all([
-        Student.filter({ email: currentUser.email }),
-        Lecturer.filter({ email: currentUser.email }),
-      ]);
+    useEffect(() => {
+        loadUserData();
+    }, []);
 
-      const roles = [];
-      if (studentRecords.length > 0) roles.push('student');
-      if (lecturerRecords.length > 0) roles.push('lecturer');
-      roles.push('admin');
-      setUserRoles(roles);
-    } catch (error) {
-      console.error("Error loading user roles:", error);
-    }
-  };
+    const loadUserData = async () => {
+        try {
+            const currentUser = await User.me();
+            setUser(currentUser);
 
-  const switchRole = async (newRole) => {
-    handleClose();
-    try {
-      await User.updateMyUserData({ current_role: newRole });
-      if (newRole === 'student') {
-        navigate(createPageUrl('Dashboard'));
-      } else if (newRole === 'lecturer') {
-        navigate(createPageUrl('LecturerPendingFiles'));
-      }
-    } catch (error) {
-      console.error("Error switching role:", error);
-    }
-  };
+            let roles: string[] = [];
+            const [studentRecords, lecturerRecords] = await Promise.all([
+                Student.filter({ email: currentUser.email }),
+                Lecturer.filter({ email: currentUser.email }),
+            ]);
+
+            if (studentRecords.length > 0) roles.push('student');
+            if (lecturerRecords.length > 0) roles.push('lecturer');
+            if (currentUser.role === 'admin') roles.push('admin');
+            setUserRoles(roles.sort());
+
+        } catch (error) {
+            console.error("Error loading user data:", error);
+        }
+    };
+
+    const switchRole = async (newRole: string) => {
+        handleClose();
+        try {
+            await User.updateMyUserData({ current_role: newRole });
+            window.location.reload();
+        } catch (error) {
+            console.error("Error switching role:", error);
+        }
+    };
 
   const adminLinks = [
     { title: "ניהול סטודנטים", icon: Users, url: "AdminStudentManagement", description: "הוספה, עריכה ומחיקה של סטודנטים", color: "info" },
@@ -126,37 +124,39 @@ export default function AdminPanel() {
         </Box>
 
         <Grid container spacing={3}>
-            {adminLinks.map((link) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={link.title}>
-                    <Card
-                        component={Link}
-                        to={createPageUrl(link.url)}
-                        sx={{
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            textDecoration: 'none',
-                            transition: 'transform 0.3s, box-shadow 0.3s',
-                            '&:hover': {
-                                transform: 'translateY(-5px)',
-                                boxShadow: 6,
-                            }
-                        }}
-                    >
-                        <CardHeader
-                            avatar={
-                                <Avatar sx={{ bgcolor: `${link.color}.light`, color: `${link.color}.main`, width: 56, height: 56 }}>
-                                    <link.icon />
-                                </Avatar>
-                            }
-                            title={<Typography variant="h6" component="h2">{link.title}</Typography>}
-                        />
-                        <CardContent sx={{ flexGrow: 1 }}>
-                            <Typography variant="body2" color="text.secondary">{link.description}</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            ))}
+          {adminLinks.map((link) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={link.title}>
+              <Paper
+                component={Link}
+                to={createPageUrl(link.url)}
+                elevation={0}
+                sx={{
+                  p: 3,
+                  textAlign: 'center',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  gap: 2,
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: 6,
+                  },
+                  transition: 'all 0.2s',
+                  border: 1,
+                  borderColor: 'divider',
+                  textDecoration: 'none',
+                  color: 'inherit'
+                }}
+              >
+                <Avatar sx={{ bgcolor: `${link.color}.light`, color: `${link.color}.main`, mx: 'auto', width: 56, height: 56 }}>
+                  <link.icon />
+                </Avatar>
+                <Typography variant="h6" fontWeight="bold">{link.title}</Typography>
+                <Typography variant="body2" color="text.secondary">{link.description}</Typography>
+              </Paper>
+            </Grid>
+          ))}
         </Grid>
     </Box>
   );

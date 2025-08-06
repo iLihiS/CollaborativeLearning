@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { File, Course, Student } from '@/api/entities';
+import { File as FileEntity, Course, Student } from '@/api/entities';
 import {
     Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Select, MenuItem, InputLabel, FormControl, Box, Typography, Paper,
@@ -12,11 +12,32 @@ import { he } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+type FileInfo = {
+  id: string;
+  title: string;
+  course_id: string;
+  file_url: string;
+  created_date: string;
+  uploader_id: string;
+  download_count: number;
+  status: 'approved' | 'rejected' | 'pending';
+};
+
+type CourseInfo = {
+    id: string;
+    course_name: string;
+};
+
+type StudentInfo = {
+    id: string;
+    full_name: string;
+};
+
 export default function AdminFileManagement() {
-  const [files, setFiles] = useState([]);
-  const [filteredFiles, setFilteredFiles] = useState([]);
-  const [coursesMap, setCoursesMap] = useState({});
-  const [studentsMap, setStudentsMap] = useState({}); // This state is no longer used in the table but kept as it might be used elsewhere.
+  const [files, setFiles] = useState<FileInfo[]>([]);
+  const [filteredFiles, setFilteredFiles] = useState<FileInfo[]>([]);
+  const [coursesMap, setCoursesMap] = useState<{ [key: string]: string }>({});
+  const [studentsMap, setStudentsMap] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -35,19 +56,19 @@ export default function AdminFileManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [fileList, courseList, studentList] = await Promise.all([File.list(), Course.list(), Student.list()]);
+      const [fileList, courseList, studentList] = await Promise.all([FileEntity.list(), Course.list(), Student.list()]);
       setFiles(fileList);
       // Re-apply filter after files are loaded, triggering the useEffect
       if (statusFilter === 'all') {
         setFilteredFiles(fileList);
       } else {
-        setFilteredFiles(fileList.filter(file => file.status === statusFilter));
+        setFilteredFiles(fileList.filter((file: FileInfo) => file.status === statusFilter));
       }
 
-      const cMap = courseList.reduce((acc, c) => ({ ...acc, [c.id]: c.course_name }), {});
+      const cMap = courseList.reduce((acc: { [key: string]: string }, c: CourseInfo) => ({ ...acc, [c.id]: c.course_name }), {});
       setCoursesMap(cMap);
 
-      const sMap = studentList.reduce((acc, s) => ({ ...acc, [s.id]: s.full_name }), {});
+      const sMap = studentList.reduce((acc: { [key: string]: string }, s: StudentInfo) => ({ ...acc, [s.id]: s.full_name }), {});
       setStudentsMap(sMap);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -55,10 +76,10 @@ export default function AdminFileManagement() {
     setLoading(false);
   };
   
-  const handleDelete = async (fileId) => {
+  const handleDelete = async (fileId: string) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק קובץ זה?')) {
       try {
-        await File.delete(fileId);
+        await FileEntity.delete(fileId);
         loadData();
       } catch (error) {
         console.error("Failed to delete file:", error);
@@ -67,7 +88,7 @@ export default function AdminFileManagement() {
     }
   };
 
-  const getStatusComponent = (status) => {
+  const getStatusComponent = (status: 'approved' | 'rejected' | 'pending') => {
     switch (status) {
       case 'approved': return <Chip icon={<Check />} label="אושר" color="success" size="small" />;
       case 'rejected': return <Chip icon={<X />} label="נדחה" color="error" size="small" />;
@@ -75,10 +96,10 @@ export default function AdminFileManagement() {
     }
   };
 
-  const getFileExtension = (url) => {
+  const getFileExtension = (url: string) => {
     if (!url) return '';
     const parts = url.split('.');
-    return parts.length > 1 ? parts.pop().toUpperCase() : '';
+    return parts.length > 1 ? parts.pop()!.toUpperCase() : '';
   };
 
   return (

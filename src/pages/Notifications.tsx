@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Notification } from "@/api/entities";
+import { Notification as NotificationEntity, User } from "@/api/entities";
 import {
     Card, CardContent, Button, Chip, Table, TableBody, TableCell, TableHead,
     TableRow, TableContainer, Box, Typography, Paper, CircularProgress,
@@ -10,15 +10,26 @@ import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import { Link } from "react-router-dom";
 
-const notificationIcons = {
-  file_uploaded: { icon: Upload, color: "primary" },
-  file_approved: { icon: CheckCircle, color: "success" },
-  file_rejected: { icon: XCircle, color: "error" },
-  inquiry_responded: { icon: MessageSquare, color: "secondary" }
+type Notification = {
+    id: string;
+    message: string;
+    is_read: boolean;
+    created_date: string;
+    user_id: string;
+    type: string;
+    title: string;
+    action_url?: string;
+};
+
+const notificationIcons: { [key: string]: { icon: React.ElementType, color: string } } = {
+    file_uploaded: { icon: Bell, color: "primary" },
+    file_approved: { icon: CheckCircle, color: "success" },
+    file_rejected: { icon: XCircle, color: "error" },
+    inquiry_responded: { icon: MessageSquare, color: "secondary" }
 };
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, unread
 
@@ -27,44 +38,44 @@ export default function Notifications() {
   }, []);
 
   const loadNotifications = async () => {
+    setLoading(true);
     try {
       const currentUser = await User.me();
         
-      const userNotifications = await Notification.filter({ user_email: currentUser.email }, '-created_date');
+      const userNotifications = await NotificationEntity.filter({ user_id: currentUser.id });
       setNotifications(userNotifications);
     } catch (error) {
-      console.error("Error loading notifications:", error);
+      console.error("Failed to load notifications:", error);
     }
     setLoading(false);
   };
 
-  const markAsRead = async (notificationId) => {
+  const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await Notification.update(notificationId, { is_read: true });
+      await NotificationEntity.update(notificationId, { is_read: true });
       setNotifications(notifications.map(n => 
         n.id === notificationId ? { ...n, is_read: true } : n
       ));
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      console.error("Failed to mark notification as read:", error);
     }
   };
 
-  const markAllAsRead = async () => {
-    try {
-      const unreadNotifications = notifications.filter(n => !n.is_read);
-      await Promise.all(
-        unreadNotifications.map(n => Notification.update(n.id, { is_read: true }))
-      );
-      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
-    } catch (error) {
-      console.error("Error marking all as read:", error);
+  const handleFilterChange = (event: React.MouseEvent<HTMLElement>, newFilter: string | null) => {
+    if (newFilter) {
+      setFilter(newFilter);
     }
   };
 
-  const filteredNotifications = notifications.filter(notification => filter === 'unread' ? !notification.is_read : true);
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === 'all') return true;
+    if (filter === 'read') return n.is_read;
+    if (filter === 'unread') return !n.is_read;
+    return true;
+  });
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = (type: string) => {
     const config = notificationIcons[type] || { icon: Bell, color: "action" };
     const IconComponent = config.icon;
     return <Avatar sx={{ bgcolor: `${config.color}.light`, color: `${config.color}.main` }}><IconComponent /></Avatar>;
@@ -80,14 +91,14 @@ export default function Notifications() {
             <Typography color="text.secondary">עקוב אחר עדכונים בפעילות שלך במערכת</Typography>
           </Box>
         </Box>
-        <ToggleButtonGroup value={filter} exclusive onChange={(e, newFilter) => newFilter && setFilter(newFilter)}>
+        <ToggleButtonGroup value={filter} exclusive onChange={handleFilterChange}>
           <ToggleButton value="all">כל ההתראות ({notifications.length})</ToggleButton>
           <ToggleButton value="unread">לא נקראו ({unreadCount})</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
       {unreadCount > 0 && (
-        <Button variant="outlined" startIcon={<BellOff />} onClick={markAllAsRead} sx={{ mb: 2 }}>
+        <Button variant="outlined" startIcon={<BellOff />} onClick={() => notifications.filter(n => !n.is_read).forEach(n => handleMarkAsRead(n.id))} sx={{ mb: 2 }}>
           סמן הכל כנקרא
         </Button>
       )}
@@ -118,7 +129,7 @@ export default function Notifications() {
                       <TableCell>{!notification.is_read ? <Chip label="חדש" color="primary" size="small" /> : <Chip label="נקרא" size="small" />}</TableCell>
                       <TableCell align="left">
                         {notification.action_url && <Button component={Link} to={notification.action_url} variant="outlined" startIcon={<Eye />}>צפייה</Button>}
-                        {!notification.is_read && <Button onClick={() => markAsRead(notification.id)}>סמן כנקרא</Button>}
+                        {!notification.is_read && <Button onClick={() => handleMarkAsRead(notification.id)}>סמן כנקרא</Button>}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -140,7 +151,7 @@ export default function Notifications() {
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{format(new Date(notification.created_date), 'd MMM yyyy', { locale: he })}</Typography>
                       <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
                         {notification.action_url && <Button component={Link} to={notification.action_url} variant="outlined" size="small" startIcon={<Eye />}>צפייה</Button>}
-                        {!notification.is_read && <Button onClick={() => markAsRead(notification.id)} size="small">סמן כנקרא</Button>}
+                        {!notification.is_read && <Button onClick={() => handleMarkAsRead(notification.id)} size="small">סמן כנקרא</Button>}
                       </Box>
                     </Box>
                   </Box>

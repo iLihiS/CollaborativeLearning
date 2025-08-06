@@ -8,8 +8,6 @@ import {
     Avatar
 } from '@mui/material';
 import { Settings, Plus, Edit, Trash2, ArrowRight } from 'lucide-react';
-import { format } from 'date-fns';
-import { he } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -17,7 +15,7 @@ export default function AdminManagement() {
   const [admins, setAdmins] = useState([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -33,7 +31,7 @@ export default function AdminManagement() {
     try {
       // Load all users with admin role
       const allUsers = await User.list();
-      const adminUsers = allUsers.filter(user => user.role === 'admin');
+      const adminUsers = allUsers.filter((user: User) => user.roles.includes('admin'));
       setAdmins(adminUsers);
     } catch (error) {
       console.error("Error loading admins:", error);
@@ -50,12 +48,12 @@ export default function AdminManagement() {
     setIsAddDialogOpen(true);
   };
 
-  const handleEdit = (admin) => {
+  const handleEdit = (admin: User) => {
     setSelectedAdmin(admin);
     setFormData({
       full_name: admin.full_name || '',
       email: admin.email || '',
-      role: admin.role || 'admin',
+      role: admin.roles.includes('admin') ? 'admin' : 'user',
       current_role: admin.current_role || 'admin'
     });
     setIsEditDialogOpen(true);
@@ -78,7 +76,7 @@ export default function AdminManagement() {
     }
   };
 
-  const handleDelete = async (adminId) => {
+  const handleDelete = async (adminId: string) => {
     if (window.confirm("האם אתה בטוח שברצונך למחוק מנהל זה?")) {
       try {
         await User.delete(adminId);
@@ -90,7 +88,7 @@ export default function AdminManagement() {
     }
   };
 
-  const getRoleChip = (role, currentRole) => {
+  const getRoleChip = (currentRole: string) => {
     const roleText = currentRole === 'admin' ? 'מנהל פעיל' :
                      currentRole === 'lecturer' ? 'מרצה פעיל' :
                      currentRole === 'student' ? 'סטודנט פעיל' : 'מנהל';
@@ -134,12 +132,11 @@ export default function AdminManagement() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {admins.map((admin) => (
+              {admins.map((admin: User) => (
                 <TableRow key={admin.id} hover>
                   <TableCell>{admin.full_name || 'לא מוגדר'}</TableCell>
                   <TableCell>{admin.email}</TableCell>
-                  <TableCell>{getRoleChip(admin.role, admin.current_role)}</TableCell>
-                  <TableCell>{format(new Date(admin.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                  <TableCell>{getRoleChip(admin.current_role)}</TableCell>
                   <TableCell align="left">
                     <IconButton onClick={() => handleEdit(admin)}><Edit /></IconButton>
                     <IconButton onClick={() => handleDelete(admin.id)} color="error"><Trash2 /></IconButton>

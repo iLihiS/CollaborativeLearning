@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { User, Lecturer, File, Course } from '@/api/entities';
+import { File as FileEntity, Course, Student, Lecturer, User } from '@/api/entities';
 import {
     Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Box, Typography, Paper, CircularProgress, Button, Avatar
@@ -9,55 +9,89 @@ import { Download, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 
+type File = {
+    id: string;
+    title: string;
+    description: string;
+    course_id: string;
+    status: 'approved' | 'pending' | 'rejected';
+    created_date: string;
+    updated_date: string;
+    file_type: string;
+    uploader_id: string;
+    file_url: string;
+};
+
+type Course = {
+    id: string;
+    course_name: string;
+};
+
+type Student = {
+    id: string;
+    full_name: string;
+};
+
 export default function LecturerApprovedFiles() {
-  const [approvedFiles, setApprovedFiles] = useState([]);
-  const [coursesMap, setCoursesMap] = useState({});
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState<{ [key: string]: Course }>({});
+  const [students, setStudents] = useState<{ [key: string]: Student }>({});
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const currentUser = await User.me();
-      
-      const [allFiles, allCourses] = await Promise.all([
-          File.filter({ status: 'approved' }),
-          Course.list()
-      ]);
+      const user = await User.me();
+      setCurrentUser(user);
 
-      let filesToDisplay = allFiles;
+      const allFiles = await FileEntity.filter({ status: 'approved' });
+      let relevantFiles = allFiles;
 
-      if (currentUser.current_role !== 'admin') {
-        const lecturerRecords = await Lecturer.filter({ email: currentUser.email });
-        const currentLecturer = lecturerRecords[0];
-
-        if (currentLecturer) {
-          const lecturerCourseIds = allCourses
-            .filter(c => c.lecturer_id === currentLecturer.id)
-            .map(c => c.id);
-          filesToDisplay = allFiles.filter(f => lecturerCourseIds.includes(f.course_id));
+      if (user.current_role !== 'admin') {
+        const lecturerRecord = await Lecturer.filter({ user_id: user.id });
+        if (lecturerRecord.length > 0) {
+          const lecturerCourses = await Course.filter({ lecturer_id: lecturerRecord[0].id });
+          const lecturerCourseIds = lecturerCourses.map((c: Course) => c.id);
+          relevantFiles = allFiles.filter((file: File) => lecturerCourseIds.includes(file.course_id));
         } else {
-          filesToDisplay = [];
+          relevantFiles = [];
         }
       }
+      
+      setFiles(relevantFiles);
+      
+      const [courseList, studentList] = await Promise.all([Course.list(), Student.list()]);
+      
+      const courseMap = courseList.reduce((acc: { [key: string]: Course }, course: Course) => ({...acc, [course.id]: course }), {});
+      const studentMap = studentList.reduce((acc: { [key: string]: Student }, student: Student) => ({...acc, [student.id]: student }), {});
+      
+      setCourses(courseMap);
+      setStudents(studentMap);
 
-      setApprovedFiles(filesToDisplay);
-
-      const cMap = allCourses.reduce((acc, course) => {
-          acc[course.id] = course.course_name;
-          return acc;
-      }, {});
-      setCoursesMap(cMap);
     } catch (error) {
-      console.error("Error loading approved files:", error);
+      console.error("Failed to load data:", error);
     }
     setLoading(false);
   };
   
-  const handleDownload = (fileUrl) => {
-      window.open(fileUrl, '_blank');
+  const handleDownload = async (file: File) => {
+    await FileEntity.update(file.id, { download_count: (file as any).download_count + 1 });
+    window.open(file.file_url, '_blank');
+  }
+
+  if (loading) {
+    return (
+      <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
   }
 
   return (
@@ -84,21 +118,17 @@ export default function LecturerApprovedFiles() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} align="center"><CircularProgress /></TableCell>
-                </TableRow>
-              ) : approvedFiles.length > 0 ? (
-                approvedFiles.map(file => (
+              {files.length > 0 ? (
+                files.map(file => (
                   <TableRow key={file.id} hover>
                     <TableCell>{file.title}</TableCell>
-                    <TableCell>{coursesMap[file.course_id] || 'לא ידוע'}</TableCell>
+                    <TableCell>{courses[file.course_id]?.course_name || 'לא ידוע'}</TableCell>
                     <TableCell>{format(new Date(file.updated_date), 'd MMM yyyy', { locale: he })}</TableCell>
                     <TableCell align="left">
                       <Button
                         variant="outlined"
                         startIcon={<Download />}
-                        onClick={() => handleDownload(file.file_url)}
+                        onClick={() => handleDownload(file)}
                       >
                         הורדה
                       </Button>
@@ -109,7 +139,7 @@ export default function LecturerApprovedFiles() {
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     <Box sx={{ py: 6, textAlign: 'center' }}>
-                      <CheckCircle sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+                      <CheckCircle size={60} color="grey.300" />
                       <Typography variant="h6">אין קבצים מאושרים</Typography>
                     </Box>
                   </TableCell>

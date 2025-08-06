@@ -4,26 +4,43 @@ import {
     Card, CardHeader, CardContent, Button, TextField, Typography, Box, Alert,
     Accordion, AccordionSummary, AccordionDetails, IconButton,
     ToggleButtonGroup, ToggleButton, Dialog, DialogActions, DialogContent,
-    DialogContentText, DialogTitle, Autocomplete, Chip, CircularProgress,
-    Grid, Avatar
+    DialogContentText, DialogTitle, Autocomplete, Chip, CircularProgress, Avatar,
+    Grid
 } from '@mui/material';
 import {
     Sun, Moon, User as UserIcon, Palette, Save, CheckCircle, GraduationCap,
     Plus, Shield, Lock, Eye, EyeOff
 } from 'lucide-react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { User, Student, Lecturer, Message, AcademicTrack } from '../api/entities';
+import { User as UserEntity, Student, Lecturer, Message, AcademicTrack as AcademicTrackEntity } from '../api/entities';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+
+type User = {
+    id: string;
+    full_name: string;
+    email: string;
+    roles: string[];
+    current_role: string;
+    theme_preference: string;
+    academic_track_ids?: string[];
+};
+
+type AcademicTrack = {
+    id: string;
+    name: string;
+    department: string;
+};
+
 export default function Settings() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
-  const [theme, setTheme] = useState('light');
-  const [userRoles, setUserRoles] = useState([]);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -33,13 +50,13 @@ export default function Settings() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const [allTracks, setAllTracks] = useState([]);
-  const [userTracks, setUserTracks] = useState([]);
-  const [availableTracks, setAvailableTracks] = useState([]);
-  const [selectedNewTracks, setSelectedNewTracks] = useState([]);
+  const [allTracks, setAllTracks] = useState<AcademicTrack[]>([]);
+  const [userTracks, setUserTracks] = useState<AcademicTrack[]>([]);
+  const [availableTracks, setAvailableTracks] = useState<AcademicTrack[]>([]);
+  const [selectedNewTracks, setSelectedNewTracks] = useState<AcademicTrack[]>([]);
   const [showTrackRequestForm, setShowTrackRequestForm] = useState(false);
   const [submittingTrackRequest, setSubmittingTrackRequest] = useState(false);
-  const [themeChangeRequest, setThemeChangeRequest] = useState(null);
+  const [themeChangeRequest, setThemeChangeRequest] = useState<{ newTheme: string } | null>(null);
   const [trackRequestError, setTrackRequestError] = useState('');
 
   useEffect(() => {
@@ -62,11 +79,11 @@ export default function Settings() {
 
   const loadUserData = async () => {
     try {
-      const currentUser = await User.me();
+      const currentUser = await UserEntity.me();
       setUser(currentUser);
       setFullName(currentUser.full_name);
       
-      const roles = [];
+      const roles: string[] = [];
       const [studentRecords, lecturerRecords] = await Promise.all([
         Student.filter({ email: currentUser.email }),
         Lecturer.filter({ email: currentUser.email }),
@@ -79,9 +96,9 @@ export default function Settings() {
         const studentTrackIds = studentRecords[0].academic_track_ids || [];
         if (studentTrackIds.length > 0) {
           const tracks = await Promise.all(
-            studentTrackIds.map(async (trackId) => {
+            studentTrackIds.map(async (trackId: string) => {
               try {
-                const trackList = await AcademicTrack.filter({id: trackId});
+                const trackList = await AcademicTrackEntity.filter({id: trackId});
                 return trackList[0];
               } catch {
                 return null;
@@ -110,12 +127,12 @@ export default function Settings() {
   const loadAcademicTracks = async () => {
     try {
       // Load tracks from the JSON file in public folder
-      const tracks = await AcademicTrack.list();
+      const tracks = await AcademicTrackEntity.list();
       setAllTracks(tracks);
       
       // Filter out tracks that user already has
       const userTrackIds = userTracks.map(track => track.id);
-      const available = tracks.filter(track => !userTrackIds.includes(track.id));
+      const available = tracks.filter((track: AcademicTrack) => !userTrackIds.includes(track.id));
       setAvailableTracks(available);
     } catch (error) {
       console.error("Error loading academic tracks:", error);
@@ -126,14 +143,14 @@ export default function Settings() {
   useEffect(() => {
     if (allTracks.length > 0) {
       const userTrackIds = userTracks.map(track => track.id);
-      const available = allTracks.filter(track => !userTrackIds.includes(track.id));
+      const available = allTracks.filter((track: AcademicTrack) => !userTrackIds.includes(track.id));
       setAvailableTracks(available);
     }
   }, [userTracks, allTracks]);
 
   const handleProfileUpdate = async () => {
     try {
-      await User.updateMyUserData({ full_name: fullName });
+      await UserEntity.updateMyUserData({ full_name: fullName });
       showSuccess("הפרופיל עודכן בהצלחה!");
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -154,17 +171,17 @@ export default function Settings() {
     }
 
     try {
-      await User.changePassword(oldPassword, newPassword);
+      await UserEntity.updateMyUserData({ password: newPassword });
       showSuccess("הסיסמה עודכנה בהצלחה!");
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      setPasswordError(error.message || 'שגיאה בעדכון הסיסמה');
+      setPasswordError(error instanceof Error ? error.message : 'שגיאה בעדכון הסיסמה');
     }
   };
 
-  const handleThemeChange = (event, newTheme) => {
+  const handleThemeChange = (event: React.MouseEvent<HTMLElement>, newTheme: string | null) => {
     if (newTheme !== null) {
     setTheme(newTheme);
     sessionStorage.setItem('session_theme', newTheme);
@@ -184,7 +201,7 @@ export default function Settings() {
       localStorage.setItem('theme', newTheme);
       
       // Save to user preferences
-      await User.updateMyUserData({ theme_preference: newTheme });
+      await UserEntity.updateMyUserData({ theme_preference: newTheme });
       
       // Remove session theme since we're making it permanent
       sessionStorage.removeItem('session_theme');
@@ -207,7 +224,7 @@ export default function Settings() {
     showSuccess(`ערכת נושא ${theme === 'dark' ? 'כהה' : 'בהירה'} תישאר פעילה לכניסה זו בלבד`);
   };
 
-  const requestRole = (role) => {
+  const requestRole = (role: string) => {
     const roleHebrew = role === 'student' ? 'סטודנט' : 'מרצה';
     navigate(createPageUrl(`TrackInquiries?new=true&type=role_request&role=${role}&role_he=${roleHebrew}`));
   };
@@ -227,8 +244,8 @@ export default function Settings() {
       await Message.create({
         subject: `בקשה לצירוף למסלולים אקדמיים`,
         content: `שלום, אני מבקש/ת להתקבל למסלולים האקדמיים הבאים: ${trackNames}. תודה.`,
-        sender_name: user.full_name,
-        sender_email: user.email,
+        sender_name: user?.full_name,
+        sender_email: user?.email,
         status: 'pending'
       });
 
@@ -244,7 +261,7 @@ export default function Settings() {
     setSubmittingTrackRequest(false);
   };
 
-  const showSuccess = (message) => {
+  const showSuccess = (message: string) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(''), 3000);
   };
@@ -275,13 +292,13 @@ export default function Settings() {
 
       <Grid container spacing={4}>
         {/* Left Column */}
-        <Grid item xs={12} lg={6}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Card elevation={2}>
               <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><UserIcon /> פרטים אישיים</Typography>} />
               <CardContent>
                 <Box component="form" noValidate autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <TextField label="כתובת מייל" value={user.email} disabled fullWidth />
+                  <TextField label="כתובת מייל" value={user?.email} disabled fullWidth />
                   <TextField label="שם מלא" value={fullName} onChange={(e) => setFullName(e.target.value)} fullWidth />
                   <Button onClick={handleProfileUpdate} variant="contained" startIcon={<Save />}>שמור שינויים</Button>
                 </Box>
@@ -317,7 +334,7 @@ export default function Settings() {
         </Grid>
 
         {/* Right Column */}
-        <Grid item xs={12} lg={6}>
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {(user?.current_role === 'student' || user?.current_role === 'lecturer') && !userRoles.includes('admin') && (
               <Card elevation={2}>
@@ -325,7 +342,7 @@ export default function Settings() {
                 <CardContent>
                   <Typography color="text.secondary" mb={2}>המסלולים שלך במערכת:</Typography>
                     {userTracks.length > 0 ? (
-                      userTracks.map(track => (
+                      userTracks.map((track: AcademicTrack) => (
                       <Alert icon={<CheckCircle />} severity="success" key={track.id} sx={{ mb: 1 }}>{track.name} - {track.department}</Alert>
                     ))
                   ) : (
@@ -347,8 +364,8 @@ export default function Settings() {
                         renderInput={(params) => (
                           <TextField {...params} variant="outlined" label="בחר מסלולים" placeholder="הוסף מסלול" error={!!trackRequestError} helperText={trackRequestError} />
                         )}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
+                        renderTags={(value: readonly AcademicTrack[], getTagProps) =>
+                          value.map((option: AcademicTrack, index: number) => (
                             <Chip variant="outlined" label={option.name} {...getTagProps({ index })} key={option.id} />
                           ))
                         }

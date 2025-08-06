@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { User } from "@/api/entities";
+import { User as UserEntity } from "@/api/entities.ts";
 import {
   Home,
   Upload,
@@ -41,16 +41,25 @@ import {
   Paper,
   Divider
 } from "@mui/material";
-import { LoginForm } from "@/components/LoginForm";
-import AccessibilityWidget from '@/components/AccessibilityWidget';
+import { LoginForm } from "@/components/LoginForm.tsx";
+import AccessibilityWidget from '@/components/AccessibilityWidget.tsx';
 
 const MORNING_START = 6; // 6 AM
 const EVENING_START = 22; // 10 PM
 
+type User = {
+  id: string;
+  full_name: string;
+  email: string;
+  roles: string[];
+  current_role: string;
+  theme_preference: string;
+};
+
 // eslint-disable-next-line react/prop-types
-export default function Layout({ children }) {
+export default function Layout({ children, currentPageName }: { children: React.ReactNode, currentPageName: string }) {
   const location = useLocation();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loginError, setLoginError] = useState('');
@@ -61,7 +70,7 @@ export default function Layout({ children }) {
     document.documentElement.setAttribute('dir', 'rtl');
     
     const faviconUrl = 'https://yedion.ono.ac.il/info/images/Favicon.ico';
-    let link = document.querySelector("link[rel~='icon']");
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (!link) {
       link = document.createElement('link');
       link.rel = 'icon';
@@ -84,7 +93,10 @@ export default function Layout({ children }) {
     }
 
     const token = localStorage.getItem('auth_token');
+    console.log('loadUser - token from localStorage:', token);
+    
     if (!token) {
+        console.log('loadUser - no token found, setting user to null');
         const savedTheme = localStorage.getItem('theme') || defaultTheme;
         document.documentElement.classList.remove('light', 'dark');
         document.documentElement.classList.add(savedTheme);
@@ -93,8 +105,11 @@ export default function Layout({ children }) {
         return;
     }
     
+    console.log('loadUser - token found, trying to get user');
     try {
-        const currentUser = await User.me();
+        console.log('Layout - trying to load user...');
+        const currentUser = await UserEntity.me();
+        console.log('Layout - user loaded successfully:', currentUser);
         setUser(currentUser);
 
         let themeToUse = sessionStorage.getItem('session_theme');
@@ -103,9 +118,11 @@ export default function Layout({ children }) {
         }
         
         document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(themeToUse);
-    } catch {
-        console.log("User not authenticated");
+        if (themeToUse) {
+            document.documentElement.classList.add(themeToUse);
+        }
+    } catch (error) {
+        console.log("User not authenticated, error:", error);
         const savedTheme = localStorage.getItem('theme') || defaultTheme;
         document.documentElement.classList.remove('light', 'dark');
         document.documentElement.classList.add(savedTheme);
@@ -117,7 +134,7 @@ export default function Layout({ children }) {
 
   const handleLogout = async () => {
     try {
-      await User.logout();
+      await UserEntity.logout();
       setToast({ open: true, message: "התנתקת בהצלחה מהמערכת" });
     } catch (error) {
       console.error('Logout error:', error);
@@ -133,7 +150,7 @@ export default function Layout({ children }) {
 
   const getNavigationItems = () => {
     if (!user) return [];
-    const currentRole = user.current_role || (user.role === 'admin' ? 'admin' : (user.role === 'lecturer' ? 'lecturer' : 'student'));
+    const currentRole = user.current_role;
     const allNavItems = [
       { title: "דף הבית", url: createPageUrl("Dashboard"), icon: Home, roles: ["student", "lecturer", "admin"] },
       { title: "הקבצים שלי", url: createPageUrl("MyFiles"), icon: FileText, roles: ["student", "lecturer", "admin"] },
@@ -160,8 +177,10 @@ export default function Layout({ children }) {
   }
 
   const handleLoginSuccess = async () => {
+    console.log('handleLoginSuccess called');
     try {
       setLoading(true);
+      console.log('handleLoginSuccess - calling loadUser');
       await loadUser();
       setToast({ open: true, message: "התחברת בהצלחה למערכת" });
       setLoginError('');
@@ -171,12 +190,12 @@ export default function Layout({ children }) {
     }
   };
 
-  const handleLoginError = (error) => {
+  const handleLoginError = (error: string) => {
     setLoginError(error);
     setLoading(false);
   };
 
-  const handleCloseToast = (event, reason) => {
+  const handleCloseToast = (event: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return;
     }
@@ -274,14 +293,14 @@ export default function Layout({ children }) {
         <Paper elevation={0} sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '12px', background: 'linear-gradient(to right, #f0fdf4, #e2f5d8)'}}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
               <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 40, height: 40 }}>
-                {user?.full_name?.charAt(0) || 'מ'}
+                {user.full_name?.charAt(0) || 'מ'}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
                 <Typography noWrap fontWeight="bold" sx={{ color: 'var(--text-primary)'}}>
-                  {user?.full_name || 'משתמש'}
+                  {user.full_name || 'משתמש'}
                 </Typography>
                 <Typography variant="body2" noWrap sx={{ color: 'var(--lime-secondary)' }}>
-                  {user?.email}
+                  {user.email}
                 </Typography>
               </Box>
             </Box>

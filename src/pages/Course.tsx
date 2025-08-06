@@ -7,11 +7,36 @@ import {
     Card, CardContent, Button, Typography, Box, Grid,
     Chip, Paper, CircularProgress, Alert, Avatar
 } from "@mui/material";
-import { User, Calendar, Upload, Download, FileText, ArrowRight } from "lucide-react";
+import { User, Calendar, Upload, Download, FileText as FileTextIcon, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 
-const fileTypeToHebrew = {
+type Course = {
+    id: string;
+    course_name: string;
+    course_code: string;
+    lecturer_id: string;
+    semester: string;
+    description: string;
+};
+
+type Lecturer = {
+    id: string;
+    full_name: string;
+    email: string;
+};
+
+type File = {
+    id: string;
+    title: string;
+    description: string;
+    file_type: string;
+    created_date: string;
+    download_count: number;
+    file_url: string;
+};
+
+const fileTypeToHebrew: { [key: string]: string } = {
   note: "הרצאות וסיכומים",
   exam: "מבחני תרגול",
   formulas: "דף נוסחאות",
@@ -20,11 +45,11 @@ const fileTypeToHebrew = {
 };
 
 export default function CoursePage() {
-  const [course, setCourse] = useState(null);
-  const [lecturer, setLecturer] = useState(null);
-  const [files, setFiles] = useState([]);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [lecturer, setLecturer] = useState<Lecturer | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -41,7 +66,7 @@ export default function CoursePage() {
     }
   }, [courseId, navigate]);
 
-  const loadCourseData = async (id) => {
+  const loadCourseData = async (id: string) => {
     try {
       setError(null);
       const courseData = await CourseEntity.get(id);
@@ -69,7 +94,7 @@ export default function CoursePage() {
     setLoading(false);
   };
 
-  const handleDownload = async (file) => {
+  const handleDownload = async (file: File) => {
     await FileEntity.update(file.id, { download_count: (file.download_count || 0) + 1 });
     window.open(file.file_url, '_blank');
   };
@@ -123,7 +148,7 @@ export default function CoursePage() {
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>
-          <FileText />
+          <FileTextIcon />
         </Avatar>
         <Typography variant="h5" fontWeight="bold">חומרי לימוד זמינים</Typography>
       </Box>
@@ -133,10 +158,10 @@ export default function CoursePage() {
           {files.length > 0 ? (
             <Grid container spacing={2}>
               {files.map((file) => (
-                <Grid item xs={12} key={file.id}>
+                <Grid size={12} key={file.id}>
                   <Paper variant="outlined" sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 56, height: 56 }}><FileText /></Avatar>
+                      <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 56, height: 56 }}><FileTextIcon /></Avatar>
                       <Box>
                         <Typography variant="h6">{file.title}</Typography>
                         <Typography variant="body2" color="text.secondary">{file.description}</Typography>
@@ -159,7 +184,7 @@ export default function CoursePage() {
             </Grid>
           ) : (
             <Box sx={{ textAlign: 'center', py: 6 }}>
-              <FileText sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
+              <FileTextIcon size={60} color="grey" />
               <Typography variant="h6">אין עדיין חומרי לימוד</Typography>
               <Typography color="text.secondary" sx={{ mb: 2 }}>היה הראשון להעלות חומר לימוד לקורס זה!</Typography>
               <Button

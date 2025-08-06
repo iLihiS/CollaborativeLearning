@@ -1,11 +1,14 @@
 // Generic API client for the CollaborativeLearning application
 class APIClient {
+  baseURL: string;
+  token: string | null;
+
   constructor(baseURL = '/api') {
     this.baseURL = baseURL;
     this.token = localStorage.getItem('auth_token');
   }
 
-  setAuthToken(token) {
+  setAuthToken(token: string | null) {
     this.token = token;
     if (token) {
       localStorage.setItem('auth_token', token);
@@ -14,9 +17,9 @@ class APIClient {
     }
   }
 
-  async request(endpoint, options = {}) {
+  async request(endpoint: string, options: any = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    const headers = {
+    const headers: any = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
@@ -54,11 +57,11 @@ class APIClient {
   }
 
   // HTTP methods
-  get(endpoint, options = {}) {
+  get(endpoint: string, options = {}) {
     return this.request(endpoint, { ...options, method: 'GET' });
   }
 
-  post(endpoint, data, options = {}) {
+  post(endpoint: string, data: any, options = {}) {
     return this.request(endpoint, {
       ...options,
       method: 'POST',
@@ -66,7 +69,7 @@ class APIClient {
     });
   }
 
-  put(endpoint, data, options = {}) {
+  put(endpoint: string, data: any, options = {}) {
     return this.request(endpoint, {
       ...options,
       method: 'PUT',
@@ -74,7 +77,7 @@ class APIClient {
     });
   }
 
-  patch(endpoint, data, options = {}) {
+  patch(endpoint: string, data: any, options = {}) {
     return this.request(endpoint, {
       ...options,
       method: 'PATCH',
@@ -82,13 +85,45 @@ class APIClient {
     });
   }
 
-  delete(endpoint, options = {}) {
+  delete(endpoint: string, options = {}) {
     return this.request(endpoint, { ...options, method: 'DELETE' });
+  }
+
+  login(email: string, password: string) {
+    return auth.login({ email, password });
+  }
+
+  me() {
+    return auth.me();
+  }
+
+  logout() {
+    return auth.logout();
+  }
+
+  create(entityName: string, data: any) {
+    return this.post(`${entityName}`, data);
+  }
+
+  update(entityName: string, id: string, data: any) {
+    return this.put(`${entityName}/${id}`, data);
+  }
+
+  getEntity(entityName: string, id: string) {
+    return this.request(`${entityName}/${id}`);
+  }
+
+  list(entityName: string) {
+    return this.get(entityName);
+  }
+
+  updateMyUserData(data: any) {
+    return auth.updateMyUserData(data);
   }
 }
 
 // Mock Data Management
-const initializeMockData = (key, initialData) => {
+const initializeMockData = (key: string, initialData: any[]) => {
   const existingData = localStorage.getItem(key);
   // Seed if data doesn't exist OR if it's an empty array.
   // This helps recover from a state where an empty array was saved during development.
@@ -144,7 +179,11 @@ const seedMockData = () => {
 seedMockData(); // Run on script load
 
 class Entity {
-  constructor(apiClient, entityName) {
+  api: APIClient;
+  entityName: string;
+  storageKey: string;
+
+  constructor(apiClient: APIClient, entityName: string) {
     this.api = apiClient;
     this.entityName = entityName;
     this.storageKey = `mock_${entityName}`;
@@ -163,14 +202,14 @@ class Entity {
         return Promise.resolve([]);
       }
     }
-    const data = JSON.parse(localStorage.getItem(this.storageKey)) || [];
+    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
     return Promise.resolve(data);
   }
 
-  async get(id) {
+  async get(id: string) {
     console.log(`Always using mock data for GET ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey)) || [];
-    const item = data.find(i => i.id === id);
+    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+    const item = data.find((i: any) => i.id === id);
     if (item) {
       return Promise.resolve(item);
     } else {
@@ -178,19 +217,19 @@ class Entity {
     }
   }
 
-  async create(newItemData) {
+  async create(newItemData: any) {
     console.log(`Always using mock data for CREATE ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey)) || [];
+    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
     const newItem = { ...newItemData, id: `${this.entityName.slice(0, -1)}-${Date.now()}` };
     data.push(newItem);
     localStorage.setItem(this.storageKey, JSON.stringify(data));
     return Promise.resolve(newItem);
   }
 
-  async update(id, updatedItemData) {
+  async update(id: string, updatedItemData: any) {
     console.log(`Always using mock data for UPDATE ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey)) || [];
-    const itemIndex = data.findIndex(i => i.id === id);
+    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+    const itemIndex = data.findIndex((i: any) => i.id === id);
     if (itemIndex > -1) {
       data[itemIndex] = { ...data[itemIndex], ...updatedItemData };
       localStorage.setItem(this.storageKey, JSON.stringify(data));
@@ -199,15 +238,15 @@ class Entity {
     return Promise.reject(new Error("Item not found"));
   }
 
-  async delete(id) {
+  async delete(id: string) {
     console.log(`Always using mock data for DELETE ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey)) || [];
-    const newData = data.filter(i => i.id !== id);
+    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+    const newData = data.filter((i: any) => i.id !== id);
     localStorage.setItem(this.storageKey, JSON.stringify(newData));
     return Promise.resolve({ success: true });
   }
   
-  async filter(filters) {
+  async filter(filters: any) {
     console.log(`Always using mock data for FILTER ${this.entityName}`);
     if (this.entityName === 'academic-tracks') {
       try {
@@ -215,7 +254,7 @@ class Entity {
         if (!response.ok) throw new Error('Network response was not ok');
         let data = await response.json();
         Object.keys(filters).forEach(key => {
-            data = data.filter(item => item[key] === filters[key]);
+            data = data.filter((item: any) => item[key] === filters[key]);
         });
         return Promise.resolve(data);
       } catch (error) {
@@ -224,10 +263,10 @@ class Entity {
       }
     }
     
-    let data = JSON.parse(localStorage.getItem(this.storageKey)) || [];
+    let data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
     
     Object.keys(filters).forEach(key => {
-        data = data.filter(item => item[key] === filters[key]);
+        data = data.filter((item: any) => item[key] === filters[key]);
     });
     
     return Promise.resolve(data);
@@ -236,20 +275,50 @@ class Entity {
 
 // Auth class for user management
 class Auth {
-  constructor(apiClient) {
+  api: APIClient;
+
+  constructor(apiClient: APIClient) {
     this.api = apiClient;
   }
 
   async me() {
-    // Always use mock data since we don't have a real backend
-    const mockUser = localStorage.getItem('mock_user');
-    if (mockUser && this.api.token) {
-      return JSON.parse(mockUser);
+    console.log('me() function started');
+    
+    try {
+      // Always use mock data since we don't have a real backend
+      const mockUser = localStorage.getItem('mock_user');
+      const token = this.api.token || localStorage.getItem('auth_token');
+      
+      console.log('me() called - mockUser exists:', !!mockUser);
+      console.log('me() called - mockUser content:', mockUser);
+      console.log('me() called - api.token:', this.api.token);
+      console.log('me() called - token from storage:', localStorage.getItem('auth_token'));
+      console.log('me() called - final token:', token);
+      
+      // Update api token if it was loaded from storage
+      if (!this.api.token && localStorage.getItem('auth_token')) {
+        console.log('me() - updating api token from storage');
+        this.api.setAuthToken(localStorage.getItem('auth_token'));
+      }
+      
+      if (mockUser && token) {
+        console.log('me() - parsing mockUser...');
+        const user = JSON.parse(mockUser);
+        console.log('me() returning user:', user);
+        return user;
+      }
+      
+      console.log('me() - User not authenticated, throwing error');
+      console.log('me() - mockUser:', !!mockUser, 'token:', !!token);
+      throw new Error('User not authenticated');
+      
+    } catch (error) {
+      console.log('me() - Error occurred:', error);
+      throw error;
     }
-    throw new Error('User not authenticated');
   }
 
-  async updateMyUserData(data) {
+  async updateMyUserData(data: any) {
     // Always use mock data since we don't have a real backend
     const mockUser = localStorage.getItem('mock_user');
     if (mockUser && this.api.token) {
@@ -261,7 +330,7 @@ class Auth {
     throw new Error('User not authenticated');
   }
 
-  async changePassword(oldPassword, newPassword) {
+  async changePassword(oldPassword: string, newPassword: string) {
     const mockUser = localStorage.getItem('mock_user');
     if (mockUser && this.api.token) {
         const user = JSON.parse(mockUser);
@@ -279,18 +348,39 @@ class Auth {
     throw new Error('User not authenticated');
   }
 
-  async login(credentials) {
+  async login(credentials: any) {
     try {
       const response = await this.api.post('/auth/login', credentials);
       if (response.token) {
         this.api.setAuthToken(response.token);
       }
       return response;
-    } catch {
+    } catch (error) {
       // If backend is not available, use mock authentication
       console.log('Backend login unavailable, using mock authentication');
+      console.log('Received credentials:', credentials);
       
-      const { email, password } = credentials;
+      // Handle different credential formats
+      let email, password;
+      
+      if (typeof credentials === 'string') {
+        email = credentials;
+        password = '123456'; // default password
+      } else if (credentials && credentials.email && typeof credentials.email === 'string') {
+        // Normal case: {email: 'user@domain.com', password: '123456'}
+        email = credentials.email;
+        password = credentials.password;
+      } else if (credentials && credentials.email && typeof credentials.email === 'object') {
+        // Nested case: {email: {email: 'user@domain.com', password: '123456'}, password: undefined}
+        email = credentials.email.email;
+        password = credentials.email.password;
+      } else {
+        email = credentials;
+        password = '123456';
+      }
+      
+      console.log('Extracted email:', email);
+      console.log('Extracted password:', password);
       
       // Mock user database with different role combinations
       const mockUsers = {
@@ -341,15 +431,22 @@ class Auth {
           email: 'all.roles@ono.ac.il',
           full_name: 'ד"ר רונה סופר יוזר',
           roles: ['student', 'lecturer', 'admin'],
-          current_role: 'admin',
+          current_role: 'admin', // Set admin as default for all-roles user
           student_id: 'MBA003',
           academic_track_ids: ['business-grad'], // For student role
           lecturer_track_ids: [] // For lecturer role
         }
       };
 
-      const mockUser = mockUsers[email];
+      console.log('Login attempt with email:', email);
+      console.log('Available emails in mockUsers:', Object.keys(mockUsers));
+
+      const mockUser = Object.values(mockUsers).find(user => user.email === email);
+      console.log('Found mockUser:', mockUser);
+      
       if (!mockUser) {
+        console.log('User not found! Email received:', email);
+        console.log('Available users:', Object.keys(mockUsers));
         throw new Error('משתמש לא נמצא במערכת');
       }
       
@@ -378,6 +475,23 @@ class Auth {
         throw new Error('סיסמה שגויה');
       }
       
+      // Set default role based on priority: admin > lecturer > student
+      if (!userToStore.current_role || !userToStore.roles.includes(userToStore.current_role)) {
+        if (userToStore.roles && userToStore.roles.length > 0) {
+          if (userToStore.roles.includes('admin')) {
+            userToStore.current_role = 'admin';
+          } else if (userToStore.roles.includes('lecturer')) {
+            userToStore.current_role = 'lecturer';
+          } else if (userToStore.roles.includes('student')) {
+            userToStore.current_role = 'student';
+          } else {
+            userToStore.current_role = userToStore.roles[0]; // fallback to first role
+          }
+        }
+      }
+      
+      console.log('Final user with role:', userToStore);
+      
       // Create a mock token and store it
       const mockToken = 'mock-token-' + Date.now();
       this.api.setAuthToken(mockToken);
@@ -392,7 +506,7 @@ class Auth {
   async logout() {
     try {
       // Try to call the backend logout endpoint (if available)
-      await this.api.post('/auth/logout');
+      await this.api.post('/auth/logout', {});
     } catch {
       // If backend is not available, continue with local cleanup
       console.log('Backend logout unavailable, performing local cleanup');
@@ -403,18 +517,20 @@ class Auth {
     // Note: We don't remove 'mock_user' to preserve user preferences like theme
   }
 
-  async register(userData) {
+  async register(userData: any) {
     return this.api.post('/auth/register', userData);
   }
 }
 
 // File upload service
 class FileUploadService {
-  constructor(apiClient) {
+  api: APIClient;
+
+  constructor(apiClient: APIClient) {
     this.api = apiClient;
   }
 
-  async uploadFile(file) {
+  async uploadFile(file: File) {
     const formData = new FormData();
     formData.append('file', file);
     
@@ -428,11 +544,13 @@ class FileUploadService {
 
 // LLM service
 class LLMService {
-  constructor(apiClient) {
+  api: APIClient;
+
+  constructor(apiClient: APIClient) {
     this.api = apiClient;
   }
 
-  async invoke(prompt, options = {}) {
+  async invoke(prompt: string, options = {}) {
     return this.api.post('/llm/invoke', {
       prompt,
       ...options,
@@ -442,11 +560,13 @@ class LLMService {
 
 // Email service
 class EmailService {
-  constructor(apiClient) {
+  api: APIClient;
+
+  constructor(apiClient: APIClient) {
     this.api = apiClient;
   }
 
-  async sendEmail(to, subject, content, options = {}) {
+  async sendEmail(to: string, subject: string, content: string, options = {}) {
     return this.api.post('/email/send', {
       to,
       subject,
