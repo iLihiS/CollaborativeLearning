@@ -1,5 +1,5 @@
 import './App.css'
-import Pages from "@/pages/index.jsx"
+import Pages from "@/pages/index.tsx"
 
 function App() {
   return (
