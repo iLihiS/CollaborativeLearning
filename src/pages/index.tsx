@@ -1,4 +1,4 @@
-import Layout from "./Layout.tsx";
+import { Layout } from "../components/layout/Layout";
 
 import Dashboard from "./Dashboard.tsx";
 
