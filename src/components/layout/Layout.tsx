@@ -5,8 +5,10 @@ import { Footer } from "./Footer";
 import { Sidebar } from "./Sidebar";
 import { LoginForm } from "@/components/LoginForm";
 import AccessibilityWidget from '@/components/AccessibilityWidget';
+import { DebugPanel } from '@/components/DebugPanel';
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
+import '@/utils/debugUtils'; // Load debug tools
 import { ToastState } from "@/types";
 import { User as UserEntity } from "@/api/entities";
 

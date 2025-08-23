@@ -8,6 +8,10 @@ import createCache from '@emotion/cache';
 import { prefixer } from 'stylis';
 import rtlPlugin from 'stylis-plugin-rtl';
 import theme from './theme/theme.ts';
+import { LocalStorageService } from '@/services/localStorage';
+
+// Initialize localStorage data
+LocalStorageService.initializeData();
 
 const cacheRtl = createCache({
   key: 'muirtl',

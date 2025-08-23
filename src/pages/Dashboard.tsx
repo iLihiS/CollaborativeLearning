@@ -136,13 +136,20 @@ export default function Dashboard() {
             let studentRecord = null;
             if (roles.includes('student')) {
                 const studentRecords = await Student.filter({ email: currentUser.email });
-                studentRecord = studentRecords[0] || await Student.create({
-                    full_name: currentUser.full_name,
-                    student_id: currentUser.student_id || `STU${Date.now()}`,
-                    email: currentUser.email,
-                    academic_track: currentUser.academic_track || "לא שויך מסלול",
-                    registered_courses: [],
-                });
+                if (studentRecords.length > 0) {
+                    studentRecord = studentRecords[0];
+                } else {
+                    // Only create if no student record exists for this email
+                    studentRecord = await Student.create({
+                        full_name: currentUser.full_name,
+                        student_id: currentUser.student_id || `STU${Date.now()}`,
+                        email: currentUser.email,
+                        academic_track: currentUser.academic_track || "לא שויך מסלול",
+                        academic_track_ids: currentUser.academic_track_ids || [],
+                        year: 1,
+                        status: 'active'
+                    });
+                }
             }
 
             let lecturerRecords = [];

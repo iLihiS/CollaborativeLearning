@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { User } from '@/api/entities';
+import { FormValidator } from '@/utils/validation';
 
 export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (user: User) => void, onLoginError: (error: string) => void }) {
   const [formData, setFormData] = useState({
@@ -24,17 +25,43 @@ export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (u
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+
+    // Real-time validation
+    if (value.trim() !== '') {
+      const validation = FormValidator.validateField(name, value);
+      setErrors(prev => ({
+        ...prev,
+        [name]: validation.isValid ? '' : validation.error || ''
+      }));
+    } else {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    const validation = FormValidator.validateLogin(formData);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
+
     setLoading(true);
+    setErrors({});
 
     try {
       const response = await User.login(formData.email, formData.password);
@@ -85,6 +112,8 @@ export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (u
             autoFocus
             value={formData.email}
             onChange={handleInputChange}
+            error={!!errors.email}
+            helperText={errors.email}
             dir="ltr"
             sx={{ '& .MuiInputBase-input': { textAlign: 'left' } }}
           />
@@ -99,6 +128,8 @@ export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (u
             autoComplete="current-password"
             value={formData.password}
             onChange={handleInputChange}
+            error={!!errors.password}
+            helperText={errors.password}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">

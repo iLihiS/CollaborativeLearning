@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { User } from '@/types';
+import { LocalStorageService } from '@/services/localStorage';
 
 export const useAuth = () => {
   const location = useLocation();
@@ -12,9 +13,21 @@ export const useAuth = () => {
     try {
       setLoading(true);
       
-      // Simulate user loading - replace with real API call
+      // Initialize localStorage data
+      LocalStorageService.initializeData();
+      
+      // Check if user is already logged in (session)
+      const sessionUser = LocalStorageService.getUserSession();
+      if (sessionUser) {
+        setUser(sessionUser);
+        setLoginError('');
+        setLoading(false);
+        return;
+      }
+      
+      // Create demo user if no session exists
       const mockUser: User = {
-        id: "1",
+        id: "demo-user-1",
         full_name: "משתמש דמו",
         email: "demo@ono.ac.il",
         roles: ["student", "lecturer", "admin"],
@@ -25,6 +38,8 @@ export const useAuth = () => {
       // Simulate loading delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Set user session
+      LocalStorageService.setUserSession(mockUser);
       setUser(mockUser);
       setLoginError('');
     } catch (error) {
@@ -37,6 +52,7 @@ export const useAuth = () => {
   };
 
   const logout = () => {
+    LocalStorageService.clearUserSession();
     setUser(null);
     setLoginError('');
   };

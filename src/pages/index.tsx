@@ -1,4 +1,5 @@
 import { Layout } from "../components/layout/Layout";
+import { DebugPanel } from "../components/DebugPanel";
 
 import Dashboard from "./Dashboard.tsx";
 
@@ -101,52 +102,54 @@ function PagesContent() {
     const currentPage = _getCurrentPage(location.pathname);
     
     return (
-        <Layout currentPageName={currentPage}>
-            <Routes>            
-                
-                    <Route path="/" element={<Dashboard />} />
-                
-                
-                <Route path="/Dashboard" element={<Dashboard />} />
-                
-                <Route path="/UploadFile" element={<UploadFile />} />
-                
-                <Route path="/MyFiles" element={<MyFiles />} />
-                
-                <Route path="/Courses" element={<Courses />} />
-                
-                <Route path="/Course" element={<Course />} />
-                
-                <Route path="/Insights" element={<Insights />} />
-                
-                <Route path="/Help" element={<Help />} />
-                
-                <Route path="/AdminPanel" element={<AdminPanel />} />
-                
-                <Route path="/TrackInquiries" element={<TrackInquiries />} />
-                
-                <Route path="/AdminStudentManagement" element={<AdminStudentManagement />} />
-                
-                <Route path="/AdminCourseManagement" element={<AdminCourseManagement />} />
-                
-                <Route path="/AdminFileManagement" element={<AdminFileManagement />} />
-                
-                <Route path="/AdminLecturerManagement" element={<AdminLecturerManagement />} />
-                
-                <Route path="/Notifications" element={<Notifications />} />
-                
-                <Route path="/LecturerApprovedFiles" element={<LecturerApprovedFiles />} />
-                
-                <Route path="/LecturerRejectedFiles" element={<LecturerRejectedFiles />} />
-                
-                <Route path="/LecturerPendingFiles" element={<LecturerPendingFiles />} />
-                
-                <Route path="/Settings" element={<Settings />} />
-                
-                <Route path="/AdminManagement" element={<AdminManagement />} />
-                
-            </Routes>
-        </Layout>
+        <>
+            <Layout currentPageName={currentPage}>
+                <Routes>            
+                    
+                        <Route path="/" element={<Dashboard />} />
+                    
+                    
+                    <Route path="/Dashboard" element={<Dashboard />} />
+                    
+                    <Route path="/UploadFile" element={<UploadFile />} />
+                    
+                    <Route path="/MyFiles" element={<MyFiles />} />
+                    
+                    <Route path="/Courses" element={<Courses />} />
+                    
+                    <Route path="/Course" element={<Course />} />
+                    
+                    <Route path="/Insights" element={<Insights />} />
+                    
+                    <Route path="/Help" element={<Help />} />
+                    
+                    <Route path="/AdminPanel" element={<AdminPanel />} />
+                    
+                    <Route path="/TrackInquiries" element={<TrackInquiries />} />
+                    
+                    <Route path="/AdminStudentManagement" element={<AdminStudentManagement />} />
+                    
+                    <Route path="/AdminCourseManagement" element={<AdminCourseManagement />} />
+                    
+                    <Route path="/AdminFileManagement" element={<AdminFileManagement />} />
+                    
+                    <Route path="/AdminLecturerManagement" element={<AdminLecturerManagement />} />
+                    
+                    <Route path="/Notifications" element={<Notifications />} />
+                    
+                    <Route path="/LecturerApprovedFiles" element={<LecturerApprovedFiles />} />
+                    
+                    <Route path="/LecturerRejectedFiles" element={<LecturerRejectedFiles />} />
+                    
+                    <Route path="/LecturerPendingFiles" element={<LecturerPendingFiles />} />
+                    
+                    <Route path="/Settings" element={<Settings />} />
+                    
+                    <Route path="/AdminManagement" element={<AdminManagement />} />
+                    
+                </Routes>
+            </Layout>
+        </>
     );
 }
 
