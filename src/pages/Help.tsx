@@ -52,7 +52,7 @@ export default function Help() {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><HelpCircle /></Avatar>
                 <Box>
-                    <Typography variant="h4" fontWeight="bold">מרכז העזרה</Typography>
+                    <Typography variant="h4" fontWeight="bold" textAlign="left">מרכז העזרה</Typography>
                     <Typography color="text.secondary">מצאו תשובות לשאלות נפוצות ומדריכים לשימוש במערכת.</Typography>
                 </Box>
             </Box>
@@ -60,28 +60,28 @@ export default function Help() {
 
         <Grid container spacing={4}>
             <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>איך המערכת עובדת?</Typography>
+                <Typography variant="h5" fontWeight="bold" textAlign="left" sx={{ mb: 2 }}>איך המערכת עובדת?</Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {howItWorks.map((step) => (
                         <Paper key={step.title} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>{step.icon}</Avatar>
                             <Box>
-                                <Typography variant="h6">{step.title}</Typography>
-                                <Typography color="text.secondary">{step.description}</Typography>
+                                <Typography variant="h6" textAlign="left">{step.title}</Typography>
+                                <Typography color="text.secondary" textAlign="left">{step.description}</Typography>
                             </Box>
                         </Paper>
                     ))}
                 </Box>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>שאלות נפוצות</Typography>
+                <Typography variant="h5" fontWeight="bold" textAlign="left" sx={{ mb: 2 }}>שאלות נפוצות</Typography>
                 {faqs.map((faq, index) => (
                     <Accordion key={index}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography>{faq.question}</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                            <Typography color="text.secondary">{faq.answer}</Typography>
+                            <Typography color="text.secondary" textAlign="left">{faq.answer}</Typography>
                         </AccordionDetails>
                     </Accordion>
                 ))}
@@ -110,8 +110,8 @@ export default function Help() {
             }
         }}>
             <CardContent sx={{ textAlign: 'center' }}>
-                <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>צריך עזרה נוספת?</Typography>
-                <Typography sx={{ mb: 2, opacity: 0.9 }}>
+                <Typography variant="h5" fontWeight="bold" textAlign="center" sx={{ mb: 1 }}>צריך עזרה נוספת?</Typography>
+                <Typography textAlign="center" sx={{ mb: 2, opacity: 0.9 }}>
                     אם לא מצאת את התשובה שחיפשת, אנחנו כאן לעזור
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>

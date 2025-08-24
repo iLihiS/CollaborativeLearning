@@ -437,7 +437,7 @@ export default function Dashboard() {
             </Paper>
 
             {user?.current_role === 'admin' ? (
-                <Grid container spacing={2}>
+                <Grid container spacing={2} justifyContent="center">
                     <AdminQuickLink to={createPageUrl("AdminCourseManagement")} icon={<BookOpen />} title="ניהול קורסים" subtitle="עריכה והוספה" color="info" />
                     <AdminQuickLink to={createPageUrl("AdminStudentManagement")} icon={<Users />} title="ניהול סטודנטים" subtitle="עריכה והוספה" color="success" />
                     <AdminQuickLink to={createPageUrl("AdminLecturerManagement")} icon={<Briefcase />} title="ניהול מרצים" subtitle="עריכה והוספה" color="secondary" />
@@ -457,13 +457,11 @@ export default function Dashboard() {
                 <Grid size={{ xs: 12, lg: 4 }}>
                      <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <CardHeader 
-                            title="פעילויות אחרונות" 
-                            sx={{ 
-                                textAlign: 'right',
-                                '& .MuiCardHeader-title': {
-                                    textAlign: 'right'
-                                }
-                            }}
+                                title="פעילויות אחרונות" 
+                                titleTypographyProps={{
+                                    align: 'left',
+                                    textAlign: 'left'
+                                }}
                         />
                         <CardContent sx={{ flexGrow: 1 }}>
                             {recentFiles.length > 0 ? (
@@ -510,11 +508,9 @@ export default function Dashboard() {
                     <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                         <CardHeader
                             title="פניות אחרונות"
-                            sx={{ 
-                                textAlign: 'right',
-                                '& .MuiCardHeader-title': {
-                                    textAlign: 'right'
-                                }
+                            titleTypographyProps={{
+                                align: 'left',
+                                textAlign: 'left'
                             }}
                             action={
                                 <IconButton component={Link} to={createPageUrl("TrackInquiries?new=true")} size="small">
@@ -560,13 +556,11 @@ export default function Dashboard() {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Card elevation={2}>
                             <CardHeader 
-                                title="פעולות מהירות" 
-                                sx={{ 
-                                    textAlign: 'right',
-                                    '& .MuiCardHeader-title': {
-                                        textAlign: 'right'
-                                    }
-                                }}
+                                    title="פעולות מהירות"
+                                    titleTypographyProps={{
+                                        align: 'left',
+                                        textAlign: 'left'
+                                    }}
                             />
                             <CardContent>
                                 <Grid container spacing={1.5}>
@@ -585,11 +579,9 @@ export default function Dashboard() {
                         <Card elevation={2}>
                              <CardHeader 
                                 title="ביצועים" 
-                                sx={{ 
-                                    textAlign: 'right',
-                                    '& .MuiCardHeader-title': {
-                                        textAlign: 'right'
-                                    }
+                                titleTypographyProps={{
+                                    align: 'left',
+                                    textAlign: 'left'
                                 }}
                             />
                              <CardContent>

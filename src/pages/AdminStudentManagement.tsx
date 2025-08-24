@@ -236,18 +236,32 @@ export default function AdminStudentManagement() {
           </Box>
           <Typography color="text.secondary">הוספה, עריכה ומחיקה של סטודנטים רשומים</Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Button 
             onClick={() => {
               LocalStorageService.removeDuplicateStudents();
               loadData();
-              alert('כפילויות הוסרו בהצלחה!');
+              alert('כפילויות וסטודנטים לא תקינים הוסרו בהצלחה!');
             }} 
             variant="outlined" 
             color="warning"
             startIcon={<Trash2 />}
+            size="small"
           >
             נקה כפילויות
+          </Button>
+          <Button 
+            onClick={() => {
+              LocalStorageService.removeStudentsWithoutNationalId();
+              loadData();
+              alert('סטודנטים ללא תעודת זהות הוסרו בהצלחה!');
+            }} 
+            variant="outlined" 
+            color="error"
+            startIcon={<Trash2 />}
+            size="small"
+          >
+            הסר ללא ת.ז
           </Button>
           <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
             הוסף סטודנט חדש
@@ -381,13 +395,13 @@ export default function AdminStudentManagement() {
 
             <TextField 
               name="national_id" 
-              label="תעודת זהות" 
+              label="תעודת זהות *" 
               value={formData.national_id || ''} 
               onChange={handleFormChange} 
               required
               fullWidth
               error={!!formErrors.national_id}
-              helperText={formErrors.national_id}
+              helperText={formErrors.national_id || "שדה חובה - לא ניתן ליצור סטודנט ללא תעודת זהות"}
               placeholder="9 ספרות"
               inputProps={{ maxLength: 9 }}
             />

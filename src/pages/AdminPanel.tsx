@@ -94,15 +94,15 @@ export default function AdminPanel() {
 
   return (
     <>
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '80vh' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 48, height: 48 }}>
                     <Settings />
                 </Avatar>
                 <Box>
-                    <Typography variant="h4" fontWeight="bold">פאנל ניהול</Typography>
-                    <Typography color="text.secondary">ניהול מרכזי של כל רכיבי המערכת</Typography>
+                    <Typography variant="h4" fontWeight="bold" textAlign="left">פאנל ניהול</Typography>
+                    <Typography color="text.secondary" textAlign="left">ניהול מרכזי של כל רכיבי המערכת</Typography>
                 </Box>
             </Box>
             
@@ -146,11 +146,9 @@ export default function AdminPanel() {
                 elevation={0}
                 sx={{
                   p: 3,
-                  textAlign: 'center',
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
                   gap: 2,
                   '&:hover': {
                     transform: 'translateY(-4px)',
@@ -166,8 +164,8 @@ export default function AdminPanel() {
                 <Avatar sx={{ bgcolor: `${link.color}.light`, color: `${link.color}.main`, mx: 'auto', width: 56, height: 56 }}>
                   <link.icon />
                 </Avatar>
-                <Typography variant="h6" fontWeight="bold">{link.title}</Typography>
-                <Typography variant="body2" color="text.secondary">{link.description}</Typography>
+                <Typography variant="h6" fontWeight="bold" textAlign="center">{link.title}</Typography>
+                <Typography variant="body2" color="text.secondary" textAlign="center">{link.description}</Typography>
               </Paper>
             </Grid>
           ))}

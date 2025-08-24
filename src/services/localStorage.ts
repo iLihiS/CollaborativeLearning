@@ -359,6 +359,11 @@ export class LocalStorageService {
   static addStudent(student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Student {
     const students = this.getStudents();
     
+    // Validate that national_id is provided and not empty
+    if (!student.national_id || student.national_id.trim() === '') {
+      throw new Error('תעודת זהות היא שדה חובה ולא ניתן ליצור סטודנט בלעדיה');
+    }
+    
     // Check for duplicates by email
     const existingByEmail = students.find(s => s.email === student.email);
     if (existingByEmail) {
@@ -376,12 +381,10 @@ export class LocalStorageService {
     }
     
     // Check for duplicates by national_id
-    if (student.national_id) {
-      const existingByNationalId = students.find(s => s.national_id === student.national_id);
-      if (existingByNationalId) {
-        console.warn(`Student with national_id ${student.national_id} already exists`);
-        return existingByNationalId;
-      }
+    const existingByNationalId = students.find(s => s.national_id === student.national_id);
+    if (existingByNationalId) {
+      console.warn(`Student with national_id ${student.national_id} already exists`);
+      return existingByNationalId;
     }
     
     const newStudent: Student = {
@@ -415,45 +418,52 @@ export class LocalStorageService {
   }
 
   // Remove duplicate students based on email, student_id, and national_id
+  // Also remove students without national_id
   static removeDuplicateStudents(): void {
     const students = this.getStudents();
     const seen = new Set<string>();
     const seenStudentIds = new Set<string>();
     const seenNationalIds = new Set<string>();
-    const uniqueStudents: Student[] = [];
+    const validStudents: Student[] = [];
 
     for (const student of students) {
-      let isDuplicate = false;
+      let shouldRemove = false;
+      
+      // Check if student has national_id - this is now required
+      if (!student.national_id || student.national_id.trim() === '') {
+        console.log(`Removing student without national_id: ${student.full_name} (${student.email})`);
+        shouldRemove = true;
+      }
       
       // Check email duplicates
-      if (seen.has(student.email)) {
+      if (!shouldRemove && seen.has(student.email)) {
         console.log(`Removing duplicate student by email: ${student.full_name} (${student.email})`);
-        isDuplicate = true;
+        shouldRemove = true;
       }
       
       // Check student_id duplicates
-      if (student.student_id && seenStudentIds.has(student.student_id)) {
+      if (!shouldRemove && student.student_id && seenStudentIds.has(student.student_id)) {
         console.log(`Removing duplicate student by student_id: ${student.full_name} (${student.student_id})`);
-        isDuplicate = true;
+        shouldRemove = true;
       }
       
       // Check national_id duplicates  
-      if (student.national_id && seenNationalIds.has(student.national_id)) {
+      if (!shouldRemove && student.national_id && seenNationalIds.has(student.national_id)) {
         console.log(`Removing duplicate student by national_id: ${student.full_name} (${student.national_id})`);
-        isDuplicate = true;
+        shouldRemove = true;
       }
       
-      if (!isDuplicate) {
+      if (!shouldRemove) {
         seen.add(student.email);
         if (student.student_id) seenStudentIds.add(student.student_id);
         if (student.national_id) seenNationalIds.add(student.national_id);
-        uniqueStudents.push(student);
+        validStudents.push(student);
       }
     }
 
-    if (uniqueStudents.length !== students.length) {
-      console.log(`Removed ${students.length - uniqueStudents.length} duplicate students`);
-      this.setStudents(uniqueStudents);
+    if (validStudents.length !== students.length) {
+      console.log(`Removed ${students.length - validStudents.length} invalid/duplicate students`);
+      this.setStudents(validStudents);
     }
   }
 
@@ -565,12 +575,29 @@ export class LocalStorageService {
     console.log('All data has been reset and reinitialized');
   }
 
+  // Remove students without national_id
+  static removeStudentsWithoutNationalId(): void {
+    const students = this.getStudents();
+    const validStudents = students.filter(student => {
+      if (!student.national_id || student.national_id.trim() === '') {
+        console.log(`Removing student without national_id: ${student.full_name} (${student.email})`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validStudents.length !== students.length) {
+      console.log(`Removed ${students.length - validStudents.length} students without national_id`);
+      this.setStudents(validStudents);
+    }
+  }
+
   // Clean specific duplicates manually
   static cleanAllDuplicates(): void {
-    console.log('Cleaning all duplicates...');
+    console.log('Cleaning all duplicates and invalid students...');
     this.removeDuplicateStudents();
     // Could add similar functions for lecturers if needed
-    console.log('Duplicates cleaned');
+    console.log('Duplicates and invalid students cleaned');
   }
 }
 
@@ -580,14 +607,16 @@ if (typeof window !== 'undefined') {
     resetAllData: () => LocalStorageService.resetAllData(),
     cleanDuplicates: () => LocalStorageService.cleanAllDuplicates(),
     removeDuplicateStudents: () => LocalStorageService.removeDuplicateStudents(),
+    removeStudentsWithoutNationalId: () => LocalStorageService.removeStudentsWithoutNationalId(),
     getStudents: () => LocalStorageService.getStudents(),
     clearAllData: () => LocalStorageService.clearAllData()
   };
   
   console.log('LocalStorageUtils available in console:');
   console.log('- LocalStorageUtils.resetAllData() - מאפס את כל הנתונים');
-  console.log('- LocalStorageUtils.cleanDuplicates() - מנקה כפילויות');
+  console.log('- LocalStorageUtils.cleanDuplicates() - מנקה כפילויות וסטודנטים לא תקינים');
   console.log('- LocalStorageUtils.removeDuplicateStudents() - מנקה כפילויות סטודנטים');
+  console.log('- LocalStorageUtils.removeStudentsWithoutNationalId() - מסיר סטודנטים ללא תעודת זהות');
   console.log('- LocalStorageUtils.getStudents() - מציג רשימת סטודנטים');
   console.log('- LocalStorageUtils.clearAllData() - מוחק את כל הנתונים');
 } 
