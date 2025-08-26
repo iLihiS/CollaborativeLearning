@@ -257,24 +257,24 @@ export default function Dashboard() {
         return (
             <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
                 <Paper component={Link} to={to} elevation={0} sx={{ 
-                    p: 2, 
+                    p: 2.5, 
                     textAlign: 'center', 
                     height: '100%', 
                     display: 'flex', 
                     flexDirection: 'column', 
                     justifyContent: 'center', 
                     alignItems: 'center',
-                    '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, 
+                    '&:hover': { transform: 'translateY(-2px)', boxShadow: 4 }, 
                     transition: 'all 0.2s', 
                     border: 1, 
                     borderColor: 'divider' 
                 }}>
-                    <Avatar sx={{ bgcolor: colorConfig.bg, color: colorConfig.color, mx: 'auto', mb: 1 }}>
+                    <Avatar sx={{ bgcolor: colorConfig.bg, color: colorConfig.color, mx: 'auto', mb: 1, width: 40, height: 40 }}>
                         {icon}
                     </Avatar>
-                    <Typography variant="h5" fontWeight="bold" sx={{ textAlign: 'center' }}>{value}</Typography>
+                    <Typography variant="h5" fontWeight="bold" sx={{ textAlign: 'center', mb: 0.5 }}>{value}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>{title}</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>{subtitle}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', fontSize: '0.75rem' }}>{subtitle}</Typography>
                 </Paper>
             </Grid>
         );
@@ -303,24 +303,24 @@ export default function Dashboard() {
         return (
             <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
                 <Paper component={Link} to={to} elevation={0} sx={{ 
-                    p: 2, 
+                    p: 2.5, 
                     textAlign: 'center', 
                     height: '100%', 
                     display: 'flex', 
                     flexDirection: 'column', 
                     justifyContent: 'center', 
                     alignItems: 'center',
-                    '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 }, 
+                    '&:hover': { transform: 'translateY(-2px)', boxShadow: 4 }, 
                     transition: 'all 0.2s', 
                     border: 1, 
                     borderColor: 'divider' 
                 }}>
-                    <Avatar sx={{ bgcolor: colorConfig.bg, color: colorConfig.color, mx: 'auto', mb: 1 }}>
+                    <Avatar sx={{ bgcolor: colorConfig.bg, color: colorConfig.color, mx: 'auto', mb: 0.5, width: 32, height: 32 }}>
                         {icon}
                     </Avatar>
-                    <Typography variant="h5" fontWeight="bold" sx={{ textAlign: 'center' }}>ניהול</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>{title}</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>{subtitle}</Typography>
+                    <Typography variant="h6" fontWeight="bold" sx={{ textAlign: 'center' }}>ניהול</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>{title}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', fontSize: '0.7rem' }}>{subtitle}</Typography>
                 </Paper>
             </Grid>
         );
@@ -336,7 +336,7 @@ export default function Dashboard() {
 
     return (
         <>
-        <Box sx={{ p: { xs: 2, lg: 3 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+        <Box sx={{ bgcolor: 'background.default', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Paper elevation={0} sx={{
                 borderRadius: '24px',
                 p: { xs: 2, sm: 3, lg: 4 },
@@ -361,15 +361,15 @@ export default function Dashboard() {
                 }
             }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ width: 56, height: 56, bgcolor: 'rgba(255,255,255,0.2)' }}>
-                            <Typography variant="h5">{user?.full_name?.charAt(0) || 'L'}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Avatar sx={{ width: 48, height: 48, bgcolor: 'rgba(255,255,255,0.2)' }}>
+                            <Typography variant="h6">{user?.full_name?.charAt(0) || 'L'}</Typography>
                         </Avatar>
                         <Box>
-                            <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.9rem' }}>
                                 {greeting.text} {greeting.icon}
                             </Typography>
-                            <Typography variant="h4" fontWeight="bold">{user?.full_name || 'משתמש'}</Typography>
+                            <Typography variant="h5" fontWeight="bold">{user?.full_name || 'משתמש'}</Typography>
                         </Box>
                     </Box>
 
@@ -453,113 +453,125 @@ export default function Dashboard() {
                 </Grid>
             )}
 
-            <Grid container spacing={3} sx={{ mt: 2 }}>
+            <Grid container spacing={3} sx={{ mt: 4 }}>
                 <Grid size={{ xs: 12, lg: 4 }}>
-                     <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                     <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: { lg: '400px' } }}>
                         <CardHeader 
-                                title="פעילויות אחרונות" 
+                                title="פעילויות אחרונות"
+                                sx={{ pb: 1 }}
+                                
                                 titleTypographyProps={{
                                     align: 'left',
-                                    textAlign: 'left'
+                                    textAlign: 'left',
+                                    variant: 'h6',
+                                    fontWeight: 'bold'
                                 }}
                         />
-                        <CardContent sx={{ flexGrow: 1 }}>
+                        <CardContent sx={{ flexGrow: 1, p: 2, overflow: 'auto' }}>
                             {recentFiles.length > 0 ? (
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                    {recentFiles.map((notification) => (
+                                    {recentFiles.slice(0, 2).map((notification) => (
                                         <Paper key={notification.id} variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: !notification.is_read ? 'primary.light' : 'transparent' }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar variant="rounded" sx={{
                                                     bgcolor: notification.type === 'file_approved' ? 'success.light' :
                                                               notification.type === 'file_rejected' ? 'error.light' :
-                                                              notification.type === 'file_uploaded' ? 'info.light' : 'grey.200'
+                                                              notification.type === 'file_uploaded' ? 'info.light' : 'grey.200',
+                                                    width: 24,
+                                                    height: 24
                                                 }}>
-                                                    {notification.type === 'file_approved' && <CheckCircle color="success" />}
-                                                    {notification.type === 'file_rejected' && <XCircle color="error" />}
-                                                    {notification.type === 'file_uploaded' && <Upload color="info" />}
-                                                     {!['file_approved', 'file_rejected', 'file_uploaded'].includes(notification.type) && <FileText />}
+                                                    {notification.type === 'file_approved' && <CheckCircle sx={{ fontSize: 16 }} color="success" />}
+                                                    {notification.type === 'file_rejected' && <XCircle sx={{ fontSize: 16 }} color="error" />}
+                                                    {notification.type === 'file_uploaded' && <Upload sx={{ fontSize: 16 }} color="info" />}
+                                                     {!['file_approved', 'file_rejected', 'file_uploaded'].includes(notification.type) && <FileText sx={{ fontSize: 16 }} />}
                                                 </Avatar>
                                                 <Box>
-                                                     <Typography variant="body2" fontWeight="medium">{notification.title}</Typography>
-                                                     <Typography variant="caption" color="text.secondary">
-                                                        {format(new Date(notification.created_date), 'd בMMM yyyy', { locale: he })}
+                                                     <Typography variant="caption" fontWeight="medium">{notification.title}</Typography>
+                                                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                                                        {format(new Date(notification.created_date), 'd בMMM', { locale: he })}
                                                     </Typography>
                                                 </Box>
                                             </Box>
-                                             {!notification.is_read && <Chip label="חדש" color="primary" size="small" />}
+                                             {!notification.is_read && <Chip label="חדש" color="primary" size="small" sx={{ fontSize: '0.6rem', height: 16 }} />}
                                         </Paper>
                                     ))}
                                 </Box>
                             ) : (
-                                <Box sx={{ textAlign: 'center', py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <FileText sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
-                                    <Typography variant="h6" sx={{ textAlign: 'center' }}>אין פעילות אחרונה</Typography>
-                                    <Typography color="text.secondary" sx={{ textAlign: 'center' }}>התחל להעלות קבצים כדי לראות פעילות כאן</Typography>
+                                <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <FileText sx={{ fontSize: 40, color: 'grey.300', mb: 1 }} />
+                                    <Typography variant="body2" sx={{ textAlign: 'center' }}>אין פעילות אחרונה</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>התחל להעלות קבצים</Typography>
                                 </Box>
                             )}
                         </CardContent>
-                        <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-                            <Button component={Link} to={createPageUrl("Notifications")} fullWidth variant="outlined">הצג את כל הפעילויות</Button>
+                        <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
+                            <Button component={Link} to={createPageUrl("Notifications")} fullWidth variant="outlined" size="small">הצג הכל</Button>
                         </Box>
                     </Card>
                 </Grid>
 
                  <Grid size={{ xs: 12, lg: 4 }}>
-                    <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: { lg: '400px' } }}>
                         <CardHeader
                             title="פניות אחרונות"
+                            sx={{ pb: 1 }}
                             titleTypographyProps={{
                                 align: 'left',
-                                textAlign: 'left'
+                                textAlign: 'left',
+                                variant: 'h6',
+                                fontWeight: 'bold'
                             }}
                             action={
                                 <IconButton component={Link} to={createPageUrl("TrackInquiries?new=true")} size="small">
-                                    <Plus />
+                                    <Plus size={16} />
                                 </IconButton>
                             }
                         />
-                        <CardContent sx={{ flexGrow: 1 }}>
+                        <CardContent sx={{ flexGrow: 1, p: 2, overflow: 'auto' }}>
                            {recentInquiries.length > 0 ? (
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                    {recentInquiries.map((inquiry) => (
+                                    {recentInquiries.slice(0, 2).map((inquiry) => (
                                         <Paper key={inquiry.id} variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                <Avatar variant="rounded" sx={{ bgcolor: 'grey.200' }}>
-                                                     <MessageSquare />
-                                                </Avatar>
+                                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                                                 <Avatar variant="rounded" sx={{ bgcolor: 'grey.200', width: 24, height: 24 }}>
+                                                      <MessageSquare size={16} />
+                                                 </Avatar>
                                                 <Box>
-                                                    <Typography variant="body2" fontWeight="medium" noWrap sx={{ maxWidth: 150 }}>{inquiry.subject}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {format(new Date(inquiry.created_date), 'd בMMM yyyy', { locale: he })}
+                                                    <Typography variant="caption" fontWeight="medium" noWrap sx={{ maxWidth: 120 }}>{inquiry.subject}</Typography>
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                                                        {format(new Date(inquiry.created_date), 'd בMMM', { locale: he })}
                                                     </Typography>
                                                 </Box>
                                             </Box>
-                                            {getInquiryStatusBadge(inquiry.status)}
+                                            <Box sx={{ transform: 'scale(0.8)' }}>{getInquiryStatusBadge(inquiry.status)}</Box>
                                         </Paper>
                                     ))}
                                 </Box>
                             ) : (
-                                <Box sx={{ textAlign: 'center', py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <MessageSquare size={60} color="grey" />
-                                    <Typography variant="h6" sx={{ textAlign: 'center' }}>אין פניות</Typography>
-                                    <Typography color="text.secondary" sx={{ textAlign: 'center' }}>שלח פנייה חדשה למנהלי המערכת</Typography>
-                                </Box>
+                                                                 <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                     <MessageSquare size={32} style={{ color: 'grey' }} />
+                                     <Typography variant="body2" sx={{ textAlign: 'center' }}>אין פניות</Typography>
+                                     <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>שלח פנייה חדשה</Typography>
+                                 </Box>
                             )}
                         </CardContent>
-                         <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-                            <Button component={Link} to={createPageUrl("TrackInquiries")} fullWidth variant="outlined">הצג את כל הפניות</Button>
+                         <Box sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
+                            <Button component={Link} to={createPageUrl("TrackInquiries")} fullWidth variant="outlined" size="medium">הצג הכל</Button>
                         </Box>
                     </Card>
                 </Grid>
 
                 <Grid size={{ xs: 12, lg: 4 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        <Card elevation={2}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, height: '100%', maxHeight: { lg: '400px' } }}>
+                        <Card elevation={2} sx={{ flex: 1.35 }}>
                             <CardHeader 
                                     title="פעולות מהירות"
+                                    sx={{ pb: 0 }}
                                     titleTypographyProps={{
                                         align: 'left',
-                                        textAlign: 'left'
+                                        textAlign: 'left',
+                                        variant: 'h6',
+                                        fontWeight: 'bold'
                                     }}
                             />
                             <CardContent>
@@ -576,16 +588,19 @@ export default function Dashboard() {
                                 </Grid>
                             </CardContent>
                         </Card>
-                        <Card elevation={2}>
+                        <Card elevation={2} sx={{ flex: 1 }}>
                              <CardHeader 
-                                title="ביצועים" 
+                                title="ביצועים"
+                                sx={{ pb: 0 }}
                                 titleTypographyProps={{
                                     align: 'left',
-                                    textAlign: 'left'
+                                    textAlign: 'left',
+                                    variant: 'h6',
+                                    fontWeight: 'bold'
                                 }}
                             />
-                             <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                             <CardContent sx={{ p: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                                     <Typography variant="body2" color="text.secondary">קבצים שאושרו</Typography>
                                     <Typography variant="body2" fontWeight="medium">{stats.approvedFiles}/{stats.totalFiles}</Typography>
                                 </Box>

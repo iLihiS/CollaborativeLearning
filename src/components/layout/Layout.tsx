@@ -185,7 +185,7 @@ export const Layout = ({ children }: LayoutProps) => {
             overflow: 'hidden'
           }}
         >
-          <Box sx={{ flexGrow: 1, p: 3, overflow: 'auto' }}>
+          <Box sx={{ flexGrow: 1, p: { xs: 1, sm: 1.5, lg: 2 }, overflow: 'auto' }}>
             {children}
           </Box>
         </Box>

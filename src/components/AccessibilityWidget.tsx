@@ -195,7 +195,7 @@ export default function AccessibilityWidget() {
         }
       `}</style>
 
-      <Box sx={{ position: 'fixed', right: 20, bottom: 20, zIndex: 9999 }}>
+      <Box sx={{ position: 'fixed', right: 15, bottom: 40, zIndex: 9999 }}>
         <Fab color="primary" aria-label="accessibility" onClick={toggleWidget}>
           <Accessibility />
         </Fab>
