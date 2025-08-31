@@ -82,18 +82,18 @@ export default function Notifications() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Bell /></Avatar>
           <Box>
-            <Typography variant="h4" fontWeight="bold">התראות</Typography>
-            <Typography color="text.secondary">עקוב אחר עדכונים בפעילות שלך במערכת</Typography>
+            <Typography variant="h4" fontWeight="bold" textAlign="left">התראות</Typography>
+            <Typography color="text.secondary" textAlign="left">עקוב אחר עדכונים בפעילות שלך במערכת</Typography>
           </Box>
         </Box>
         <ToggleButtonGroup value={filter} exclusive onChange={handleFilterChange}>
-          <ToggleButton value="all">כל ההתראות ({notifications.length})</ToggleButton>
-          <ToggleButton value="unread">לא נקראו ({unreadCount})</ToggleButton>
+          <ToggleButton value="all" sx={{textAlign: 'center'}}>כל ההתראות ({notifications.length})</ToggleButton>
+          <ToggleButton value="unread" sx={{textAlign: 'center'}}>לא נקראו ({unreadCount})</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
@@ -106,27 +106,27 @@ export default function Notifications() {
       {loading ? <CircularProgress /> : (
         <>
           {/* Desktop Table View */}
-          <Paper elevation={2} sx={{ display: { xs: 'none', md: 'block' } }}>
+          <Paper elevation={2} sx={{ display: { xs: 'none', md: 'block' }}}>
             <TableContainer>
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell></TableCell>
-                    <TableCell>כותרת</TableCell>
-                    <TableCell>הודעה</TableCell>
-                    <TableCell>תאריך</TableCell>
-                    <TableCell>סטטוס</TableCell>
+                    <TableCell align="left"></TableCell>
+                    <TableCell align="left">כותרת</TableCell>
+                    <TableCell align="left">הודעה</TableCell>
+                    <TableCell align="left">תאריך</TableCell>
+                    <TableCell align="left">סטטוס</TableCell>
                     <TableCell align="left">פעולות</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredNotifications.map((notification) => (
                     <TableRow key={notification.id} hover sx={{ bgcolor: !notification.is_read ? 'action.hover' : 'inherit' }}>
-                      <TableCell>{getNotificationIcon(notification.type)}</TableCell>
-                      <TableCell>{notification.title}</TableCell>
-                      <TableCell>{notification.message}</TableCell>
-                      <TableCell>{format(new Date(notification.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
-                      <TableCell>{!notification.is_read ? <Chip label="חדש" color="primary" size="small" /> : <Chip label="נקרא" size="small" />}</TableCell>
+                      <TableCell align="left">{getNotificationIcon(notification.type)}</TableCell>
+                      <TableCell align="left">{notification.title}</TableCell>
+                      <TableCell align="left">{notification.message}</TableCell>
+                      <TableCell align="left">{format(new Date(notification.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                      <TableCell align="left">{!notification.is_read ? <Chip label="חדש" color="primary" size="small" /> : <Chip label="נקרא" size="small" />}</TableCell>
                       <TableCell align="left">
                         {notification.action_url && <Button component={Link} to={notification.action_url} variant="outlined" startIcon={<Eye />}>צפייה</Button>}
                         {!notification.is_read && <Button onClick={() => handleMarkAsRead(notification.id)}>סמן כנקרא</Button>}

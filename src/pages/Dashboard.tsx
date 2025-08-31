@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User as UserEntity, Course, File, Student, Lecturer, Message, Notification } from "@/api/entities";
+import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -54,6 +55,11 @@ type User = {
     roles: string[];
     current_role: string;
     theme_preference: string;
+    national_id?: string;
+    student_id?: string;
+    academic_track?: string;
+    academic_track_ids?: string[];
+    department?: string;
 };
 
 const MORNING_START = 5;
@@ -139,16 +145,21 @@ export default function Dashboard() {
                 if (studentRecords.length > 0) {
                     studentRecord = studentRecords[0];
                 } else {
-                    // Only create if no student record exists for this email
-                    studentRecord = await Student.create({
-                        full_name: currentUser.full_name,
-                        student_id: currentUser.student_id || `STU${Date.now()}`,
-                        email: currentUser.email,
-                        academic_track: currentUser.academic_track || "לא שויך מסלול",
-                        academic_track_ids: currentUser.academic_track_ids || [],
-                        year: 1,
-                        status: 'active'
-                    });
+                    // Only create if no student record exists for this email AND user has national_id
+                    if (currentUser.national_id) {
+                        studentRecord = await Student.create({
+                            full_name: currentUser.full_name,
+                            student_id: currentUser.student_id || `STU${Date.now()}`,
+                            email: currentUser.email,
+                            national_id: currentUser.national_id,
+                            academic_track: currentUser.academic_track || "לא שויך מסלול",
+                            academic_track_ids: currentUser.academic_track_ids || [],
+                            year: 1,
+                            status: 'active'
+                        });
+                    } else {
+                        console.warn('Cannot create student record: national_id is missing for user', currentUser.email);
+                    }
                 }
             }
 
@@ -255,11 +266,12 @@ export default function Dashboard() {
         const colorConfig = pastelColors[color as keyof typeof pastelColors] || pastelColors.info;
         
         return (
-            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
                 <Paper component={Link} to={to} elevation={0} sx={{ 
-                    p: 2.5, 
+                    p: { xs: 2, sm: 2.5 }, 
                     textAlign: 'center', 
                     height: '100%', 
+                    minHeight: { xs: 'auto', sm: '140px' },
                     display: 'flex', 
                     flexDirection: 'column', 
                     justifyContent: 'center', 
@@ -269,12 +281,53 @@ export default function Dashboard() {
                     border: 1, 
                     borderColor: 'divider' 
                 }}>
-                    <Avatar sx={{ bgcolor: colorConfig.bg, color: colorConfig.color, mx: 'auto', mb: 1, width: 40, height: 40 }}>
+                    <Avatar sx={{ 
+                        bgcolor: colorConfig.bg, 
+                        color: colorConfig.color, 
+                        mx: 'auto', 
+                        mb: { xs: 0.5, sm: 1 }, 
+                        width: { xs: 32, sm: 40 }, 
+                        height: { xs: 32, sm: 40 } 
+                    }}>
                         {icon}
                     </Avatar>
-                    <Typography variant="h5" fontWeight="bold" sx={{ textAlign: 'center', mb: 0.5 }}>{value}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>{title}</Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center', fontSize: '0.75rem' }}>{subtitle}</Typography>
+                    <Typography 
+                        variant="h5" 
+                        fontWeight="bold" 
+                        sx={{ 
+                            textAlign: 'center', 
+                            mb: 0.5,
+                            fontSize: { xs: '1.1rem', sm: '1.5rem' }
+                        }}
+                    >
+                        {value}
+                    </Typography>
+                    <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
+                        sx={{ 
+                            textAlign: 'center',
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                            lineHeight: 1.3,
+                            wordBreak: 'break-word',
+                            hyphens: 'auto'
+                        }}
+                    >
+                        {title}
+                    </Typography>
+                    <Typography 
+                        variant="caption" 
+                        color="text.secondary" 
+                        sx={{ 
+                            textAlign: 'center', 
+                            fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                            lineHeight: 1.3,
+                            wordBreak: 'break-word',
+                            hyphens: 'auto'
+                        }}
+                    >
+                        {subtitle}
+                    </Typography>
                 </Paper>
             </Grid>
         );
@@ -301,7 +354,7 @@ export default function Dashboard() {
         const colorConfig = pastelColors[color as keyof typeof pastelColors] || pastelColors.info;
         
         return (
-            <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+            <Grid size={{ xs: 6, sm: 3, md: 2}}>
                 <Paper component={Link} to={to} elevation={0} sx={{ 
                     p: 2.5, 
                     textAlign: 'center', 
@@ -339,12 +392,16 @@ export default function Dashboard() {
         <Box sx={{ bgcolor: 'background.default', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Paper elevation={0} sx={{
                 borderRadius: '24px',
-                p: { xs: 2, sm: 3, lg: 4 },
-                mb: 4,
+                p: { xs: 2, sm: 3, lg: 3, xl: 3 },
+                mb: 2,
+                minHeight: { xs: '240px', sm: '200px', md: '200px', lg: '200px', xl: '200px' },
                 color: 'white',
                 background: 'linear-gradient(to right, #84cc16, #65a30d)',
                 position: 'relative',
                 overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
                 '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -360,16 +417,43 @@ export default function Dashboard() {
                     '100%': { left: '100%' }
                 }
             }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Avatar sx={{ width: 48, height: 48, bgcolor: 'rgba(255,255,255,0.2)' }}>
-                            <Typography variant="h6">{user?.full_name?.charAt(0) || 'L'}</Typography>
+                <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'center', sm: 'flex-start' }, 
+                    gap: 2, 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    flex: 1
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
+                        <Avatar sx={{ 
+                            width: { xs: 40, sm: 48 }, 
+                            height: { xs: 40, sm: 48 }, 
+                            bgcolor: 'rgba(255,255,255,0.2)' 
+                        }}>
+                            <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>{user?.full_name?.charAt(0) || 'L'}</Typography>
                         </Avatar>
-                        <Box>
-                            <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.9rem' }}>
+                        <Box sx={{ textAlign: { xs: 'center', sm: 'right' } }}>
+                            <Typography sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 1, 
+                                fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                                justifyContent: { xs: 'center', sm: 'flex-start' }
+                            }}>
                                 {greeting.text} {greeting.icon}
                             </Typography>
-                            <Typography variant="h5" fontWeight="bold">{user?.full_name || 'משתמש'}</Typography>
+                            <Typography 
+                                variant="h5" 
+                                fontWeight="bold"
+                                sx={{ 
+                                    fontSize: { xs: '1.1rem', sm: '1.5rem' },
+                                    lineHeight: 1.2,
+                                    wordBreak: 'break-word'
+                                }}
+                            >
+                                {user?.full_name || 'משתמש'}
+                            </Typography>
                         </Box>
                     </Box>
 
@@ -413,23 +497,58 @@ export default function Dashboard() {
                         </Button>
                     )}
                 </Box>
-                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <Box>
-                        <Typography sx={{ mb: 2, display: { xs: 'none', sm: 'block' } }}>ברוכים הבאים לשיתוף האקדמי שלכם</Typography>
-                        <Button component={Link} to={createPageUrl("UploadFile")} variant="contained" color="inherit" startIcon={<Upload />} sx={{ 
-                            bgcolor: 'white', 
-                            color: 'primary.main', 
-                            border: '2px solid white',
-                            '&:hover': { 
-                                bgcolor: 'transparent', 
-                                color: 'white',
-                                borderColor: 'white'
-                            } 
+                                <Box sx={{ 
+                    mt: { xs: 1, sm: 3 }, 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'center', sm: 'flex-end' }, 
+                    gap: 2, 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    flexShrink: 0
+                }}>
+                    <Box sx={{ textAlign: { xs: 'center', sm: 'left' }, width: { xs: '100%', sm: 'auto' } }}>
+                        <Typography sx={{ 
+                            mb: { xs: 1, sm: 2 }, 
+                            display: { xs: 'block', sm: 'block' },
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            textAlign: { xs: 'center', sm: 'right' },
+                            lineHeight: 1.4
                         }}>
+                            ברוכים הבאים לשיתוף האקדמי שלכם
+                        </Typography>
+                        <Button 
+                            component={Link} 
+                            to={createPageUrl("UploadFile")} 
+                            variant="contained" 
+                            color="inherit" 
+                            startIcon={<Upload />}
+                            sx={{ 
+                                bgcolor: 'white', 
+                                color: 'primary.main', 
+                                border: '2px solid white',
+                                fontSize: { xs: '0.9rem', sm: '1rem' },
+                                px: 2,
+                                py: 1,
+                                '&:hover': { 
+                                    bgcolor: 'transparent', 
+                                    color: 'white',
+                                    borderColor: 'white'
+                                }
+                            }}
+                        >
                             העלאת קובץ חדש
                         </Button>
                     </Box>
-                    <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 1,
+                            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                            order: { xs: -1, sm: 0 }
+                        }}
+                    >
                         <Clock style={{ width: 16, height: 16 }} />
                         {format(new Date(), 'HH:mm d.M.yyyy', { locale: he })}
                     </Typography>
@@ -453,7 +572,7 @@ export default function Dashboard() {
                 </Grid>
             )}
 
-            <Grid container spacing={3} sx={{ mt: 4 }}>
+            <Grid container spacing={3} sx={{ mt: 2 }}>
                 <Grid size={{ xs: 12, lg: 4 }}>
                      <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: { lg: '400px' } }}>
                         <CardHeader 
@@ -488,7 +607,10 @@ export default function Dashboard() {
                                                 <Box>
                                                      <Typography variant="caption" fontWeight="medium">{notification.title}</Typography>
                                                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
-                                                        {format(new Date(notification.created_date), 'd בMMM', { locale: he })}
+                                                        {notification.created_date && !isNaN(new Date(notification.created_date).getTime()) 
+                                                      ? format(new Date(notification.created_date), 'd בMMM', { locale: he })
+                                                      : 'תאריך לא תקין'
+                                                    }
                                                     </Typography>
                                                 </Box>
                                             </Box>
@@ -539,7 +661,10 @@ export default function Dashboard() {
                                                 <Box>
                                                     <Typography variant="caption" fontWeight="medium" noWrap sx={{ maxWidth: 120 }}>{inquiry.subject}</Typography>
                                                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
-                                                        {format(new Date(inquiry.created_date), 'd בMMM', { locale: he })}
+                                                        {inquiry.created_date && !isNaN(new Date(inquiry.created_date).getTime()) 
+                                                          ? format(new Date(inquiry.created_date), 'd בMMM', { locale: he })
+                                                          : 'תאריך לא תקין'
+                                                        }
                                                     </Typography>
                                                 </Box>
                                             </Box>

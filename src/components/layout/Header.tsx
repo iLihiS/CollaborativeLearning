@@ -75,13 +75,13 @@ export const Header = ({
               <GraduationCap style={{ width: 18, height: 18, color: 'white' }} />
             </Box>
             
-            <Typography 
-              variant="h6" 
-              sx={{ 
+            <Typography
+              variant="h6"
+              sx={{
                 color: 'white',
                 fontWeight: 'bold',
                 lineHeight: 1,
-                fontSize: '1.1rem'
+                fontSize: { xs: '1rem', lg: '1.1rem' }
               }}
             >
               למידה שיתופית
@@ -106,7 +106,8 @@ export const Header = ({
         <Box
           sx={{
             position: 'absolute',
-            left: '50%',
+            left: { lg: '50%' },
+            right: { xs: '0px' , lg: 'auto'},
             transform: 'translateX(-50%)',
             display: { xs: 'none', md: 'block' }
           }}

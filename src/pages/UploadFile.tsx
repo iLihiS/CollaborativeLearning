@@ -162,7 +162,7 @@ export default function UploadFile() {
 
     if (isSubmitted) {
         return (
-            <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+            <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
                 <Paper elevation={2} sx={{ p: 6, textAlign: 'center', maxWidth: 600, mx: 'auto', mt: 8 }}>
                     <Avatar sx={{ bgcolor: 'success.main', width: 80, height: 80, mx: 'auto', mb: 3 }}>
                         <CheckCircleIcon sx={{ fontSize: 48 }} />
@@ -200,7 +200,7 @@ export default function UploadFile() {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+        <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
                 <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
                     <CloudUploadIcon />

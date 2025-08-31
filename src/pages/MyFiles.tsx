@@ -187,7 +187,7 @@ export default function MyFiles() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" fontWeight="bold">הקבצים שלי</Typography>
@@ -290,10 +290,10 @@ export default function MyFiles() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>שם הקובץ</TableCell>
-                  <TableCell>קורס</TableCell>
-                  <TableCell>סטטוס</TableCell>
-                  <TableCell>תאריך העלאה</TableCell>
+                  <TableCell align="left">שם הקובץ</TableCell>
+                  <TableCell align="left">קורס</TableCell>
+                  <TableCell align="left">סטטוס</TableCell>
+                  <TableCell align="left">תאריך העלאה</TableCell>
                   <TableCell align="right">פעולות</TableCell>
                 </TableRow>
               </TableHead>
@@ -306,9 +306,14 @@ export default function MyFiles() {
                         {file.title}
                       </Box>
                     </TableCell>
-                    <TableCell>{courses[file.course_id]?.course_name || 'N/A'}</TableCell>
-                    <TableCell>{getStatusComponent(file.status)}</TableCell>
-                    <TableCell>{format(new Date(file.created_date), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell align="left">{courses[file.course_id]?.course_name || 'N/A'}</TableCell>
+                    <TableCell align="left">{getStatusComponent(file.status)}</TableCell>
+                    <TableCell align="left">
+                      {file.created_date && !isNaN(new Date(file.created_date).getTime()) 
+                        ? format(new Date(file.created_date), 'dd/MM/yyyy')
+                        : 'תאריך לא תקין'
+                      }
+                    </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => navigate(createPageUrl(`UploadFile?edit=${file.id}`))}><EditIcon /></IconButton>
                       <IconButton size="small" color="error" onClick={() => handleDelete(file.id)}><DeleteIcon /></IconButton>
@@ -328,7 +333,10 @@ export default function MyFiles() {
                   <Chip label={fileTypeToHebrew[file.file_type]} size="small" sx={{ mt: 1, mb: 1 }} />
                   <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mb: 1 }}>
                     <CalendarIcon sx={{ mr: 0.5 }} />
-                    {format(new Date(file.created_date), 'dd/MM/yyyy')}
+                                                  {file.created_date && !isNaN(new Date(file.created_date).getTime()) 
+                                ? format(new Date(file.created_date), 'dd/MM/yyyy')
+                                : 'תאריך לא תקין'
+                              }
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mb: 2 }}>
                     <FileTextIcon sx={{ mr: 0.5 }} />

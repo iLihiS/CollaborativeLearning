@@ -223,7 +223,7 @@ export default function AdminStudentManagement() {
   }, {});
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         חזרה לפאנל הניהול
       </Button>
@@ -318,11 +318,11 @@ export default function AdminStudentManagement() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>שם מלא</TableCell>
-                <TableCell>מספר סטודנט</TableCell>
-                <TableCell>תעודת זהות</TableCell>
-                <TableCell>כתובת מייל</TableCell>
-                <TableCell>מסלול אקדמי</TableCell>
+                <TableCell align="left">שם מלא</TableCell>
+                <TableCell align="left">מספר סטודנט</TableCell>
+                <TableCell align="left">תעודת זהות</TableCell>
+                <TableCell align="left">כתובת מייל</TableCell>
+                <TableCell align="left">מסלול אקדמי</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
@@ -333,10 +333,10 @@ export default function AdminStudentManagement() {
                 </TableRow>
               ) : (Array.isArray(filteredStudents) ? filteredStudents : []).map((student) => (
                 <TableRow key={student.id} hover>
-                  <TableCell>{student.full_name || 'לא מוגדר'}</TableCell>
-                  <TableCell>{student.student_id || 'לא מוגדר'}</TableCell>
-                  <TableCell>{(student as any).national_id || 'לא מוגדר'}</TableCell>
-                  <TableCell>{student.email || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{student.full_name || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{student.student_id || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{(student as any).national_id || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{student.email || 'לא מוגדר'}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(student.academic_track_ids && student.academic_track_ids.length > 0) ? 

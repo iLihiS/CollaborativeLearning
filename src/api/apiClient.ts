@@ -526,7 +526,13 @@ class Auth {
           full_name: 'ד"ר רונה סופר יוזר',
           roles: ['student', 'lecturer', 'admin'],
           current_role: 'admin', // Set admin as default for all-roles user
-          student_id: 'MBA003',
+          student_id: 'MBA2024003',
+          national_id: '123456789',
+          academic_track: 'מנהל עסקים - תואר שני',
+          department: 'מנהל עסקים וכלכלה',
+          title: 'ד״ר',
+          admin_permissions: ['full_access'],
+          theme_preference: 'light',
           academic_track_ids: ['business-grad'], // For student role
           lecturer_track_ids: [] // For lecturer role
         }

@@ -110,16 +110,16 @@ export default function TrackInquiries() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><MessagesSquare /></Avatar>
           <Box>
-            <Typography variant="h4" fontWeight="bold">מעקב פניות</Typography>
-            <Typography color="text.secondary">שלחו פניות למנהלי המערכת ועקבו אחר הטיפול</Typography>
+            <Typography variant="h4" fontWeight="bold" textAlign="left">מעקב פניות</Typography>
+            <Typography color="text.secondary" textAlign="left">שלחו פניות למנהלי המערכת ועקבו אחר הטיפול</Typography>
           </Box>
         </Box>
-        <Button onClick={() => setShowNewInquiry(!showNewInquiry)} variant="contained" startIcon={<Plus />}>
+        <Button onClick={() => setShowNewInquiry(!showNewInquiry)} variant="contained" startIcon={<Plus />} sx={{textAlign: 'center'}}>
           פנייה חדשה
         </Button>
       </Box>
@@ -149,9 +149,9 @@ export default function TrackInquiries() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>נושא הפנייה</TableCell>
-                <TableCell>תאריך שליחה</TableCell>
-                <TableCell>סטטוס</TableCell>
+                <TableCell align="left">נושא הפנייה</TableCell>
+                <TableCell align="left">תאריך שליחה</TableCell>
+                <TableCell align="left">סטטוס</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
@@ -162,9 +162,9 @@ export default function TrackInquiries() {
                 </TableRow>
               ) : inquiries.map((inquiry) => (
                 <TableRow key={inquiry.id} hover>
-                  <TableCell>{inquiry.subject}</TableCell>
-                  <TableCell>{format(new Date(inquiry.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
-                  <TableCell>{getStatusChip(inquiry.status)}</TableCell>
+                  <TableCell align="left">{inquiry.subject}</TableCell>
+                  <TableCell align="left">{format(new Date(inquiry.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                  <TableCell align="left">{getStatusChip(inquiry.status)}</TableCell>
                   <TableCell align="left">
                     <Button variant="outlined" startIcon={<Eye />} onClick={() => setSelectedInquiry(inquiry)}>צפייה</Button>
                   </TableCell>

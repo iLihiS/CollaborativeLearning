@@ -83,7 +83,7 @@ export default function LecturerRejectedFiles() {
     
     if (loading) {
         return (
-            <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+            <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 48, height: 48 }}><XCircle /></Avatar>
@@ -99,10 +99,10 @@ export default function LecturerRejectedFiles() {
                         <Table>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>שם קובץ</TableCell>
-                                    <TableCell>קורס</TableCell>
-                                    <TableCell>תאריך דחייה</TableCell>
-                                    <TableCell>סיבת הדחייה</TableCell>
+                                    <TableCell align="left">שם קובץ</TableCell>
+                                    <TableCell align="left">קורס</TableCell>
+                                    <TableCell align="left">תאריך דחייה</TableCell>
+                                    <TableCell align="left">סיבת הדחייה</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -118,7 +118,7 @@ export default function LecturerRejectedFiles() {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+        <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 48, height: 48 }}><XCircle /></Avatar>
@@ -134,19 +134,24 @@ export default function LecturerRejectedFiles() {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>שם קובץ</TableCell>
-                                <TableCell>קורס</TableCell>
-                                <TableCell>תאריך דחייה</TableCell>
-                                <TableCell>סיבת הדחייה</TableCell>
+                                <TableCell align="left">שם קובץ</TableCell>
+                                <TableCell align="left">קורס</TableCell>
+                                <TableCell align="left">תאריך דחייה</TableCell>
+                                <TableCell align="left">סיבת הדחייה</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {files.length > 0 ? (
                                 files.map(file => (
                                     <TableRow key={file.id} hover>
-                                        <TableCell>{file.title}</TableCell>
-                                        <TableCell>{courses[file.course_id]?.course_name || 'לא ידוע'}</TableCell>
-                                        <TableCell>{format(new Date(file.updated_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                                        <TableCell align="left">{file.title}</TableCell>
+                                        <TableCell align="left">{courses[file.course_id]?.course_name || 'לא ידוע'}</TableCell>
+                                        <TableCell align="left">
+                      {file.updated_date && !isNaN(new Date(file.updated_date).getTime()) 
+                        ? format(new Date(file.updated_date), 'd MMM yyyy', { locale: he })
+                        : 'תאריך לא תקין'
+                      }
+                    </TableCell>
                                         <TableCell>
                                             {file.lecturer_notes ? (
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -154,7 +159,7 @@ export default function LecturerRejectedFiles() {
                                                     {file.lecturer_notes}
                                                 </Box>
                                             ) : (
-                                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }} textAlign="left">
                                                     לא צוינה סיבה
                                                 </Typography>
                                             )}

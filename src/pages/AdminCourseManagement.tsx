@@ -1,5 +1,5 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import { Course, AcademicTrack } from '@/api/entities';
+import { Course, AcademicTrack, Lecturer } from '@/api/entities';
 import {
     Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Dialog, DialogContent, DialogTitle, DialogActions, TextField,
@@ -13,11 +13,14 @@ import { createPageUrl } from '@/utils';
 
 type CourseData = {
   id: string;
-  course_name: string;
-  course_code: string;
-  lecturer: string;
+  course_name?: string;
+  course_code?: string;
+  name?: string; // Legacy field
+  code?: string; // Legacy field
+  lecturer?: string;
   credits: number;
-  academic_track_ids: string[];
+  academic_track_ids?: string[];
+  academic_track?: string; // Legacy field
 };
 
 type AcademicTrackData = {
@@ -38,6 +41,7 @@ export default function AdminCourseManagement() {
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<CourseData[]>([]);
   const [academicTracks, setAcademicTracks] = useState<AcademicTrackData[]>([]);
+  const [lecturers, setLecturers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<CourseData | null>(null);
@@ -67,16 +71,23 @@ export default function AdminCourseManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [courseList, trackList] = await Promise.all([
+      const [courseList, trackList, lecturerList] = await Promise.all([
         Course.list(),
-        AcademicTrack.list()
+        AcademicTrack.list(),
+        Lecturer.list()
       ]);
       console.log('Courses loaded:', courseList);
       console.log('Academic tracks in courses:', trackList);
+      if (courseList.length > 0) {
+        console.log('Sample course object:', courseList[0]);
+        console.log('Course fields:', Object.keys(courseList[0]));
+      }
       const validCourses = Array.isArray(courseList) ? courseList : [];
       setCourses(validCourses);
       setFilteredCourses(validCourses);
       setAcademicTracks(Array.isArray(trackList) ? trackList : []);
+      setLecturers(Array.isArray(lecturerList) ? lecturerList : []);
+      console.log('Lecturers loaded:', lecturerList);
     } catch (error) {
       console.error("Error loading data:", error);
       setCourses([]);
@@ -90,10 +101,10 @@ export default function AdminCourseManagement() {
     setEditingCourse(course);
     if (course) {
       setFormData({
-        course_name: course.course_name,
-        course_code: course.course_code,
-        lecturer: course.lecturer,
-        credits: course.credits,
+        course_name: course.course_name || course.name || '',
+        course_code: course.course_code || course.code || '',
+        lecturer: course.lecturer || '',
+        credits: course.credits || 0,
         academic_track_ids: course.academic_track_ids || [],
       });
     } else {
@@ -174,15 +185,18 @@ export default function AdminCourseManagement() {
     if(track) acc[track.id] = track.name;
     return acc;
   }, {});
+  
+  console.log('Academic tracks map:', academicTracksMap);
+  console.log('Sample course academic_track_ids:', courses.length > 0 ? courses[0].academic_track_ids : 'No courses');
 
-  const lecturersMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc: { [key: string]: string }, track: AcademicTrackData) => {
-    if(track) acc[track.id] = track.name;
+  const lecturersMap = (Array.isArray(lecturers) ? lecturers : []).reduce((acc: { [key: string]: string }, lecturer: any) => {
+    if(lecturer) acc[lecturer.id] = lecturer.full_name;
     return acc;
   }, {});
 
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         בחזרה לפאנל הניהול
       </Button>
@@ -249,11 +263,11 @@ export default function AdminCourseManagement() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>שם קורס</TableCell>
-                <TableCell>קוד קורס</TableCell>
-                <TableCell>מרצה אחראי</TableCell>
-                <TableCell>נקודות זכות</TableCell>
-                <TableCell>מסלולים אקדמיים</TableCell>
+                <TableCell align="left">שם קורס</TableCell>
+                <TableCell align="left">קוד קורס</TableCell>
+                <TableCell align="left">מרצה אחראי</TableCell>
+                <TableCell align="left">נקודות זכות</TableCell>
+                <TableCell align="left">מסלולים אקדמיים</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
@@ -264,18 +278,26 @@ export default function AdminCourseManagement() {
                 </TableRow>
               ) : (Array.isArray(filteredCourses) ? filteredCourses : []).map((course) => (
                 <TableRow key={course.id} hover>
-                  <TableCell>{course.course_name || 'לא מוגדר'}</TableCell>
-                  <TableCell>{course.course_code || 'לא מוגדר'}</TableCell>
-                  <TableCell>{course.lecturer || 'לא משויך'}</TableCell>
-                  <TableCell>{course.credits || 0}</TableCell>
+                  <TableCell align="left">{course.course_name || course.name || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{course.course_code || course.code || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{course.lecturer || 'לא משויך'}</TableCell>
+                  <TableCell align="left">{course.credits || 0}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {(course.academic_track_ids && course.academic_track_ids.length > 0) ? 
-                        course.academic_track_ids.map(trackId => (
-                          <Chip key={trackId} label={academicTracksMap[trackId] || trackId} size="small" icon={<GraduationCap />} />
-                        )) : 
-                        <Typography variant="body2" color="text.secondary">אין מסלולים</Typography>
-                      }
+                      {(() => {
+                        const trackIds = course.academic_track_ids || (course.academic_track ? [course.academic_track] : []);
+                        console.log(`Course ${course.id} track IDs:`, trackIds);
+                        return trackIds.length > 0 ? 
+                          trackIds.map(trackId => {
+                            const trackName = academicTracksMap[trackId];
+                            if (!trackName) {
+                              console.warn(`⚠️ Track ID "${trackId}" not found in academicTracksMap. Run LocalStorageUtils.refreshAllData() to fix.`);
+                              return <Chip key={trackId} label={`${trackId} (נדרש רענון)`} size="small" color="warning" />;
+                            }
+                            return <Chip key={trackId} label={trackName} size="small" icon={<GraduationCap />} />;
+                          }) : 
+                          <Typography variant="body2" color="text.secondary">אין מסלולים</Typography>;
+                      })()}
                     </Box>
                   </TableCell>
                   <TableCell align="left">

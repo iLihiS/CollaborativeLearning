@@ -122,7 +122,7 @@ export default function CoursePage() {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Button
         component={Link}
         to={createPageUrl(`Courses?track=${fromTrack || ''}&search=${fromSearch || ''}`)}
@@ -167,7 +167,11 @@ export default function CoursePage() {
                         <Typography variant="body2" color="text.secondary">{file.description}</Typography>
                         <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                           <Chip label={fileTypeToHebrew[file.file_type] || file.file_type} size="small" />
-                          <Chip label={format(new Date(file.created_date), 'd MMM yyyy', { locale: he })} size="small" variant="outlined" />
+                          <Chip label={
+                            file.created_date && !isNaN(new Date(file.created_date).getTime()) 
+                              ? format(new Date(file.created_date), 'd MMM yyyy', { locale: he })
+                              : 'תאריך לא תקין'
+                          } size="small" variant="outlined" />
                         </Box>
                       </Box>
                     </Box>

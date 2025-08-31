@@ -210,7 +210,8 @@ export const Sidebar = ({
           width: 240,
           height: '100%',
           transition: 'opacity 0.3s ease',
-          overflow: 'auto'
+          overflow: 'auto',
+          bgcolor: 'background.default'
         }}
       >
         {sidebarContent}

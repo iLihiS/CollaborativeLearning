@@ -102,9 +102,10 @@ class MockDataGenerator {
     'טל שמיר', 'גל נחמן', 'רונן דהן', 'יעל פרץ', 'איתן מור'
   ];
 
-  private static academicTracks = [
-    'מדעי המחשב', 'הנדסת תוכנה', 'מערכות מידע', 'כלכלה', 'ניהול',
-    'פסיכולוגיה', 'חינוך', 'משפטים', 'קוממיוניקציה', 'עיצוב'
+  private static academicTrackIds = [
+    'cs-undergrad', 'swe-undergrad', 'math-undergrad', 'physics-undergrad',
+    'law-undergrad', 'business-undergrad', 'business-grad', 'psychology-undergrad',
+    'education-grad', 'cs-grad'
   ];
 
   private static departments = [
@@ -115,6 +116,12 @@ class MockDataGenerator {
   private static specializations = [
     'בינה מלאכותית', 'אבטחת מידע', 'פיתוח אפליקציות', 'מסדי נתונים',
     'כלכלה מיקרו', 'שיווק דיגיטלי', 'פסיכולוגיה קלינית', 'חינוך מיוחד'
+  ];
+
+  private static cities = [
+    'תל אביב', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד', 'נתניה', 
+    'באר שבע', 'בני ברק', 'חולון', 'רמת גן', 'אשקלון', 'רחובות', 'בת ים',
+    'כפר סבא', 'חדרה', 'הרצליה', 'קריית גת', 'לוד', 'רמלה'
   ];
 
   // Generate valid Israeli ID
@@ -144,99 +151,178 @@ class MockDataGenerator {
       'law-undergrad', 'business-undergrad', 'psychology-undergrad'
     ];
 
-    const students = Array.from({ length: count }, (_, i) => ({
-      id: `student-${this.getRandomId()}`,
-      full_name: this.hebrewNames[i % this.hebrewNames.length],
-      email: `student${i + 1}@ono.ac.il`,
-      student_id: `STU${String(i + 1).padStart(4, '0')}`, // Changed format
-      national_id: this.generateIsraeliId(), // Add national ID
-      academic_track: academicTrackIds[i % academicTrackIds.length],
-      academic_track_ids: [academicTrackIds[i % academicTrackIds.length]], 
-      year: Math.floor(Math.random() * 4) + 1,
-      phone: `05${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`,
-      status: (Math.random() > 0.1 ? 'active' : (Math.random() > 0.5 ? 'inactive' : 'graduated')) as 'active' | 'inactive' | 'graduated',
-      created_at: this.getRandomDate(365),
-      updated_at: this.getRandomDate(30)
-    }));
+    const students = Array.from({ length: count }, (_, i) => {
+      const trackId = academicTrackIds[i % academicTrackIds.length];
+      const year = Math.floor(Math.random() * 4) + 1;
+      
+      return {
+        id: `student-${String(i + 1).padStart(3, '0')}`,
+        full_name: this.hebrewNames[i % this.hebrewNames.length],
+        email: `student${i + 1}@ono.ac.il`,
+        student_id: `STU${String(i + 2024).padStart(4, '0')}${String(i + 1).padStart(3, '0')}`,
+        national_id: this.generateIsraeliId(),
+        academic_track: trackId,
+        academic_track_ids: [trackId],
+        year: year,
+        semester: year * 2 - (Math.random() > 0.5 ? 1 : 0), // Current semester
+        gpa: Math.round((Math.random() * 40 + 60) * 100) / 100, // GPA between 60-100
+        total_credits: year * 15 + Math.floor(Math.random() * 10), // Credits accumulated
+        phone: `05${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`,
+        address: `${this.cities[i % this.cities.length]}, רחוב ${Math.floor(Math.random() * 200) + 1}`,
+        birth_date: this.getRandomDate(365 * 6), // Random birth date in last 6 years from 1998
+        enrollment_date: this.getRandomDate(year * 365), // Random enrollment date
+        advisor_id: `lecturer-${String((i % 12) + 1).padStart(3, '0')}`,
+        status: (Math.random() > 0.05 ? 'active' : (Math.random() > 0.7 ? 'inactive' : 'graduated')) as 'active' | 'inactive' | 'graduated',
+        created_at: this.getRandomDate(365),
+        updated_at: this.getRandomDate(30)
+      };
+    });
 
     // Sort alphabetically by name
     return students.sort((a, b) => a.full_name.localeCompare(b.full_name, 'he'));
   }
 
   static generateLecturers(count: number = 10): Lecturer[] {
-    const lecturers = Array.from({ length: count }, (_, i) => ({
-      id: `lecturer-${this.getRandomId()}`,
-      full_name: `ד"ר ${this.hebrewNames[(i + 5) % this.hebrewNames.length]}`,
-      email: `lecturer${i + 1}@ono.ac.il`,
-      employee_id: `EMP${String(i + 1001).padStart(4, '0')}`,
-      national_id: this.generateIsraeliId(), // Add national ID
-      department: this.departments[i % this.departments.length],
-      specialization: this.specializations[i % this.specializations.length],
-      phone: `03${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`,
-      status: (Math.random() > 0.05 ? 'active' : 'inactive') as 'active' | 'inactive',
-      academic_tracks: [this.academicTracks[i % this.academicTracks.length]],
-      created_at: this.getRandomDate(365),
-      updated_at: this.getRandomDate(30)
-    }));
+    const titles = ['ד"ר', 'פרופ\'', 'מר', 'גב\'', 'מר'];
+    const degrees = ['Ph.D', 'M.Sc', 'M.A', 'LL.M', 'M.B.A'];
+    
+    const lecturers = Array.from({ length: count }, (_, i) => {
+      const title = titles[i % titles.length];
+      const name = this.hebrewNames[(i + 5) % this.hebrewNames.length];
+      const department = this.departments[i % this.departments.length];
+      
+      return {
+        id: `lecturer-${String(i + 1).padStart(3, '0')}`,
+        full_name: `${title} ${name}`,
+        title: title,
+        first_name: name.split(' ')[0],
+        last_name: name.split(' ')[1] || '',
+        email: `lecturer${i + 1}@ono.ac.il`,
+        employee_id: `EMP${String(i + 1001).padStart(4, '0')}`,
+        national_id: this.generateIsraeliId(),
+        department: department,
+        specialization: this.specializations[i % this.specializations.length],
+        degree: degrees[i % degrees.length],
+        office_number: `${Math.floor(Math.random() * 5) + 1}${Math.floor(Math.random() * 50) + 10}`,
+        office_hours: 'ב\' 10:00-12:00, ה\' 14:00-16:00',
+        phone: `03${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`,
+        extension: (1000 + i).toString(),
+        bio: `מרצה בכיר במחלקת ${department} עם התמחות ב${this.specializations[i % this.specializations.length]}. בעל ניסיון רב בהוראה ובמחקר.`,
+        research_interests: [this.specializations[i % this.specializations.length], this.specializations[(i + 1) % this.specializations.length]],
+        courses_taught: [], // Will be filled when courses are created
+        academic_tracks: [this.academicTrackIds[i % this.academicTrackIds.length]],
+        status: (Math.random() > 0.02 ? 'active' : 'inactive') as 'active' | 'inactive',
+        hire_date: this.getRandomDate(365 * 10), // Hired in last 10 years
+        academic_rank: ['מרצה', 'מרצה בכיר', 'פרופ\' חבר', 'פרופ\' מן המניין'][Math.floor(Math.random() * 4)],
+        salary_grade: Math.floor(Math.random() * 10) + 10,
+        created_at: this.getRandomDate(365),
+        updated_at: this.getRandomDate(30)
+      };
+    });
 
     // Sort alphabetically by name
     return lecturers.sort((a, b) => a.full_name.localeCompare(b.full_name, 'he'));
   }
 
-  static generateCourses(count: number = 10): Course[] {
-    const courseNames = [
-      'מבוא למדעי המחשב', 'מבני נתונים', 'אלגוריתמים', 'מסדי נתונים',
-      'הנדסת תוכנה', 'רשתות מחשבים', 'בינה מלאכותית', 'אבטחת מידע',
-      'מתמטיקה לתכנות', 'סטטיסטיקה'
+  static generateCourses(count: number = 10, lecturers: Lecturer[] = []): Course[] {
+    const courseData = [
+      { name: 'מבוא למדעי המחשב', code: 'CS101', credits: 4, tracks: ['cs-undergrad', 'swe-undergrad'], department: 'מדעים והנדסה' },
+      { name: 'מבני נתונים ואלגוריתמים', code: 'CS201', credits: 5, tracks: ['cs-undergrad', 'swe-undergrad'], department: 'מדעים והנדסה' },
+      { name: 'מסדי נתונים', code: 'CS301', credits: 4, tracks: ['cs-undergrad', 'swe-undergrad'], department: 'מדעים והנדסה' },
+      { name: 'הנדסת תוכנה', code: 'SE301', credits: 4, tracks: ['swe-undergrad'], department: 'מדעים והנדסה' },
+      { name: 'רשתות מחשבים', code: 'CS401', credits: 3, tracks: ['cs-undergrad', 'cs-grad'], department: 'מדעים והנדסה' },
+      { name: 'בינה מלאכותית', code: 'CS501', credits: 4, tracks: ['cs-grad'], department: 'מדעים והנדסה' },
+      { name: 'אבטחת מידע', code: 'CS451', credits: 3, tracks: ['cs-undergrad', 'cs-grad'], department: 'מדעים והנדסה' },
+      { name: 'מתמטיקה דיסקרטית', code: 'MATH101', credits: 4, tracks: ['math-undergrad', 'cs-undergrad'], department: 'מדעים מדויקים' },
+      { name: 'סטטיסטיקה', code: 'MATH201', credits: 3, tracks: ['math-undergrad', 'psychology-undergrad'], department: 'מדעים מדויקים' },
+      { name: 'פיזיקה כללית', code: 'PHYS101', credits: 5, tracks: ['physics-undergrad'], department: 'מדעים מדויקים' },
+      { name: 'חוקי חוזים', code: 'LAW201', credits: 4, tracks: ['law-undergrad'], department: 'משפטים' },
+      { name: 'דיני חברות', code: 'LAW301', credits: 3, tracks: ['law-undergrad'], department: 'משפטים' },
+      { name: 'ניהול ואסטרטגיה', code: 'BUS101', credits: 4, tracks: ['business-undergrad', 'business-grad'], department: 'ניהול וכלכלה' },
+      { name: 'שיווק דיגיטלי', code: 'BUS301', credits: 3, tracks: ['business-undergrad', 'business-grad'], department: 'ניהול וכלכלה' },
+      { name: 'חשבונאות פיננסית', code: 'ACC101', credits: 4, tracks: ['business-undergrad'], department: 'ניהול וכלכלה' },
+      { name: 'פסיכולוגיה כללית', code: 'PSY101', credits: 4, tracks: ['psychology-undergrad'], department: 'מדעי החברה' },
+      { name: 'פסיכולוגיה התפתחותית', code: 'PSY201', credits: 3, tracks: ['psychology-undergrad'], department: 'מדעי החברה' },
+      { name: 'ייעוץ והדרכה', code: 'EDU501', credits: 4, tracks: ['education-grad'], department: 'מדעי החברה' },
+      { name: 'מחקר כמותי', code: 'RES401', credits: 3, tracks: ['psychology-undergrad', 'education-grad'], department: 'מדעי החברה' },
+      { name: 'כלכלה מיקרו', code: 'ECON101', credits: 4, tracks: ['business-undergrad'], department: 'ניהול וכלכלה' }
     ];
 
-    return Array.from({ length: count }, (_, i) => ({
-      id: `course-${this.getRandomId()}`,
-      name: courseNames[i % courseNames.length],
-      code: `CS${String(i + 101).padStart(3, '0')}`,
-      description: `תיאור מפורט של הקורס ${courseNames[i % courseNames.length]}`,
-      credits: Math.floor(Math.random() * 3) + 2,
-      semester: ['א', 'ב', 'קיץ'][Math.floor(Math.random() * 3)] as 'א' | 'ב' | 'קיץ',
-      year: 2024,
-      lecturer_id: `lecturer-${this.getRandomId()}`,
-      academic_track: this.academicTracks[i % this.academicTracks.length],
-      max_students: 30 + Math.floor(Math.random() * 20),
-      enrolled_students: Math.floor(Math.random() * 35),
-      status: Math.random() > 0.1 ? 'active' : 'inactive',
-      created_at: this.getRandomDate(365),
-      updated_at: this.getRandomDate(30)
-    }));
+    // Get lecturer IDs for proper linking
+    const lecturerIds = lecturers.length > 0 
+      ? lecturers.map(l => l.id) 
+      : Array.from({ length: 12 }, (_, i) => `lecturer-${String(i + 1).padStart(3, '0')}`);
+
+    return Array.from({ length: count }, (_, i) => {
+      const courseInfo = courseData[i % courseData.length];
+      
+      return {
+        id: `course-${String(i + 1).padStart(3, '0')}`,
+        course_name: courseInfo.name,
+        course_code: courseInfo.code,
+        name: courseInfo.name, // Legacy field
+        code: courseInfo.code, // Legacy field
+        description: `${courseInfo.name} - קורס מקצועי המועבר במחלקת ${courseInfo.department}. הקורס כולל הרצאות, תרגילים ופרויקטים מעשיים.`,
+        credits: courseInfo.credits,
+        semester: ['א', 'ב', 'קיץ'][Math.floor(Math.random() * 3)] as 'א' | 'ב' | 'קיץ',
+        year: 2024,
+        lecturer_id: lecturerIds[i % lecturerIds.length],
+        lecturer: lecturers.length > 0 ? lecturers[i % lecturers.length].full_name : `מרצה ${i + 1}`,
+        department: courseInfo.department,
+        academic_track_ids: courseInfo.tracks,
+        academic_track: courseInfo.tracks[0], // Primary track
+        max_students: 25 + Math.floor(Math.random() * 25),
+        enrolled_students: Math.floor(Math.random() * 30),
+        status: Math.random() > 0.05 ? 'active' : 'inactive',
+        prerequisites: i > 2 ? [`course-${String(Math.floor(Math.random() * i) + 1).padStart(3, '0')}`] : [],
+        syllabus_url: `https://example.com/syllabus/${courseInfo.code.toLowerCase()}.pdf`,
+        created_at: this.getRandomDate(365),
+        updated_at: this.getRandomDate(30)
+      };
+    });
   }
 
-  static generateFiles(count: number = 10): FileEntity[] {
+  static generateFiles(count: number = 10, courses: Course[] = [], students: Student[] = []): FileEntity[] {
     const fileTypes = ['pdf', 'docx', 'pptx', 'xlsx', 'txt'];
     const fileNames = [
       'הרצאה 1 - מבוא', 'תרגיל בית 2', 'מצגת שיעור', 'חומר עזר',
       'דוגמאות קוד', 'סיכום נושא', 'מבחן דוגמא', 'פתרון תרגיל',
-      'הנחיות פרויקט', 'רשימת ביבליוגרפיה'
+      'הנחיות פרויקט', 'רשימת ביבליוגרפיה', 'נושאי מחקר', 'דוח פרויקט',
+      'סיכום הרצאה', 'תרגיל מעשי', 'חומר הכנה למבחן'
+    ];
+
+    // If no courses provided, create some default course IDs
+    const courseIds = courses.length > 0 ? courses.map(c => c.id) : [
+      'course-001', 'course-002', 'course-003', 'course-004', 'course-005'
+    ];
+    
+    // If no students provided, create some default student IDs
+    const studentIds = students.length > 0 ? students.map(s => s.id) : [
+      'student-001', 'student-002', 'student-003', 'student-004', 'student-005'
     ];
 
     return Array.from({ length: count }, (_, i) => {
       const fileType = fileTypes[i % fileTypes.length];
       const fileName = fileNames[i % fileNames.length];
+      const createdDate = this.getRandomDate(90); // Last 90 days
       
       return {
-        id: `file-${this.getRandomId()}`,
+        id: `file-${String(i + 1).padStart(3, '0')}`,
         filename: `${fileName.replace(/\s+/g, '_')}.${fileType}`,
         original_name: `${fileName}.${fileType}`,
         file_type: fileType,
         file_size: Math.floor(Math.random() * 5000000) + 100000, // 100KB - 5MB
-        course_id: `course-${this.getRandomId()}`,
-        uploader_id: `student-${this.getRandomId()}`,
+        course_id: courseIds[i % courseIds.length], // Link to existing courses
+        uploader_id: studentIds[i % studentIds.length], // Link to existing students
         uploader_type: Math.random() > 0.7 ? 'lecturer' : 'student',
         status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)] as 'pending' | 'approved' | 'rejected',
         approval_date: Math.random() > 0.5 ? this.getRandomDate(30) : undefined,
-        approved_by: Math.random() > 0.5 ? `lecturer-${this.getRandomId()}` : undefined,
+        approved_by: Math.random() > 0.5 ? `lecturer-001` : undefined,
         rejection_reason: Math.random() > 0.8 ? 'הקובץ אינו רלוונטי לקורס' : undefined,
         download_count: Math.floor(Math.random() * 50),
         tags: ['חומר לימוד', 'תרגיל', 'מבחן'].slice(0, Math.floor(Math.random() * 3) + 1),
-        created_at: this.getRandomDate(365),
-        updated_at: this.getRandomDate(30)
+        created_at: createdDate,
+        updated_at: createdDate
       };
     });
   }
@@ -319,10 +405,13 @@ export class LocalStorageService {
       this.setLecturers(MockDataGenerator.generateLecturers(12));
     }
     if (!localStorage.getItem(this.KEYS.COURSES)) {
-      this.setCourses(MockDataGenerator.generateCourses(20));
+      const lecturers = this.getLecturers();
+      this.setCourses(MockDataGenerator.generateCourses(20, lecturers));
     }
     if (!localStorage.getItem(this.KEYS.FILES)) {
-      this.setFiles(MockDataGenerator.generateFiles(50));
+      const courses = this.getCourses();
+      const students = this.getStudents();
+      this.setFiles(MockDataGenerator.generateFiles(50, courses, students));
     }
     if (!localStorage.getItem(this.KEYS.MESSAGES)) {
       this.setMessages(MockDataGenerator.generateMessages(30));
@@ -565,6 +654,14 @@ export class LocalStorageService {
     });
   }
 
+  static refreshAllData(): void {
+    console.log('🔄 מרענן את כל הנתונים עם IDs נכונים של מסלולים...');
+    this.clearAllData();
+    this.initializeData();
+    console.log('✅ הנתונים עודכנו עם מסלולים נכונים! רוענן את הדף...');
+    setTimeout(() => window.location.reload(), 500);
+  }
+
   // Force clean all data and reinitialize
   static resetAllData(): void {
     console.log('Resetting all data...');
@@ -605,18 +702,24 @@ export class LocalStorageService {
 if (typeof window !== 'undefined') {
   (window as any).LocalStorageUtils = {
     resetAllData: () => LocalStorageService.resetAllData(),
-    cleanDuplicates: () => LocalStorageService.cleanAllDuplicates(),
-    removeDuplicateStudents: () => LocalStorageService.removeDuplicateStudents(),
-    removeStudentsWithoutNationalId: () => LocalStorageService.removeStudentsWithoutNationalId(),
-    getStudents: () => LocalStorageService.getStudents(),
-    clearAllData: () => LocalStorageService.clearAllData()
+          cleanDuplicates: () => LocalStorageService.cleanAllDuplicates(),
+      removeDuplicateStudents: () => LocalStorageService.removeDuplicateStudents(),
+      removeStudentsWithoutNationalId: () => LocalStorageService.removeStudentsWithoutNationalId(),
+      getStudents: () => LocalStorageService.getStudents(),
+      clearAllData: () => LocalStorageService.clearAllData(),
+      refreshAllData: () => LocalStorageService.refreshAllData(),
+      getFiles: () => LocalStorageService.getFiles(),
+      getCourses: () => LocalStorageService.getCourses(),
+      getLecturers: () => LocalStorageService.getLecturers()
   };
   
-  console.log('LocalStorageUtils available in console:');
-  console.log('- LocalStorageUtils.resetAllData() - מאפס את כל הנתונים');
-  console.log('- LocalStorageUtils.cleanDuplicates() - מנקה כפילויות וסטודנטים לא תקינים');
-  console.log('- LocalStorageUtils.removeDuplicateStudents() - מנקה כפילויות סטודנטים');
-  console.log('- LocalStorageUtils.removeStudentsWithoutNationalId() - מסיר סטודנטים ללא תעודת זהות');
-  console.log('- LocalStorageUtils.getStudents() - מציג רשימת סטודנטים');
-  console.log('- LocalStorageUtils.clearAllData() - מוחק את כל הנתונים');
+      console.log('%c🛠️ LocalStorageUtils available in console:', 'color: #2196F3; font-weight: bold; font-size: 14px;');
+    console.log('%c✨ LocalStorageUtils.refreshAllData() - רענון נתונים עם נתונים מלאים חדשים!', 'color: #4CAF50; font-weight: bold;');
+    console.log('- LocalStorageUtils.resetAllData() - מאפס את כל הנתונים');
+    console.log('- LocalStorageUtils.cleanDuplicates() - מנקה כפילויות וסטודנטים לא תקינים');
+    console.log('- LocalStorageUtils.removeDuplicateStudents() - מנקה כפילויות סטודנטים');
+    console.log('- LocalStorageUtils.removeStudentsWithoutNationalId() - מסיר סטודנטים ללא תעודת זהות');
+    console.log('- LocalStorageUtils.getStudents() - מציג רשימת סטודנטים');
+    console.log('- LocalStorageUtils.getCourses() - מציג רשימת קורסים');
+    console.log('- LocalStorageUtils.clearAllData() - מוחק את כל הנתונים');
 } 

@@ -85,16 +85,16 @@ export default function AdminPanel() {
     };
 
   const adminLinks = [
-    { title: "ניהול סטודנטים", icon: Users, url: "AdminStudentManagement", description: "הוספה, עריכה ומחיקה של סטודנטים", color: "info" },
-    { title: "ניהול קורסים", icon: Book, url: "AdminCourseManagement", description: "ניהול קורסים וסמסטרים", color: "success" },
-    { title: "ניהול קבצים", icon: FileText, url: "AdminFileManagement", description: "צפייה וניהול של כל הקבצים במערכת", color: "warning" },
-    { title: "ניהול מרצים", icon: GraduationCap, url: "AdminLecturerManagement", description: "הוספה וניהול של סגל המרצים", color: "secondary" },
-    { title: "ניהול מנהלים", icon: Settings, url: "AdminManagement", description: "ניהול מנהלי המערכת והרשאותיהם", color: "primary" },
+    { title: "ניהול סטודנטים", icon: Users, url: "AdminStudentManagement", description: "הוספה, עריכה ומחיקה של סטודנטים", bgcolor: "#faf5ff", iconColor: "#8b5cf6" },
+    { title: "ניהול קורסים", icon: Book, url: "AdminCourseManagement", description: "ניהול קורסים וסמסטרים", bgcolor: "#f0f9ff", iconColor: "#0ea5e9" },
+    { title: "ניהול קבצים", icon: FileText, url: "AdminFileManagement", description: "צפייה וניהול של כל הקבצים במערכת", bgcolor: "#fefce8", iconColor: "#eab308" },
+    { title: "ניהול מרצים", icon: GraduationCap, url: "AdminLecturerManagement", description: "הוספה וניהול של סגל המרצים", bgcolor: "#fdf2f8", iconColor: "#ec4899" },
+    { title: "ניהול מנהלים", icon: Settings, url: "AdminManagement", description: "ניהול מנהלי המערכת והרשאותיהם", bgcolor: "#f0fdf4", iconColor: "#22c55e" },
   ];
 
   return (
     <>
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '80vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '80vh' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 48, height: 48 }}>
@@ -161,7 +161,7 @@ export default function AdminPanel() {
                   color: 'inherit'
                 }}
               >
-                <Avatar sx={{ bgcolor: `${link.color}.light`, color: `${link.color}.main`, mx: 'auto', width: 56, height: 56 }}>
+                <Avatar sx={{ bgcolor: link.bgcolor, color: link.iconColor, mx: 'auto', width: 56, height: 56 }}>
                   <link.icon />
                 </Avatar>
                 <Typography variant="h6" fontWeight="bold" textAlign="center">{link.title}</Typography>

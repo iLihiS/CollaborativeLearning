@@ -25,11 +25,11 @@ export const useAuth = () => {
         return;
       }
       
-      // Create demo user if no session exists
+      // Create demo user if no session exists - use same user as apiClient
       const mockUser: User = {
-        id: "demo-user-1",
-        full_name: "משתמש דמו",
-        email: "demo@ono.ac.il",
+        id: "user-006",
+        full_name: "ד\"ר רונה סופר יוזר",
+        email: "all.roles@ono.ac.il",
         roles: ["student", "lecturer", "admin"],
         current_role: "admin", // Changed to admin to see all menu items
         theme_preference: "light"

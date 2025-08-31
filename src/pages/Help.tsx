@@ -47,53 +47,64 @@ export default function Help() {
   ];
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
-        <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><HelpCircle /></Avatar>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold" textAlign="left">מרכז העזרה</Typography>
-                    <Typography color="text.secondary">מצאו תשובות לשאלות נפוצות ומדריכים לשימוש במערכת.</Typography>
+    <Box sx={{ 
+        p: 2, 
+        bgcolor: 'background.default', 
+        minHeight: '87vh',
+        display: 'flex',
+        flexDirection: 'column'
+    }}>
+        {/* תוכן עיקרי */}
+        <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><HelpCircle /></Avatar>
+                    <Box>
+                        <Typography variant="h4" fontWeight="bold" textAlign="left">מרכז העזרה</Typography>
+                        <Typography color="text.secondary">מצאו תשובות לשאלות נפוצות ומדריכים לשימוש במערכת.</Typography>
+                    </Box>
                 </Box>
             </Box>
+
+            <Grid container spacing={4} >
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Typography variant="h5" fontWeight="bold" textAlign="left" sx={{ mb: 2 }}>איך המערכת עובדת?</Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {howItWorks.map((step) => (
+                            <Paper key={step.title} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>{step.icon}</Avatar>
+                                <Box>
+                                    <Typography variant="h6" textAlign="left">{step.title}</Typography>
+                                    <Typography color="text.secondary" textAlign="left">{step.description}</Typography>
+                                </Box>
+                            </Paper>
+                        ))}
+                    </Box>
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Typography variant="h5" fontWeight="bold" textAlign="left" sx={{ mb: 2 }}>שאלות נפוצות</Typography>
+                    {faqs.map((faq, index) => (
+                        <Accordion key={index}>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Typography>{faq.question}</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <Typography color="text.secondary" textAlign="left">{faq.answer}</Typography>
+                            </AccordionDetails>
+                        </Accordion>
+                    ))}
+                </Grid>
+            </Grid>
         </Box>
 
-        <Grid container spacing={4}>
-            <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="h5" fontWeight="bold" textAlign="left" sx={{ mb: 2 }}>איך המערכת עובדת?</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {howItWorks.map((step) => (
-                        <Paper key={step.title} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>{step.icon}</Avatar>
-                            <Box>
-                                <Typography variant="h6" textAlign="left">{step.title}</Typography>
-                                <Typography color="text.secondary" textAlign="left">{step.description}</Typography>
-                            </Box>
-                        </Paper>
-                    ))}
-                </Box>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="h5" fontWeight="bold" textAlign="left" sx={{ mb: 2 }}>שאלות נפוצות</Typography>
-                {faqs.map((faq, index) => (
-                    <Accordion key={index}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography>{faq.question}</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <Typography color="text.secondary" textAlign="left">{faq.answer}</Typography>
-                        </AccordionDetails>
-                    </Accordion>
-                ))}
-            </Grid>
-        </Grid>
-
+        {/* כרטיסיה תמיד בתחתית */}
         <Card sx={{
             mt: 4, 
             color: 'white',
             background: 'linear-gradient(to right, #84cc16, #65a30d)',
             position: 'relative',
             overflow: 'hidden',
+            flexShrink: 0, // לא תתכווץ
             '&::before': {
                 content: '""',
                 position: 'absolute',

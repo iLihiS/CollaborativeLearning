@@ -127,7 +127,7 @@ export default function AdminFileManagement() {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         בחזרה לפאנל הניהול
       </Button>
@@ -202,13 +202,13 @@ export default function AdminFileManagement() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>שם קובץ</TableCell>
-                <TableCell>קורס</TableCell>
-                <TableCell>סוג</TableCell>
-                <TableCell>תאריך העלאה</TableCell>
-                <TableCell>מעלה הקובץ</TableCell>
-                <TableCell>הורדות</TableCell>
-                <TableCell>סטטוס</TableCell>
+                <TableCell align="left">שם קובץ</TableCell>
+                <TableCell align="left">קורס</TableCell>
+                <TableCell align="left">סוג</TableCell>
+                <TableCell align="left">תאריך העלאה</TableCell>
+                <TableCell align="left">מעלה הקובץ</TableCell>
+                <TableCell align="left">הורדות</TableCell>
+                <TableCell align="left">סטטוס</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
@@ -219,18 +219,18 @@ export default function AdminFileManagement() {
                 </TableRow>
               ) : (Array.isArray(filteredFiles) ? filteredFiles : []).map((file) => (
                 <TableRow key={file.id} hover>
-                  <TableCell>{file.title || 'לא מוגדר'}</TableCell>
-                  <TableCell>{coursesMap[file.course_id] || 'קורס לא ידוע'}</TableCell>
-                  <TableCell>{getFileExtension(file.file_url)}</TableCell>
+                  <TableCell align="left">{file.title || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{coursesMap[file.course_id] || 'קורס לא ידוע'}</TableCell>
+                  <TableCell align="left">{getFileExtension(file.file_url)}</TableCell>
                   <TableCell>
                     {file.created_date ? 
                       format(new Date(file.created_date), 'd MMM yyyy', { locale: he }) : 
                       'תאריך לא ידוע'
                     }
                   </TableCell>
-                  <TableCell>{studentsMap[file.uploader_id] || 'מעלה לא ידוע'}</TableCell>
-                  <TableCell>{file.download_count || 0}</TableCell>
-                  <TableCell>{getStatusComponent(file.status)}</TableCell>
+                  <TableCell align="left">{studentsMap[file.uploader_id] || 'מעלה לא ידוע'}</TableCell>
+                  <TableCell align="left">{file.download_count || 0}</TableCell>
+                  <TableCell align="left">{getStatusComponent(file.status)}</TableCell>
                   <TableCell align="left">
                     <IconButton component="a" href={file.file_url} target="_blank" rel="noopener noreferrer"><Download /></IconButton>
                     <IconButton onClick={() => handleDelete(file.id)} color="error"><Trash2 /></IconButton>

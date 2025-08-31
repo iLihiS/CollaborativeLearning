@@ -156,7 +156,7 @@ export default function AdminLecturerManagement() {
   }, {});
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         חזרה לפאנל הניהול
       </Button>
@@ -223,9 +223,9 @@ export default function AdminLecturerManagement() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>שם מלא</TableCell>
-                <TableCell>כתובת מייל</TableCell>
-                <TableCell>מסלולים אקדמיים</TableCell>
+                <TableCell align="left">שם מלא</TableCell>
+                <TableCell align="left">כתובת מייל</TableCell>
+                <TableCell align="left">מסלולים אקדמיים</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
@@ -236,9 +236,9 @@ export default function AdminLecturerManagement() {
                 </TableRow>
               ) : (Array.isArray(filteredLecturers) ? filteredLecturers : []).map((lecturer) => (
                 <TableRow key={lecturer.id} hover>
-                  <TableCell>{lecturer.full_name || 'לא מוגדר'}</TableCell>
-                  <TableCell>{lecturer.email || 'לא מוגדר'}</TableCell>
-                  <TableCell>
+                  <TableCell align="left">{lecturer.full_name || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{lecturer.email || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(lecturer.academic_track_ids && lecturer.academic_track_ids.length > 0) ? 
                         lecturer.academic_track_ids.map(trackId => (

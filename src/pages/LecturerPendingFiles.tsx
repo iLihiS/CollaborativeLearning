@@ -111,7 +111,7 @@ export default function LecturerPendingFiles() {
   };
   
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
         <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><CheckSquare /></Avatar>
         <Box>
@@ -125,9 +125,9 @@ export default function LecturerPendingFiles() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>שם קובץ</TableCell>
-                <TableCell>קורס</TableCell>
-                <TableCell>הועלה בתאריך</TableCell>
+                <TableCell align="left">שם קובץ</TableCell>
+                <TableCell align="left">קורס</TableCell>
+                <TableCell align="left">הועלה בתאריך</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
@@ -139,9 +139,14 @@ export default function LecturerPendingFiles() {
               ) : files.length > 0 ? (
                 files.map(file => (
                   <TableRow key={file.id} hover>
-                    <TableCell>{file.title}</TableCell>
-                    <TableCell>{courses[file.course_id]?.course_name || 'לא ידוע'}</TableCell>
-                    <TableCell>{format(new Date(file.created_date), 'd MMM yyyy', { locale: he })}</TableCell>
+                    <TableCell align="left">{file.title}</TableCell>
+                    <TableCell align="left">{courses[file.course_id]?.course_name || 'לא ידוע'}</TableCell>
+                    <TableCell align="left">
+                      {file.created_date && !isNaN(new Date(file.created_date).getTime()) 
+                        ? format(new Date(file.created_date), 'd MMM yyyy', { locale: he })
+                        : 'תאריך לא תקין'
+                      }
+                    </TableCell>
                     <TableCell align="left">
                       <IconButton component="a" href={file.file_url} target="_blank" rel="noopener noreferrer"><Download /></IconButton>
                       <IconButton onClick={() => handleApprove(file.id)} color="success"><Check /></IconButton>

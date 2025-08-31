@@ -132,7 +132,7 @@ export default function AdminManagement() {
   }, {});
 
   return (
-    <Box sx={{ p: { xs: 2, lg: 4 }, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         בחזרה לפאנל הניהול
       </Button>
@@ -155,9 +155,9 @@ export default function AdminManagement() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>שם מלא</TableCell>
-                <TableCell>כתובת מייל</TableCell>
-                <TableCell>מסלולים אקדמיים</TableCell>
+                <TableCell align="left">שם מלא</TableCell>
+                <TableCell align="left">כתובת מייל</TableCell>
+                <TableCell align="left">מסלולים אקדמיים</TableCell>
                 <TableCell align="left">פעולות</TableCell>
               </TableRow>
             </TableHead>
@@ -168,9 +168,9 @@ export default function AdminManagement() {
                 </TableRow>
               ) : (Array.isArray(admins) ? admins : []).map((admin) => (
                 <TableRow key={admin.id} hover>
-                  <TableCell>{admin.full_name || 'לא מוגדר'}</TableCell>
-                  <TableCell>{admin.email || 'לא מוגדר'}</TableCell>
-                  <TableCell>
+                  <TableCell align="left">{admin.full_name || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">{admin.email || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(admin.academic_track_ids && admin.academic_track_ids.length > 0) ? 
                         admin.academic_track_ids.map(trackId => (
