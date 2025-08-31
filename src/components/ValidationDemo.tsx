@@ -65,7 +65,7 @@ export function ValidationDemo() {
 
       <Grid container spacing={3}>
         {/* Real-time validation demo */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader title="בדיקה בזמן אמת" />
             <CardContent>
@@ -141,7 +141,7 @@ export function ValidationDemo() {
         </Grid>
 
         {/* Email validation examples */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardHeader title="דוגמאות בדיקת אימייל" />
             <CardContent>
@@ -170,12 +170,12 @@ export function ValidationDemo() {
         </Grid>
 
         {/* Validation features summary */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardHeader title="תכונות מערכת ה-Validation החדשה" />
             <CardContent>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Typography variant="h6" gutterBottom>בדיקות אימייל מתקדמות</Typography>
                   <ul>
                     <li>בדיקת פורמט RFC-compliant</li>
@@ -186,7 +186,7 @@ export function ValidationDemo() {
                   </ul>
                 </Grid>
                 
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Typography variant="h6" gutterBottom>בדיקות טלפון ישראליות</Typography>
                   <ul>
                     <li>תמיכה בפורמטים ישראליים</li>
@@ -197,7 +197,7 @@ export function ValidationDemo() {
                   </ul>
                 </Grid>
                 
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Typography variant="h6" gutterBottom>בדיקות נוספות</Typography>
                   <ul>
                     <li>בדיקת שמות עבריים</li>

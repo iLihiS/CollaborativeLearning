@@ -143,18 +143,18 @@ export default function Insights() {
   );
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '90vh' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
         <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><TrendingUp /></Avatar>
         <Box>
-          <Typography variant="h4" fontWeight="bold">תובנות המערכת</Typography>
-          <Typography color="text.secondary">גלה את החומרים והקורסים הפופולריים ביותר</Typography>
+          <Typography variant="h4" fontWeight="bold" textAlign="left">תובנות המערכת</Typography>
+          <Typography color="text.secondary" textAlign="left">גלה את החומרים והקורסים הפופולריים ביותר</Typography>
         </Box>
       </Box>
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
         <Card elevation={2}>
-          <CardHeader titleTypographyProps={{ variant: 'h6' }} title="הקבצים הפופולריים ביותר" />
+          <CardHeader titleTypographyProps={{ variant: 'h6', textAlign: 'left' }} title="הקבצים הפופולריים ביותר" />
           <CardContent>
             {loading ? <LoadingList /> : (
               <List>
@@ -174,7 +174,7 @@ export default function Insights() {
         </Card>
 
         <Card elevation={2}>
-          <CardHeader titleTypographyProps={{ variant: 'h6' }} title="הקורסים הפעילים ביותר" />
+          <CardHeader titleTypographyProps={{ variant: 'h6', textAlign: 'left' }} title="הקורסים הפעילים ביותר" />
           <CardContent>
             {loading ? <LoadingList /> : (
               <List>
@@ -192,7 +192,7 @@ export default function Insights() {
         </Card>
 
         <Card elevation={2} sx={{ gridColumn: { lg: 'span 2' } }}>
-          <CardHeader titleTypographyProps={{ variant: 'h6' }} title="הסטודנטים המשתפים ביותר" />
+          <CardHeader titleTypographyProps={{ variant: 'h6', textAlign: 'left' }} title="הסטודנטים המשתפים ביותר" />
           <CardContent>
             {loading ? <CircularProgress /> : (
               <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', minHeight: 150 }}>

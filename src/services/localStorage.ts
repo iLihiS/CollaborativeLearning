@@ -51,9 +51,10 @@ export interface FileEntity extends BaseEntity {
   original_name: string;
   file_type: string;
   file_size: number;
+  file_code?: string;
   course_id: string;
   uploader_id: string;
-  uploader_type: 'student' | 'lecturer';
+  uploader_type: 'student' | 'lecturer' | 'admin';
   status: 'pending' | 'approved' | 'rejected';
   approval_date?: string;
   approved_by?: string;
@@ -266,8 +267,9 @@ class MockDataGenerator {
         credits: courseInfo.credits,
         semester: ['א', 'ב', 'קיץ'][Math.floor(Math.random() * 3)] as 'א' | 'ב' | 'קיץ',
         year: 2024,
-        lecturer_id: lecturerIds[i % lecturerIds.length],
-        lecturer: lecturers.length > 0 ? lecturers[i % lecturers.length].full_name : `מרצה ${i + 1}`,
+        lecturer_id: lecturerIds[i % lecturerIds.length], // Legacy field
+        lecturer_ids: [lecturerIds[i % lecturerIds.length]], // New field for multiple lecturers
+        lecturer: lecturers.length > 0 ? lecturers[i % lecturers.length].full_name : `מרצה ${i + 1}`, // Legacy field
         department: courseInfo.department,
         academic_track_ids: courseInfo.tracks,
         academic_track: courseInfo.tracks[0], // Primary track
@@ -306,19 +308,60 @@ class MockDataGenerator {
       const fileName = fileNames[i % fileNames.length];
       const createdDate = this.getRandomDate(90); // Last 90 days
       
+      const courseId = courseIds[i % courseIds.length];
+      const course = courses.find(c => c.id === courseId);
+      const courseCode = course?.code || 'FILE';
+      
+      // Generate file_code based on course and type
+      const typePrefix = {
+        'note': 'N',
+        'exam': 'E', 
+        'formulas': 'F',
+        'assignment': 'A',
+        'other': 'O'
+      }[fileType] || 'O';
+      
+      const fileCode = `${courseCode}-${typePrefix}${String(i + 1).padStart(3, '0')}`;
+      
       return {
         id: `file-${String(i + 1).padStart(3, '0')}`,
         filename: `${fileName.replace(/\s+/g, '_')}.${fileType}`,
         original_name: `${fileName}.${fileType}`,
         file_type: fileType,
         file_size: Math.floor(Math.random() * 5000000) + 100000, // 100KB - 5MB
-        course_id: courseIds[i % courseIds.length], // Link to existing courses
+        file_code: fileCode,
+        course_id: courseId, // Link to existing courses
         uploader_id: studentIds[i % studentIds.length], // Link to existing students
-        uploader_type: Math.random() > 0.7 ? 'lecturer' : 'student',
-        status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)] as 'pending' | 'approved' | 'rejected',
-        approval_date: Math.random() > 0.5 ? this.getRandomDate(30) : undefined,
-        approved_by: Math.random() > 0.5 ? `lecturer-001` : undefined,
-        rejection_reason: Math.random() > 0.8 ? 'הקובץ אינו רלוונטי לקורס' : undefined,
+        uploader_type: Math.random() > 0.8 ? 'admin' : (Math.random() > 0.6 ? 'lecturer' : 'student'),
+        status: (() => {
+          // Ensure we have files in all statuses - distribute more evenly
+          const statusIndex = i % 5; // Every 5 files, cycle through statuses
+          if (statusIndex === 0 || statusIndex === 1) return 'approved'; // 40% approved
+          if (statusIndex === 2 || statusIndex === 3) return 'pending';  // 40% pending  
+          return 'rejected'; // 20% rejected
+        })() as 'pending' | 'approved' | 'rejected',
+        approval_date: (() => {
+          const status = i % 5 === 4 ? 'rejected' : (i % 5 >= 2 ? 'pending' : 'approved');
+          return status !== 'pending' ? this.getRandomDate(30) : undefined;
+        })(),
+        approved_by: (() => {
+          const status = i % 5 === 4 ? 'rejected' : (i % 5 >= 2 ? 'pending' : 'approved');
+          return status !== 'pending' ? `lecturer-001` : undefined;
+        })(),
+        rejection_reason: (() => {
+          const status = i % 5 === 4 ? 'rejected' : (i % 5 >= 2 ? 'pending' : 'approved');
+          if (status === 'rejected') {
+            const reasons = [
+              'הקובץ אינו רלוונטי לקורס',
+              'איכות הקובץ אינה מספקת',
+              'הקובץ כבר קיים במערכת',
+              'תוכן הקובץ אינו מתאים',
+              'הקובץ פגום או לא ניתן לקריאה'
+            ];
+            return reasons[i % reasons.length];
+          }
+          return undefined;
+        })(),
         download_count: Math.floor(Math.random() * 50),
         tags: ['חומר לימוד', 'תרגיל', 'מבחן'].slice(0, Math.floor(Math.random() * 3) + 1),
         created_at: createdDate,
@@ -411,7 +454,7 @@ export class LocalStorageService {
     if (!localStorage.getItem(this.KEYS.FILES)) {
       const courses = this.getCourses();
       const students = this.getStudents();
-      this.setFiles(MockDataGenerator.generateFiles(50, courses, students));
+      this.setFiles(MockDataGenerator.generateFiles(100, courses, students));
     }
     if (!localStorage.getItem(this.KEYS.MESSAGES)) {
       this.setMessages(MockDataGenerator.generateMessages(30));
@@ -654,13 +697,7 @@ export class LocalStorageService {
     });
   }
 
-  static refreshAllData(): void {
-    console.log('🔄 מרענן את כל הנתונים עם IDs נכונים של מסלולים...');
-    this.clearAllData();
-    this.initializeData();
-    console.log('✅ הנתונים עודכנו עם מסלולים נכונים! רוענן את הדף...');
-    setTimeout(() => window.location.reload(), 500);
-  }
+
 
   // Force clean all data and reinitialize
   static resetAllData(): void {
@@ -695,6 +732,31 @@ export class LocalStorageService {
     this.removeDuplicateStudents();
     // Could add similar functions for lecturers if needed
     console.log('Duplicates and invalid students cleaned');
+  }
+
+  // Force refresh all data with new mock data
+  static refreshAllData(): void {
+    console.log('🔄 Refreshing all data with new mock data...');
+    
+    // Clear existing data
+    this.clearAllData();
+    
+    // Generate new data
+    this.setStudents(MockDataGenerator.generateStudents(15));
+    this.setLecturers(MockDataGenerator.generateLecturers(12));
+    
+    const lecturers = this.getLecturers();
+    this.setCourses(MockDataGenerator.generateCourses(20, lecturers));
+    
+    const courses = this.getCourses();
+    const students = this.getStudents();
+    this.setFiles(MockDataGenerator.generateFiles(100, courses, students));
+    
+    this.setMessages(MockDataGenerator.generateMessages(30));
+    this.setNotifications(MockDataGenerator.generateNotifications(25));
+    
+    console.log('✅ All data refreshed successfully!');
+    console.log(`📊 Generated: ${students.length} students, ${lecturers.length} lecturers, ${courses.length} courses, 100 files, 30 messages, 25 notifications`);
   }
 }
 

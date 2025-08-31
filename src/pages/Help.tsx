@@ -72,7 +72,10 @@ export default function Help() {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {howItWorks.map((step) => (
                             <Paper key={step.title} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>{step.icon}</Avatar>
+                                <Avatar sx={{ 
+                                    bgcolor: '#e8f5e8', // רקע ירוק עדין כמו בניהול מרצים
+                                    color: '#2e7d32'     // ירוק עדין כמו בניהול מרצים
+                                }}>{step.icon}</Avatar>
                                 <Box>
                                     <Typography variant="h6" textAlign="left">{step.title}</Typography>
                                     <Typography color="text.secondary" textAlign="left">{step.description}</Typography>

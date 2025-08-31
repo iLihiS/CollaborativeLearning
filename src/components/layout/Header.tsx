@@ -15,6 +15,8 @@ import {
   HelpCircle
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -27,6 +29,7 @@ export const Header = ({
   unreadNotifications, 
   unhandledInquiries 
 }: HeaderProps) => {
+  const { session, switchRole } = useAuth();
   return (
     <AppBar
       position="static"
@@ -54,8 +57,9 @@ export const Header = ({
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: 1.5,
+              gap: { xs: 1, sm: 1.5 },
               textDecoration: 'none',
+              whiteSpace: 'nowrap',
               '&:hover': {
                 opacity: 0.8
               }
@@ -81,7 +85,7 @@ export const Header = ({
                 color: 'white',
                 fontWeight: 'bold',
                 lineHeight: 1,
-                fontSize: { xs: '1rem', lg: '1.1rem' }
+                fontSize: { xs: '0.85rem', sm: '0.95rem', lg: '1.1rem' }
               }}
             >
               למידה שיתופית
@@ -94,7 +98,7 @@ export const Header = ({
                 fontWeight: 300,
                 opacity: 0.9,
                 lineHeight: 1,
-                fontSize: '1rem'
+                fontSize: { xs: '0.75rem', sm: '0.9rem', lg: '1rem' }
               }}
             >
               בקריה האקדמית אונו
@@ -126,8 +130,18 @@ export const Header = ({
           </Typography>
         </Box>
 
-        {/* Right side - Action buttons */}
+        {/* Right side - Role Switcher and Action buttons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+          {/* Role Switcher */}
+          {session && (
+            <Box sx={{ mr: 1 }}>
+              <RoleSwitcher 
+                session={session} 
+                onRoleChange={switchRole}
+              />
+            </Box>
+          )}
+          
           <IconButton
             component={Link}
             to={createPageUrl("Notifications")}

@@ -1,28 +1,32 @@
 
-import { useState, useEffect } from "react";
-import { Course, File as FileEntity, Student, Lecturer, User } from "@/api/entities";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { Course, File as FileEntity, Student, Lecturer, User } from '@/api/entities';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Box, Button, TextField, Select, MenuItem, FormControl, InputLabel,
-    Typography, Paper, CircularProgress, Avatar
+    Typography, Paper, CircularProgress, Avatar, Autocomplete, Dialog,
+    DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import {
-    CheckCircle as CheckCircleIcon,
-    CloudUpload as CloudUploadIcon
+    CloudUpload as CloudUploadIcon,
+    CloudUpload
 } from '@mui/icons-material';
+import { Lock, Unlock, Plus, X, RefreshCw } from 'lucide-react';
 
 type CourseInfo = {
     id: string;
-    course_name: string;
-    course_code: string;
-    academic_track_ids: string[];
+    course_name?: string;
+    name?: string;
+    course_code?: string;
+    code?: string;
 };
 
-type FormState = {
+type FormData = {
     title: string;
     description: string;
     course_id: string;
     file_type: string;
+    file_code: string;
 };
 
 type FormErrors = {
@@ -30,196 +34,270 @@ type FormErrors = {
     description?: string;
     course_id?: string;
     file_type?: string;
+    file_code?: string;
     file?: string;
 };
 
 export default function UploadFile() {
     const [courses, setCourses] = useState<CourseInfo[]>([]);
-    const [formState, setFormState] = useState<FormState>({
+    const [formData, setFormData] = useState<FormData>({
         title: '',
         description: '',
         course_id: '',
-        file_type: 'note',
+        file_type: '',
+        file_code: ''
     });
-    const [errors, setErrors] = useState<FormErrors>({});
+    const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+    const [isFileCodeEditable, setIsFileCodeEditable] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [files, setFiles] = useState<any[]>([]);
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
-        loadInitialData();
+        loadData();
     }, []);
 
-    const loadInitialData = async () => {
+    useEffect(() => {
+        validateForm();
+    }, [formData, selectedFile]);
+
+    // Auto-generate file code when course and file type are selected
+    useEffect(() => {
+        if (formData.course_id && formData.file_type && !isFileCodeEditable && courses.length > 0) {
+            const generatedCode = generateFileCode(formData.course_id, formData.file_type);
+            setFormData(prev => ({ ...prev, file_code: generatedCode }));
+        }
+    }, [formData.course_id, formData.file_type, isFileCodeEditable, courses, files]);
+
+    const loadData = async () => {
         try {
-            const currentUser = await User.me();
+            const [courseList, fileList, currentUser] = await Promise.all([
+                Course.list(),
+                FileEntity.list(),
+                User.me()
+            ]);
+
+            setCourses(Array.isArray(courseList) ? courseList : []);
+            setFiles(Array.isArray(fileList) ? fileList : []);
             setUser(currentUser);
-            const allCourses = await Course.list();
-            
-            const validCourses = Array.isArray(allCourses) ? allCourses : [];
-            let relevantCourses = validCourses;
-            
-            if (currentUser.current_role === 'student') {
-                const studentProfile = await Student.filter({ user_id: currentUser.id });
-                if (Array.isArray(studentProfile) && studentProfile.length > 0 && studentProfile[0].academic_track_ids) {
-                    const studentTrackIds = studentProfile[0].academic_track_ids;
-                    relevantCourses = validCourses.filter((course: CourseInfo) => 
-                        Array.isArray(course.academic_track_ids) && 
-                        course.academic_track_ids.some((trackId: string) => studentTrackIds.includes(trackId))
-                    );
-                }
-            }
-            setCourses(relevantCourses);
-            
-            const params = new URLSearchParams(location.search);
-            const courseIdFromUrl = params.get('course_id');
-            if (courseIdFromUrl) {
-                setFormState(prev => ({ ...prev, course_id: courseIdFromUrl }));
-            }
         } catch (error) {
-            console.error("Error loading initial data:", error);
+            console.error('Error loading data:', error);
             setCourses([]);
+            setFiles([]);
         }
     };
 
-    const validate = () => {
+    const generateFileCode = (courseId: string, fileType: string): string => {
+        const course = courses.find(c => c.id === courseId);
+        
+        if (!course) {
+            return 'FILE-001';
+        }
+        
+        const courseCode = course?.course_code || course?.code || course?.name?.substring(0, 4).toUpperCase() || 'FILE';
+        
+        const typePrefix = {
+            'note': 'N',
+            'exam': 'E', 
+            'formulas': 'F',
+            'assignment': 'A',
+            'other': 'O'
+        }[fileType] || 'O';
+        
+        // Find next available number for this course and type
+        const existingCodes = files
+            .filter(f => f.file_code && f.file_code.startsWith(`${courseCode}-${typePrefix}`))
+            .map(f => {
+                const match = f.file_code.match(/\d+$/);
+                return match ? parseInt(match[0]) : 0;
+            });
+        
+        const nextNumber = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
+        return `${courseCode}-${typePrefix}${nextNumber.toString().padStart(3, '0')}`;
+    };
+
+    const isFileCodeUnique = (code: string): boolean => {
+        return !files.some(f => f.file_code === code);
+    };
+
+    const validateForm = () => {
         const newErrors: FormErrors = {};
         
-        if (!formState.title.trim()) {
+        if (!formData.title.trim()) {
             newErrors.title = 'שם הקובץ הוא שדה חובה';
         }
         
-        if (!formState.description.trim()) {
+        if (!formData.description.trim()) {
             newErrors.description = 'תיאור הקובץ הוא שדה חובה';
         }
         
-        if (!formState.course_id) {
+        if (!formData.course_id) {
             newErrors.course_id = 'יש לבחור קורס';
         }
         
-        if (!formState.file_type) {
+        if (!formData.file_type) {
             newErrors.file_type = 'יש לבחור סוג קובץ';
         }
         
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        if (!formData.file_code.trim()) {
+            newErrors.file_code = 'קוד קובץ הוא שדה חובה';
+        } else if (!isFileCodeUnique(formData.file_code)) {
+            newErrors.file_code = 'קוד קובץ זה כבר קיים במערכת';
+        }
+        
+        if (!selectedFile) {
+            newErrors.file = 'יש לבחור קובץ להעלאה';
+        }
+        
+        setFormErrors(newErrors);
+        
+        const isValid = Object.keys(newErrors).length === 0 && 
+            formData.title.trim() !== '' &&
+            formData.description.trim() !== '' &&
+            formData.course_id !== '' &&
+            formData.file_type !== '' &&
+            formData.file_code.trim() !== '' &&
+            selectedFile !== null;
+        
+        setIsFormValid(isValid);
     };
 
-    const handleChange = (e: any) => {
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormState(prev => ({ ...prev, [name!]: value as string }));
+        setFormData(prev => ({ ...prev, [name]: value }));
+        
+        // Clear error when user starts typing
+        if (formErrors[name as keyof FormErrors]) {
+            setFormErrors(prev => ({ ...prev, [name]: undefined }));
+        }
+        
+        // Reset attempt flag when user starts interacting with form
+        if (hasAttemptedSubmit) {
+            setHasAttemptedSubmit(false);
+        }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!validate()) return;
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setSelectedFile(file);
+        
+        if (file && !formData.title) {
+            // Auto-fill title from filename
+            const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, "");
+            setFormData(prev => ({ ...prev, title: nameWithoutExtension }));
+        }
+        
+        // Clear file error
+        if (formErrors.file) {
+            setFormErrors(prev => ({ ...prev, file: undefined }));
+        }
+        
+        // Reset attempt flag when user starts interacting with form
+        if (hasAttemptedSubmit) {
+            setHasAttemptedSubmit(false);
+        }
+    };
+
+    const handleSubmit = async () => {
+        setHasAttemptedSubmit(true);
+        
+        if (!isFormValid) {
+            validateForm();
+            return;
+        }
+        
         setIsSubmitting(true);
+        
         try {
+            // Get current user info for uploader details
             const currentUser = await User.me();
-            let uploaderRecord;
-            if (currentUser.current_role === 'student') {
-                const studentRecords = await Student.filter({ user_id: currentUser.id });
-                if (Array.isArray(studentRecords) && studentRecords.length > 0) uploaderRecord = studentRecords[0];
-            } else if (currentUser.current_role === 'lecturer') {
-                const lecturerRecords = await Lecturer.filter({ user_id: currentUser.id });
-                if (Array.isArray(lecturerRecords) && lecturerRecords.length > 0) uploaderRecord = lecturerRecords[0];
-            } else { // Admin
-                const studentRecords = await Student.filter({ user_id: currentUser.id });
-                 if (Array.isArray(studentRecords) && studentRecords.length > 0) {
-                    uploaderRecord = studentRecords[0];
-                 } else {
-                    const lecturerRecords = await Lecturer.filter({ user_id: currentUser.id });
-                    if (Array.isArray(lecturerRecords) && lecturerRecords.length > 0) uploaderRecord = lecturerRecords[0];
-                 }
+            let uploaderId = currentUser.id;
+            let uploaderType: 'student' | 'lecturer' | 'admin' = 'student';
+            
+            // Determine uploader type based on current role
+            if (currentUser.current_role === 'lecturer') {
+                uploaderType = 'lecturer';
+            } else if (currentUser.current_role === 'admin') {
+                uploaderType = 'admin';
             }
-
-            if (!uploaderRecord) {
-                throw new Error("פרופיל המשתמש לא נמצא. אנא פנה למנהל המערכת.");
-            }
-
-            const status = ['admin', 'lecturer'].includes(currentUser.current_role) ? 'approved' : 'pending';
-
-            const newFile = {
-                ...formState,
-                uploader_id: uploaderRecord.id,
-                status,
-                created_date: new Date().toISOString(),
+            
+            // Create file entity
+            const fileData = {
+                filename: selectedFile?.name || formData.title,
+                original_name: formData.title,
+                file_type: formData.file_type,
+                file_code: formData.file_code,
+                course_id: formData.course_id,
+                uploader_id: uploaderId,
+                uploader_type: uploaderType,
+                status: uploaderType === 'student' ? 'pending' : 'approved', // Auto-approve for lecturers/admins
+                file_size: selectedFile?.size || 0,
                 download_count: 0,
-                file_url: 'https://example.com/mock-file.pdf' // Mock URL
+                tags: [],
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
             };
-
-            await FileEntity.create(newFile);
+            
+            await FileEntity.create(fileData);
+            
             setIsSubmitted(true);
+            
+            // Navigate to my files after a short delay
+            setTimeout(() => {
+                navigate('/my-files');
+            }, 1500);
         } catch (error) {
-            console.error("Failed to upload file:", error);
+            console.error('Error uploading file:', error);
             alert('שגיאה בהעלאת הקובץ. אנא נסה שוב.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleCancel = () => {
+        navigate('/my-files');
+    };
+
     if (isSubmitted) {
         return (
-            <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
-                <Paper elevation={2} sx={{ p: 6, textAlign: 'center', maxWidth: 600, mx: 'auto', mt: 8 }}>
-                    <Avatar sx={{ bgcolor: 'success.main', width: 80, height: 80, mx: 'auto', mb: 3 }}>
-                        <CheckCircleIcon sx={{ fontSize: 48 }} />
-                    </Avatar>
-                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+            <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+                <Paper elevation={3} sx={{ p: 4, textAlign: 'center', maxWidth: 500 }}>
+                    <CircularProgress sx={{ mb: 2 }} />
+                    <Typography variant="h6" textAlign="center" gutterBottom>
                         הקובץ הועלה בהצלחה!
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" paragraph>
-                        {user?.current_role === 'student' 
-                            ? 'הקובץ שלך נשלח לאישור מרצה.<br/>תקבל התראה כאשר הקובץ יאושר.'
-                            : 'הקובץ שלך אושר אוטומטית והוא זמין כעת לסטודנטים.'
-                        }
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
+                        מעביר אותך לעמוד הקבצים שלי...
                     </Typography>
-                    <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
-                        <Button 
-                            variant="contained" 
-                            onClick={() => setIsSubmitted(false)}
-                            sx={{ 
-                                bgcolor: 'success.main',
-                                '&:hover': { bgcolor: 'success.dark' }
-                            }}
-                        >
-                            העלה קובץ נוסף
-                        </Button>
-                        <Button 
-                            variant="outlined" 
-                            onClick={() => navigate('/courses')}
-                        >
-                            חזרה לקורסים
-                        </Button>
-                    </Box>
                 </Paper>
             </Box>
         );
     }
 
     return (
-        <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
-                    <CloudUploadIcon />
-                </Avatar>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold">העלאת קובץ חדש</Typography>
-                    <Typography color="text.secondary">העלה קבצים ללימוד ושיתוף עם הקהילה</Typography>
-                </Box>
-            </Box>
-
+        <Box sx={{ p: 3 }}>
             <Paper elevation={2} sx={{ p: 4, maxWidth: 800, mx: 'auto' }}>
-                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {/* Header - Same as Dialog Title */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                    <Plus />
+                    <Typography variant="h4" fontWeight="bold" textAlign="left">הוספת קובץ חדש</Typography>
+                </Box>
+
+                {/* Form Content - Same as Dialog Content */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
                     <TextField
                         name="title"
                         label="שם הקובץ"
-                        value={formState.title}
-                        onChange={handleChange}
-                        error={!!errors.title}
-                        helperText={errors.title}
+                        value={formData.title}
+                        onChange={handleFormChange}
+                        error={hasAttemptedSubmit && !!formErrors.title}
+                        helperText={hasAttemptedSubmit ? formErrors.title : ''}
                         required
                         fullWidth
                     />
@@ -227,42 +305,79 @@ export default function UploadFile() {
                     <TextField
                         name="description"
                         label="תיאור הקובץ"
-                        value={formState.description}
-                        onChange={handleChange}
-                        error={!!errors.description}
-                        helperText={errors.description}
+                        value={formData.description}
+                        onChange={handleFormChange}
+                        error={hasAttemptedSubmit && !!formErrors.description}
+                        helperText={hasAttemptedSubmit ? formErrors.description : ''}
                         required
                         multiline
                         rows={3}
                         fullWidth
                     />
                     
-                    <FormControl fullWidth error={!!errors.course_id} required>
-                        <InputLabel id="course-label">קורס</InputLabel>
-                        <Select
-                            labelId="course-label"
-                            name="course_id"
-                            value={formState.course_id}
-                            onChange={handleChange}
-                            label="קורס"
-                        >
-                            {courses.map((course) => (
-                                <MenuItem key={course.id} value={course.id}>
-                                    {course.course_name} ({course.course_code})
-                                </MenuItem>
-                            ))}
-                        </Select>
-                        {errors.course_id && <Typography color="error" variant="caption">{errors.course_id}</Typography>}
-                    </FormControl>
+                    <Autocomplete
+                        options={courses}
+                        getOptionLabel={(option) => `${option.course_name || option.name} ${option.course_code ? `(${option.course_code})` : ''}`}
+                        value={courses.find(course => course.id === formData.course_id) || null}
+                        onChange={(event, newValue) => {
+                            setFormData(prev => ({ ...prev, course_id: newValue?.id || '' }));
+                            if (formErrors.course_id) {
+                                setFormErrors(prev => ({ ...prev, course_id: undefined }));
+                            }
+                            
+                            // Reset attempt flag when user starts interacting with form
+                            if (hasAttemptedSubmit) {
+                                setHasAttemptedSubmit(false);
+                            }
+                            
+                            // Reset file code when course changes
+                            if (newValue?.id && formData.file_type && !isFileCodeEditable) {
+                                const generatedCode = generateFileCode(newValue.id, formData.file_type);
+                                setFormData(prev => ({ ...prev, file_code: generatedCode }));
+                            }
+                        }}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="קורס"
+                                required
+                                error={hasAttemptedSubmit && !!formErrors.course_id}
+                                helperText={hasAttemptedSubmit ? formErrors.course_id : ''}
+                            />
+                        )}
+                        noOptionsText="לא נמצאו קורסים"
+                        fullWidth
+                    />
                     
-                    <FormControl fullWidth error={!!errors.file_type}>
-                        <InputLabel id="file-type-label">סוג הקובץ</InputLabel>
+                    <FormControl fullWidth error={hasAttemptedSubmit && !!formErrors.file_type} required sx={{ direction: 'rtl' }}>
+                        <InputLabel id="file-type-label" sx={{ textAlign: 'left', transformOrigin: 'top left', direction: 'ltr' }}>סוג הקובץ</InputLabel>
                         <Select
                             labelId="file-type-label"
                             name="file_type"
-                            value={formState.file_type}
-                            onChange={handleChange}
-                            required
+                            value={formData.file_type}
+                            onChange={(e) => {
+                                setFormData(prev => ({ ...prev, file_type: e.target.value }));
+                                if (formErrors.file_type) {
+                                    setFormErrors(prev => ({ ...prev, file_type: undefined }));
+                                }
+                                
+                                // Reset attempt flag when user starts interacting with form
+                                if (hasAttemptedSubmit) {
+                                    setHasAttemptedSubmit(false);
+                                }
+                                
+                                // Reset file code when file type changes
+                                if (formData.course_id && e.target.value && !isFileCodeEditable) {
+                                    const generatedCode = generateFileCode(formData.course_id, e.target.value);
+                                    setFormData(prev => ({ ...prev, file_code: generatedCode }));
+                                }
+                            }}
+                            label="סוג הקובץ"
+                            sx={{
+                                '& .MuiSelect-select': {
+                                    textAlign: 'left'
+                                }
+                            }}
                         >
                             <MenuItem value="note">הרצאות וסיכומים</MenuItem>
                             <MenuItem value="exam">מבחני תרגול</MenuItem>
@@ -270,25 +385,71 @@ export default function UploadFile() {
                             <MenuItem value="assignment">מטלות</MenuItem>
                             <MenuItem value="other">אחר</MenuItem>
                         </Select>
-                        {errors.file_type && <Typography color="error" variant="caption">{errors.file_type}</Typography>}
+                        {hasAttemptedSubmit && formErrors.file_type && <Typography color="error" textAlign="left" variant="caption">{formErrors.file_type}</Typography>}
                     </FormControl>
                     
-                    <Box>
-                        <Button variant="contained" component="label">
-                            בחר קובץ
-                            <input type="file" hidden accept=".pdf,.docx,.png,.jpg,.jpeg" />
-                        </Button>
-                        {errors.file && <Typography color="error" variant="caption">{errors.file}</Typography>}
-                    </Box>
+                    <TextField
+                        name="file_code"
+                        label="קוד קובץ"
+                        value={formData.file_code}
+                        onChange={handleFormChange}
+                        required
+                        fullWidth
+                        InputProps={{
+                            readOnly: !isFileCodeEditable
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '&.Mui-focused': {
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: !isFileCodeEditable ? '#ff9800' : undefined,
+                                    },
+                                },
+                            },
+                            '& .MuiInputLabel-root': {
+                                '&.Mui-focused': {
+                                    color: !isFileCodeEditable ? '#ff9800' : undefined,
+                                },
+                            },
+                        }}
+                        error={hasAttemptedSubmit && Boolean(formErrors.file_code)}
+                        helperText={
+                            (hasAttemptedSubmit && formErrors.file_code) ? formErrors.file_code : (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <Lock size={16} style={{ color: '#ff9800' }} />
+                                    <span>קוד הקובץ יתמלא אוטומטית לאחר בחירת קורס וסוג קובץ</span>
+                                </Box>
+                            )
+                        }
+                        placeholder="יתמלא אוטומטית..."
+                    />
                     
-                    <Button
-                        type="submit"
+                    <Box>
+                        <Button variant="outlined" component="label" fullWidth sx={{ py: 2 }}>
+                            {selectedFile ? selectedFile.name : 'בחר קובץ להעלאה'}
+                            <input 
+                                type="file" 
+                                hidden 
+                                accept=".pdf,.docx,.png,.jpg,.jpeg,.txt,.pptx,.xlsx"
+                                onChange={handleFileChange}
+                            />
+                        </Button>
+                        {hasAttemptedSubmit && formErrors.file && <Typography color="error" textAlign="left" variant="caption" sx={{ mt: 1, display: 'block' }}>{formErrors.file}</Typography>}
+                    </Box>
+                </Box>
+
+                {/* Actions - Same as Dialog Actions */}
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4, pt: 2 }}>
+                    <Button onClick={handleCancel}>
+                        ביטול
+                    </Button>
+                    <Button 
+                        onClick={handleSubmit}
                         variant="contained"
-                        size="large"
-                        disabled={isSubmitting}
-                        sx={{ mt: 2 }}
+                        disabled={isSubmitting || !isFormValid}
+                        startIcon={isSubmitting ? <CircularProgress size={16} /> : <CloudUpload />}
                     >
-                        {isSubmitting ? <CircularProgress size={24} /> : 'העלה קובץ'}
+                        {isSubmitting ? <CircularProgress size={24} /> : 'הוסף קובץ'}
                     </Button>
                 </Box>
             </Paper>

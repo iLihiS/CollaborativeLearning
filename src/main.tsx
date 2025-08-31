@@ -9,9 +9,11 @@ import { prefixer } from 'stylis';
 import rtlPlugin from 'stylis-plugin-rtl';
 import theme from './theme/theme.ts';
 import { LocalStorageService } from '@/services/localStorage';
+import { UserService } from '@/services/userService';
 
-// Initialize localStorage data
+// Initialize both old and new systems
 LocalStorageService.initializeData();
+UserService.initializeUsers();
 
 const cacheRtl = createCache({
   key: 'muirtl',

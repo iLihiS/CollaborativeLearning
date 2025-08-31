@@ -109,8 +109,8 @@ export default function Courses() {
             <BookOpen />
           </Avatar>
           <Box>
-            <Typography variant="h4" fontWeight="bold">רשימת קורסים</Typography>
-            <Typography color="text.secondary">מצא חומרי לימוד לפי הקורסים הזמינים במערכת</Typography>
+            <Typography variant="h4" fontWeight="bold" textAlign="left">רשימת קורסים</Typography>
+            <Typography color="text.secondary" textAlign="left">מצא חומרי לימוד לפי הקורסים הזמינים במערכת</Typography>
           </Box>
         </Box>
       </Box>
@@ -213,13 +213,13 @@ export default function Courses() {
 
       {!loading && searchFilteredCourses.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6">
+          <Typography variant="h6" textAlign="center">
             {searchTerm
               ? `לא נמצאו קורסים עבור החיפוש "${searchTerm}"`
               : 'לא נמצאו קורסים זמינים.'
             }
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color="text.secondary" textAlign="center">
             {searchTerm
               ? 'נסה מונח חיפוש אחר.'
               : currentUser?.current_role === 'admin'

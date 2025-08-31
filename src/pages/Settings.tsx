@@ -397,9 +397,9 @@ export default function Settings() {
       </Grid>
 
       <Dialog open={!!themeChangeRequest} onClose={() => setThemeChangeRequest(null)}>
-        <DialogTitle>שמירת ערכת נושא</DialogTitle>
+        <DialogTitle textAlign="left" fontWeight="bold">שמירת ערכת נושא</DialogTitle>
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText textAlign="left">
               האם תרצה לשמור את ערכת הנושא ה{themeChangeRequest?.newTheme === 'dark' ? 'כהה' : 'בהירה'} כהעדפה קבועה לכניסות הבאות?
           </DialogContentText>
         </DialogContent>

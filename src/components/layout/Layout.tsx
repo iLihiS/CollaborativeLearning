@@ -18,8 +18,8 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { user, loading, loginError, setLoginError, logout, loadUser } = useAuth();
-  const { unreadNotifications, unhandledInquiries } = useNotifications(user);
+  const { session, user, loading, loginError, setLoginError, logout, loadUser } = useAuth();
+  const { unreadNotifications, unhandledInquiries } = useNotifications(session?.user || user);
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
@@ -167,7 +167,7 @@ export const Layout = ({ children }: LayoutProps) => {
       
       <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
         <Sidebar
-          user={user}
+          user={session?.user || user}
           isDrawerOpen={isDrawerOpen}
           isMobileMenuOpen={isMobileMenuOpen}
           onMobileMenuClose={handleMobileMenuClose}
@@ -194,6 +194,7 @@ export const Layout = ({ children }: LayoutProps) => {
       <Footer />
       
       <AccessibilityWidget />
+      <DebugPanel />
       <Snackbar
         open={toast.open}
         autoHideDuration={6000}

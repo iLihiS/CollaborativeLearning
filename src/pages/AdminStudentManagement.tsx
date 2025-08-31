@@ -10,7 +10,7 @@ import {
     IconButton, CircularProgress, Chip, Avatar, ToggleButtonGroup, ToggleButton,
     Alert
 } from '@mui/material';
-import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap, ChevronUp, ChevronDown, Filter, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -51,6 +51,7 @@ export default function AdminStudentManagement() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<StudentData[]>([]);
   const [academicTracks, setAcademicTracks] = useState<AcademicTrackData[]>([]);
+  const [academicTracksMap, setAcademicTracksMap] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
@@ -65,19 +66,130 @@ export default function AdminStudentManagement() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sorting and filtering state
+  const [sortField, setSortField] = useState<keyof StudentData | ''>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [filters, setFilters] = useState<{
+    full_name: string;
+    student_id: string;
+    national_id: string;
+    email: string;
+    academic_tracks: string;
+  }>({
+    full_name: '',
+    student_id: '',
+    national_id: '',
+    email: '',
+    academic_tracks: ''
+  });
+
   useEffect(() => {
     loadData();
+    // Set default sorting on initial load
+    setSortField('full_name');
+    setSortDirection('asc');
   }, []);
 
   useEffect(() => {
-    if (trackFilter === 'all') {
-      setFilteredStudents(students);
-    } else {
-      setFilteredStudents(students.filter(student => 
+    let filtered = students;
+    
+    // Track filter
+    if (trackFilter !== 'all') {
+      filtered = filtered.filter(student => 
         student.academic_track_ids && student.academic_track_ids.includes(trackFilter)
-      ));
+      );
     }
-  }, [trackFilter, students]);
+    
+    // Column filters
+    if (filters.full_name) {
+      filtered = filtered.filter(student => 
+        (student.full_name || '').toLowerCase().includes(filters.full_name.toLowerCase())
+      );
+    }
+    
+    if (filters.student_id) {
+      filtered = filtered.filter(student => 
+        (student.student_id || '').toLowerCase().includes(filters.student_id.toLowerCase())
+      );
+    }
+    
+    if (filters.national_id) {
+      filtered = filtered.filter(student => 
+        (student.national_id || '').toLowerCase().includes(filters.national_id.toLowerCase())
+      );
+    }
+    
+    if (filters.email) {
+      filtered = filtered.filter(student => 
+        (student.email || '').toLowerCase().includes(filters.email.toLowerCase())
+      );
+    }
+    
+    if (filters.academic_tracks) {
+      filtered = filtered.filter(student => {
+        const trackNames = (student.academic_track_ids || [])
+          .map(trackId => academicTracksMap[trackId] || '')
+          .join(' ');
+        return trackNames.toLowerCase().includes(filters.academic_tracks.toLowerCase());
+      });
+    }
+    
+    // Sorting with multi-level fallback
+    filtered.sort((a, b) => {
+      // Primary sort
+      if (sortField) {
+        let aValue: any = '';
+        let bValue: any = '';
+        
+        switch (sortField) {
+          case 'full_name':
+            aValue = a.full_name || '';
+            bValue = b.full_name || '';
+            break;
+          case 'student_id':
+            aValue = a.student_id || '';
+            bValue = b.student_id || '';
+            break;
+          case 'national_id':
+            aValue = a.national_id || '';
+            bValue = b.national_id || '';
+            break;
+          case 'email':
+            aValue = a.email || '';
+            bValue = b.email || '';
+            break;
+          case 'academic_track_ids':
+            aValue = (a.academic_track_ids || []).map(id => academicTracksMap[id] || '').join(', ');
+            bValue = (b.academic_track_ids || []).map(id => academicTracksMap[id] || '').join(', ');
+            break;
+          default:
+            aValue = '';
+            bValue = '';
+        }
+        
+        if (aValue < bValue) {
+          return sortDirection === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortDirection === 'asc' ? 1 : -1;
+        }
+      }
+      
+      // Secondary sort: Full name (alphabetical)
+      const aName = a.full_name || '';
+      const bName = b.full_name || '';
+      if (aName !== bName) {
+        return aName.localeCompare(bName, 'he');
+      }
+      
+      // Tertiary sort: Student ID (alphabetical)
+      const aId = a.student_id || '';
+      const bId = b.student_id || '';
+      return aId.localeCompare(bId, 'he');
+    });
+    
+    setFilteredStudents(filtered);
+  }, [trackFilter, students, filters, sortField, sortDirection, academicTracksMap]);
 
   const loadData = async () => {
     setLoading(true);
@@ -90,9 +202,17 @@ export default function AdminStudentManagement() {
       console.log('Academic tracks loaded:', trackList);
       const validStudents = Array.isArray(studentList) ? studentList : [];
       const validTracks = Array.isArray(trackList) ? trackList : [];
+      
+      // Create academic tracks map
+      const tracksMap: { [key: string]: string } = {};
+      validTracks.forEach((track: AcademicTrackData) => {
+        tracksMap[track.id] = track.name;
+      });
+      
       setStudents(validStudents);
       setFilteredStudents(validStudents);
       setAcademicTracks(validTracks);
+      setAcademicTracksMap(tracksMap);
       console.log('Final academic tracks count:', validTracks.length);
       console.log('Academic tracks data:', validTracks.slice(0, 3)); // Show first 3 tracks
     } catch (error) {
@@ -157,6 +277,46 @@ export default function AdminStudentManagement() {
     if (newTrack !== null) {
       setTrackFilter(newTrack);
     }
+  };
+
+  // Sorting functions
+  const handleSort = (field: keyof StudentData) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: keyof StudentData) => {
+    if (sortField !== field) {
+      return <ChevronUp size={16} style={{ opacity: 0.3 }} />;
+    }
+    return sortDirection === 'asc' ? 
+      <ChevronUp size={16} /> : 
+      <ChevronDown size={16} />;
+  };
+
+  // Filter functions
+  const handleFilterChange = (field: keyof typeof filters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      full_name: '',
+      student_id: '',
+      national_id: '',
+      email: '',
+      academic_tracks: ''
+    });
+    setTrackFilter('all');
+    setSortField('full_name');
+    setSortDirection('asc');
   };
 
   const getShortTrackName = (trackName: string) => {
@@ -237,32 +397,6 @@ export default function AdminStudentManagement() {
           <Typography color="text.secondary">הוספה, עריכה ומחיקה של סטודנטים רשומים</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button 
-            onClick={() => {
-              LocalStorageService.removeDuplicateStudents();
-              loadData();
-              alert('כפילויות וסטודנטים לא תקינים הוסרו בהצלחה!');
-            }} 
-            variant="outlined" 
-            color="warning"
-            startIcon={<Trash2 />}
-            size="small"
-          >
-            נקה כפילויות
-          </Button>
-          <Button 
-            onClick={() => {
-              LocalStorageService.removeStudentsWithoutNationalId();
-              loadData();
-              alert('סטודנטים ללא תעודת זהות הוסרו בהצלחה!');
-            }} 
-            variant="outlined" 
-            color="error"
-            startIcon={<Trash2 />}
-            size="small"
-          >
-            הסר ללא ת.ז
-          </Button>
           <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
             הוסף סטודנט חדש
           </Button>
@@ -311,6 +445,82 @@ export default function AdminStudentManagement() {
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
+        
+        {/* Filter Row */}
+        <Box sx={{ display: 'flex', gap: 1, mb: 2, mt: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', flex: 1 }}>
+            <TextField
+              size="small"
+              placeholder="חפש שם..."
+              value={filters.full_name}
+              onChange={(e) => handleFilterChange('full_name', e.target.value)}
+              InputProps={{
+                startAdornment: <Filter size={16} style={{ marginRight: 8, color: '#6b7280' }} />
+              }}
+              sx={{ minWidth: 150 }}
+            />
+            <TextField
+              size="small"
+              placeholder="חפש מספר סטודנט..."
+              value={filters.student_id}
+              onChange={(e) => handleFilterChange('student_id', e.target.value)}
+              InputProps={{
+                startAdornment: <Filter size={16} style={{ marginRight: 8, color: '#6b7280' }} />
+              }}
+              sx={{ minWidth: 150 }}
+            />
+            <TextField
+              size="small"
+              placeholder="חפש ת.ז..."
+              value={filters.national_id}
+              onChange={(e) => handleFilterChange('national_id', e.target.value)}
+              InputProps={{
+                startAdornment: <Filter size={16} style={{ marginRight: 8, color: '#6b7280' }} />
+              }}
+              sx={{ minWidth: 120 }}
+            />
+            <TextField
+              size="small"
+              placeholder="חפש מייל..."
+              value={filters.email}
+              onChange={(e) => handleFilterChange('email', e.target.value)}
+              InputProps={{
+                startAdornment: <Filter size={16} style={{ marginRight: 8, color: '#6b7280' }} />
+              }}
+              sx={{ minWidth: 150 }}
+            />
+            <TextField
+              size="small"
+              placeholder="חפש מסלול..."
+              value={filters.academic_tracks}
+              onChange={(e) => handleFilterChange('academic_tracks', e.target.value)}
+              InputProps={{
+                startAdornment: <Filter size={16} style={{ marginRight: 8, color: '#6b7280' }} />
+              }}
+              sx={{ minWidth: 150 }}
+            />
+          </Box>
+          
+          <Button 
+            onClick={clearFilters} 
+            variant="outlined" 
+            size="small"
+            startIcon={<X />}
+            sx={{ 
+              minWidth: 'auto', 
+              height: '40px', 
+              flexShrink: 0,
+              borderColor: '#84cc16',
+              color: '#84cc16',
+              '&:hover': {
+                borderColor: '#65a30d',
+                backgroundColor: '#f0fdf4'
+              }
+            }}
+          >
+            נקה סינונים
+          </Button>
+        </Box>
       </Box>
 
       <Paper elevation={2}>
@@ -318,12 +528,102 @@ export default function AdminStudentManagement() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell align="left">שם מלא</TableCell>
-                <TableCell align="left">מספר סטודנט</TableCell>
-                <TableCell align="left">תעודת זהות</TableCell>
-                <TableCell align="left">כתובת מייל</TableCell>
-                <TableCell align="left">מסלול אקדמי</TableCell>
-                <TableCell align="left">פעולות</TableCell>
+                <TableCell align="left">
+                  <Button
+                    onClick={() => handleSort('full_name')}
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      textTransform: 'none', 
+                      minWidth: 'auto',
+                      p: 0,
+                      color: 'text.primary',
+                      '&:hover': { backgroundColor: 'transparent' }
+                    }}
+                    endIcon={getSortIcon('full_name')}
+                  >
+                    שם מלא
+                  </Button>
+                </TableCell>
+                <TableCell align="left">
+                  <Button
+                    onClick={() => handleSort('student_id')}
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      textTransform: 'none', 
+                      minWidth: 'auto',
+                      p: 0,
+                      color: 'text.primary',
+                      '&:hover': { backgroundColor: 'transparent' }
+                    }}
+                    endIcon={getSortIcon('student_id')}
+                  >
+                    מספר סטודנט
+                  </Button>
+                </TableCell>
+                <TableCell align="left">
+                  <Button
+                    onClick={() => handleSort('national_id')}
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      textTransform: 'none', 
+                      minWidth: 'auto',
+                      p: 0,
+                      color: 'text.primary',
+                      '&:hover': { backgroundColor: 'transparent' }
+                    }}
+                    endIcon={getSortIcon('national_id')}
+                  >
+                    תעודת זהות
+                  </Button>
+                </TableCell>
+                <TableCell align="left">
+                  <Button
+                    onClick={() => handleSort('email')}
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      textTransform: 'none', 
+                      minWidth: 'auto',
+                      p: 0,
+                      color: 'text.primary',
+                      '&:hover': { backgroundColor: 'transparent' }
+                    }}
+                    endIcon={getSortIcon('email')}
+                  >
+                    כתובת מייל
+                  </Button>
+                </TableCell>
+                <TableCell align="left">
+                  <Button
+                    onClick={() => handleSort('academic_track_ids')}
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      textTransform: 'none', 
+                      minWidth: 'auto',
+                      p: 0,
+                      color: 'text.primary',
+                      '&:hover': { backgroundColor: 'transparent' }
+                    }}
+                    endIcon={getSortIcon('academic_track_ids')}
+                  >
+                    מסלול אקדמי
+                  </Button>
+                </TableCell>
+                <TableCell align="left">
+                  <Button
+                    disabled
+                    sx={{ 
+                      fontWeight: 'bold', 
+                      textTransform: 'none', 
+                      minWidth: 'auto',
+                      p: 0,
+                      cursor: 'default',
+                      color: 'text.primary'
+                    }}
+                    endIcon={<ChevronUp size={16} style={{ opacity: 0 }} />}
+                  >
+                    פעולות
+                  </Button>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -334,7 +634,14 @@ export default function AdminStudentManagement() {
               ) : (Array.isArray(filteredStudents) ? filteredStudents : []).map((student) => (
                 <TableRow key={student.id} hover>
                   <TableCell align="left">{student.full_name || 'לא מוגדר'}</TableCell>
-                  <TableCell align="left">{student.student_id || 'לא מוגדר'}</TableCell>
+                  <TableCell align="left">
+                    <Chip 
+                      label={student.student_id || 'לא הוגדר'} 
+                      size="small" 
+                      icon={<Users color="#2e7d32" size={16} />}
+                      sx={{ bgcolor: student.student_id  ? '#e8f5e8' : '#ffebee', color: student.student_id  ? '#2e7d32' : '#d32f2f', width: "120px" }}
+                    />
+                  </TableCell>
                   <TableCell align="left">{(student as any).national_id || 'לא מוגדר'}</TableCell>
                   <TableCell align="left">{student.email || 'לא מוגדר'}</TableCell>
                   <TableCell>
@@ -359,7 +666,7 @@ export default function AdminStudentManagement() {
       </Paper>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="md">
-        <DialogTitle>{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
+        <DialogTitle textAlign="left" fontWeight="bold" >{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
         <DialogContent sx={{ minHeight: 400 }}>
           <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
             {formErrors.general && (
@@ -395,7 +702,7 @@ export default function AdminStudentManagement() {
 
             <TextField 
               name="national_id" 
-              label="תעודת זהות *" 
+              label="תעודת זהות" 
               value={formData.national_id || ''} 
               onChange={handleFormChange} 
               required
@@ -421,7 +728,7 @@ export default function AdminStudentManagement() {
 
 
             <FormGroup>
-              <Typography component="legend" variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+              <Typography component="legend" variant="h6" textAlign="left" sx={{ mb: 2, fontWeight: 'bold' }}>
                 מסלולים אקדמיים
               </Typography>
               
@@ -439,7 +746,7 @@ export default function AdminStudentManagement() {
                   p: 2,
                   backgroundColor: 'grey.50'
                 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary" textAlign="left" sx={{ mb: 2 }}>
                     בחר מסלול אקדמי או יותר עבור הסטודנט:
                   </Typography>
                   
@@ -459,19 +766,21 @@ export default function AdminStudentManagement() {
                         }
                       }}
                       control={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Checkbox
                           checked={formData.academic_track_ids.includes(track.id)}
                           onChange={() => handleTrackToggle(track.id)}
                           name={track.id}
                           color="primary"
                         />
+                        <Typography variant="body1" fontWeight="medium" textAlign="left">
+                            {track.name}
+                          </Typography>
+                        </Box>
                       }
                       label={
                         <Box>
-                          <Typography variant="body1" fontWeight="medium">
-                            {track.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary" textAlign="left">
                             {track.department} • {track.degree_type}
                           </Typography>
                         </Box>

@@ -30,7 +30,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
-import { User } from "@/types";
+import { User, UserRole } from "@/types";
 
 interface NavigationItem {
   title: string;
@@ -48,15 +48,18 @@ interface SidebarProps {
 }
 
 const getNavigationItems = (user: User | null): NavigationItem[] => {
-  if (!user) return [];
+  if (!user || !user.current_role) return [];
+  
+  const currentRole = user.current_role;
+  console.log(`🔍 Sidebar - Current role: ${currentRole}, User: ${user.full_name}`);
   
   const allNavItems: NavigationItem[] = [
     { title: "דף הבית", url: createPageUrl("Dashboard"), icon: Home, roles: ["student", "lecturer", "admin"] },
     { title: "פאנל ניהול", url: createPageUrl("AdminPanel"), icon: SettingsIcon, roles: ["admin"] },
-    { title: "הקבצים שלי", url: createPageUrl("MyFiles"), icon: FileText, roles: ["student", "lecturer", "admin"] },
     { title: "קבצים ממתינים", url: createPageUrl("LecturerPendingFiles"), icon: Clock, roles: ["lecturer", "admin"] },
     { title: "קבצים מאושרים", url: createPageUrl("LecturerApprovedFiles"), icon: CheckCircle, roles: ["lecturer", "admin"] },
     { title: "קבצים שנדחו", url: createPageUrl("LecturerRejectedFiles"), icon: XCircleIcon, roles: ["lecturer", "admin"] },
+    { title: "הקבצים שלי", url: createPageUrl("MyFiles"), icon: FileText, roles: ["student", "lecturer", "admin"] },
     { title: "קורסים", url: createPageUrl("Courses"), icon: BookOpen, roles: ["student", "lecturer", "admin"] },
     { title: "העלאת קובץ", url: createPageUrl("UploadFile"), icon: Upload, roles: ["student", "lecturer", "admin"] },
     { title: "תובנות", url: createPageUrl("Insights"), icon: BarChart3, roles: ["student", "lecturer", "admin"] },
@@ -65,7 +68,7 @@ const getNavigationItems = (user: User | null): NavigationItem[] => {
     { title: "עזרה", url: createPageUrl("Help"), icon: HelpCircle, roles: ["student", "lecturer", "admin"] },
   ];
   
-  return allNavItems.filter(item => item.roles.includes(user.current_role));
+  return allNavItems.filter(item => item.roles.includes(currentRole));
 };
 
 const SidebarContent = ({ user, onLogout }: { user: User | null; onLogout: () => void }) => {
