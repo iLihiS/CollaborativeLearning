@@ -574,7 +574,7 @@ export default function Dashboard() {
                 <Grid container spacing={2}>
                     <StatCard to={createPageUrl("Notifications")} icon={<Heart />} value={stats.totalDownloads} title="הורדות" subtitle="לקבצים שלך" color="error" />
                     <StatCard to={createPageUrl("MyFiles")} icon={<FileText />} value={stats.totalFiles} title="קבצים" subtitle="שהעלת" color="info" />
-                    <StatCard to={createPageUrl("MyFiles?status=approved")} icon={<CheckCircle />} value={stats.approvedFiles} title="קבצים" subtitle="מאושרים" color="success" />
+                    <StatCard to={createPageUrl("MyFiles?status=approved")} icon={<CheckCircle />} value={stats.approvedFiles} title="קבצים" subtitle="שאושרו" color="success" />
                     <StatCard to={createPageUrl(user?.current_role === 'student' ? "MyFiles?status=pending" : "LecturerPendingFiles")} icon={<Clock />} value={stats.pendingFiles} title={user?.current_role === 'student' ? 'ממתינה' : 'ממתינים'} subtitle={user?.current_role === 'student' ? 'לבדיקה' : 'לאישורך'} color="warning" />
                     <StatCard to={createPageUrl("MyFiles?status=rejected")} icon={<XCircle />} value={stats.rejectedFiles} title="קבצים" subtitle="שנדחו" color="error" />
                 </Grid>

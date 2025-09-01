@@ -317,7 +317,7 @@ export default function MyFiles() {
   const getStatusComponent = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Chip icon={<Check size={14} />} label="מאושר" color="success" size="small" />;
+        return <Chip icon={<Check size={14} />} label="אושר" color="success" size="small" />;
       case 'pending':
         return <Chip icon={<Clock size={14} />} label="ממתין" color="warning" size="small" />;
       case 'rejected':
@@ -598,8 +598,8 @@ export default function MyFiles() {
           <ToggleButton value="all" aria-label="הכל">
             הכל
           </ToggleButton>
-          <ToggleButton value="approved" aria-label="מאושר">
-            מאושר
+          <ToggleButton value="approved" aria-label="אושר">
+            אושר
           </ToggleButton>
           <ToggleButton value="pending" aria-label="ממתין">
             ממתין לאישור

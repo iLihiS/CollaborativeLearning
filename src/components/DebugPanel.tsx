@@ -435,7 +435,7 @@ export const DebugPanel = () => {
               ייצא
             </Button>
           </Tooltip>
-          <Tooltip title="יוצר נתונים חדשים עם קבצים בכל הסטטוסים (ממתין/מאושר/נדחה)">
+          <Tooltip title="יוצר נתונים חדשים עם קבצים בכל הסטטוסים (ממתין/אושר/נדחה)">
             <Button size="small" startIcon={<Refresh />} onClick={refreshAllData} color="success">
               רענן נתונים
             </Button>

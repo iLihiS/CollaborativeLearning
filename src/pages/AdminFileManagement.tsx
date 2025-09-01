@@ -606,7 +606,7 @@ export default function AdminFileManagement() {
   const getStatusComponent = (status: 'approved' | 'rejected' | 'pending') => {
     switch (status) {
       case 'approved':
-        return <Chip label="מאושר" color="success" size="small" icon={<Check size={20} color={green[800]} />} sx={{ bgcolor: green[100], color: green[800], width: '100px' }} />;
+        return <Chip label="אושר" color="success" size="small" icon={<Check size={20} color={green[800]} />} sx={{ bgcolor: green[100], color: green[800], width: '100px' }} />;
       case 'rejected':
         return <Chip label="נדחה" color="error" size="small" icon={<X size={20} color={red[800]} />} sx={{ bgcolor: red[100], color: red[800], width: '100px' }} />;
       case 'pending':

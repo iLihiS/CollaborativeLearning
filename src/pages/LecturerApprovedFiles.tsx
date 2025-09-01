@@ -331,7 +331,7 @@ export default function LecturerApprovedFiles() {
                 </Avatar>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" textAlign="left">
-                        קבצים מאושרים
+                        קבצים שאושרו
                     </Typography>
                     <Typography color="text.secondary" textAlign="left">
                         צפייה בקבצים שאושרו ופורסמו במערכת
