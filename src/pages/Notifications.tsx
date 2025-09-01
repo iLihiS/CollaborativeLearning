@@ -180,7 +180,18 @@ export default function Notifications() {
         setLoading(true);
         try {
             const currentUser = await User.me();
-            const userNotifications = await NotificationEntity.filter({ user_id: currentUser.id });
+            let userNotifications = await NotificationEntity.filter({ user_id: currentUser.id });
+            
+            // If no notifications exist for this user, generate random ones
+            if (!userNotifications || userNotifications.length === 0) {
+                console.log('No notifications found for user, generating random notifications...');
+                userNotifications = generateRandomNotifications(currentUser.id, 10);
+                
+                // Save the generated notifications
+                for (const notification of userNotifications) {
+                    await NotificationEntity.create(notification);
+                }
+            }
             
             // Transform to enhanced notification format
             const enhancedNotifications: NotificationInfo[] = (Array.isArray(userNotifications) ? userNotifications : []).map(notification => ({
@@ -210,6 +221,55 @@ export default function Notifications() {
             default:
                 return 'low';
         }
+    };
+
+    const generateRandomNotifications = (userId: string, count: number): NotificationInfo[] => {
+        const types: NotificationInfo['type'][] = ['file_uploaded', 'file_approved', 'file_rejected', 'inquiry_responded', 'system', 'course', 'other'];
+        const titles = [
+            'קובץ הועלה בהצלחה',
+            'קובץ אושר על ידי המרצה',
+            'קובץ נדחה',
+            'תגובה לפנייה שלך',
+            'עדכון מערכת',
+            'עדכון בקורס',
+            'הודעה כללית',
+            'תזכורת חשובה',
+            'הודעה מהמנהל',
+            'עדכון בדיקות'
+        ];
+        const messages = [
+            'הקובץ שלך הועלה למערכת ומחכה לאישור',
+            'הקובץ שלך אושר ופורסם במערכת',
+            'הקובץ שלך נדחה, אנא בדוק את הסיבה',
+            'קיבלת תגובה לפנייה שהגשת',
+            'המערכת עודכנה לגרסה חדשה',
+            'יש עדכון חדש בקורס שלך',
+            'הודעה כללית לכל המשתמשים',
+            'תזכורת על משימה שטרם הושלמה',
+            'הודעה חשובה מהמנהל',
+            'נערכות בדיקות במערכת'
+        ];
+
+        return Array.from({ length: count }, (_, i) => {
+            const type = types[Math.floor(Math.random() * types.length)];
+            const title = titles[Math.floor(Math.random() * titles.length)];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            const daysAgo = Math.floor(Math.random() * 30);
+            const createdDate = new Date();
+            createdDate.setDate(createdDate.getDate() - daysAgo);
+
+            return {
+                id: `notification_${userId}_${Date.now()}_${i}`,
+                title,
+                message,
+                type,
+                is_read: Math.random() > 0.6, // 40% chance to be unread
+                created_date: createdDate.toISOString(),
+                user_id: userId,
+                priority: getPriorityFromType(type),
+                category: getCategoryFromType(type)
+            };
+        });
     };
 
     const getCategoryFromType = (type: string): string => {
@@ -673,7 +733,9 @@ export default function Notifications() {
                                         <Typography variant="body2" sx={{ 
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap'
+                                            whiteSpace: 'nowrap',
+                                            textAlign: 'left'
+
                                         }}>
                                             {notification.message || 'ללא הודעה'}
                                         </Typography>

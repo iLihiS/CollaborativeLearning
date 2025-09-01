@@ -5,7 +5,7 @@ import {
     Card, CardContent, CardHeader, Typography, Button, TextField, Chip, Alert,
     Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Dialog, DialogTitle, DialogContent, DialogActions, Box, Paper, Avatar,
-    CircularProgress, ToggleButtonGroup, ToggleButton
+    CircularProgress, ToggleButtonGroup, ToggleButton, Menu, MenuItem
 } from '@mui/material';
 import { 
     MessagesSquare, 
@@ -20,7 +20,8 @@ import {
     X,
     MessageSquare,
     AlertCircle,
-    User as UserIcon
+    User as UserIcon,
+    XCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
@@ -98,6 +99,10 @@ export default function TrackInquiries() {
     });
     const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [selectedInquiry, setSelectedInquiry] = useState<InquiryInfo | null>(null);
+    const [respondingInquiry, setRespondingInquiry] = useState<InquiryInfo | null>(null);
+    const [response, setResponse] = useState('');
+    const [priorityMenuAnchor, setPriorityMenuAnchor] = useState<HTMLElement | null>(null);
+    const [editingPriorityInquiry, setEditingPriorityInquiry] = useState<InquiryInfo | null>(null);
 
     useEffect(() => {
         loadData();
@@ -226,7 +231,18 @@ export default function TrackInquiries() {
             const currentUser = await User.me();
             setUser(currentUser);
             
-            const userInquiries = await Message.filter({ sender_email: currentUser.email });
+            let userInquiries = await Message.filter({ sender_email: currentUser.email });
+            
+            // If no inquiries exist for this user, generate random ones
+            if (!userInquiries || userInquiries.length === 0) {
+                console.log('No inquiries found for user, generating random inquiries...');
+                userInquiries = generateRandomInquiries(currentUser, 10);
+                
+                // Save the generated inquiries
+                for (const inquiry of userInquiries) {
+                    await Message.create(inquiry);
+                }
+            }
             
             // Transform to enhanced inquiry format
             const enhancedInquiries: InquiryInfo[] = (Array.isArray(userInquiries) ? userInquiries : []).map(inquiry => ({
@@ -258,6 +274,67 @@ export default function TrackInquiries() {
             return 'medium';
         }
         return 'low';
+    };
+
+    const generateRandomInquiries = (currentUser: any, count: number): InquiryInfo[] => {
+        const subjects = [
+            'בעיה בהעלאת קובץ',
+            'שאלה לגבי קורס',
+            'בעיה טכנית במערכת',
+            'שאלה כללית',
+            'בקשה לעזרה',
+            'דיווח על תקלה',
+            'שאלה לגבי הרשמה',
+            'בעיה בהתחברות',
+            'בקשת הבהרה',
+            'שאלה לגבי ציונים'
+        ];
+        const contents = [
+            'יש לי בעיה בהעלאת קובץ למערכת. הקובץ לא נטען כמו שצריך.',
+            'אני לא מבין את החומר בקורס האחרון. האם יש חומר נוסף?',
+            'המערכת לא עובדת כמו שצריך. יש שגיאה כשאני מנסה להיכנס.',
+            'יש לי שאלה כללית לגבי איך המערכת עובדת.',
+            'אני צריך עזרה עם התנהלות במערכת.',
+            'יש תקלה בעמוד הבית, הוא לא נטען כמו שצריך.',
+            'איך אני יכול להירשם לקורס חדש?',
+            'אני לא מצליח להתחבר למערכת עם הסיסמה שלי.',
+            'אני צריך הבהרה לגבי דרישות הקורס.',
+            'איפה אני יכול לראות את הציונים שלי?'
+        ];
+        const statuses: InquiryInfo['status'][] = ['pending', 'handled', 'closed'];
+
+        return Array.from({ length: count }, (_, i) => {
+            const subject = subjects[Math.floor(Math.random() * subjects.length)];
+            const content = contents[Math.floor(Math.random() * contents.length)];
+            const status = statuses[Math.floor(Math.random() * statuses.length)];
+            const daysAgo = Math.floor(Math.random() * 30);
+            const createdDate = new Date();
+            createdDate.setDate(createdDate.getDate() - daysAgo);
+
+            const inquiry: InquiryInfo = {
+                id: `inquiry_${currentUser.id}_${Date.now()}_${i}`,
+                subject,
+                content,
+                sender_name: currentUser.full_name,
+                sender_email: currentUser.email,
+                status,
+                priority: getPriorityFromContent(content),
+                category: getCategoryFromSubject(subject),
+                created_date: createdDate.toISOString(),
+                updated_date: createdDate.toISOString()
+            };
+
+            // Add response for handled/closed inquiries
+            if (status === 'handled' || status === 'closed') {
+                inquiry.admin_response = 'תודה על הפנייה. הבעיה טופלה והמערכת עובדת כמו שצריך.';
+                const responseDate = new Date(createdDate);
+                responseDate.setDate(responseDate.getDate() + Math.floor(Math.random() * 7) + 1);
+                inquiry.response_date = responseDate.toISOString();
+                inquiry.updated_date = responseDate.toISOString();
+            }
+
+            return inquiry;
+        });
     };
 
     const getCategoryFromSubject = (subject: string): string => {
@@ -325,6 +402,67 @@ export default function TrackInquiries() {
         setFilters(prev => ({ ...prev, [filterKey]: value }));
     };
 
+    const handleRespondToInquiry = async (inquiry: InquiryInfo, responseText: string, newStatus: 'handled' | 'closed') => {
+        try {
+            const updatedInquiry = {
+                ...inquiry,
+                status: newStatus,
+                admin_response: responseText,
+                response_date: new Date().toISOString(),
+                updated_date: new Date().toISOString()
+            };
+
+            await Message.update(inquiry.id, updatedInquiry);
+            
+            // Update local state
+            setInquiries(prev => prev.map(inq => inq.id === inquiry.id ? updatedInquiry : inq));
+            
+            // Close dialogs
+            setRespondingInquiry(null);
+            setResponse('');
+            
+            alert('התגובה נשלחה בהצלחה!');
+        } catch (error) {
+            console.error('Error responding to inquiry:', error);
+            alert('שגיאה בשליחת התגובה');
+        }
+    };
+
+    const handleQuickClose = async (inquiry: InquiryInfo) => {
+        await handleRespondToInquiry(inquiry, 'הפנייה נסגרה על ידי המשתמש.', 'closed');
+    };
+
+    const handlePriorityClick = (event: React.MouseEvent<HTMLElement>, inquiry: InquiryInfo) => {
+        event.stopPropagation();
+        setPriorityMenuAnchor(event.currentTarget);
+        setEditingPriorityInquiry(inquiry);
+    };
+
+    const handlePriorityUpdate = async (newPriority: 'low' | 'medium' | 'high') => {
+        if (!editingPriorityInquiry) return;
+
+        try {
+            const updatedInquiry = {
+                ...editingPriorityInquiry,
+                priority: newPriority,
+                updated_date: new Date().toISOString()
+            };
+
+            await Message.update(editingPriorityInquiry.id, updatedInquiry);
+            
+            // Update local state
+            setInquiries(prev => prev.map(inq => inq.id === editingPriorityInquiry.id ? updatedInquiry : inq));
+            
+            // Close menu
+            setPriorityMenuAnchor(null);
+            setEditingPriorityInquiry(null);
+            
+        } catch (error) {
+            console.error('Error updating priority:', error);
+            alert('שגיאה בעדכון העדיפות');
+        }
+    };
+
     const clearFilters = () => {
         setFilters({
             subject: '',
@@ -366,16 +504,24 @@ export default function TrackInquiries() {
         );
     };
 
-    const getPriorityComponent = (priority: 'low' | 'medium' | 'high') => {
+    const getPriorityComponent = (priority: 'low' | 'medium' | 'high', inquiry?: InquiryInfo) => {
         const config = priorityConfig[priority];
         return (
             <Chip
                 label={config.label}
                 size="small"
+                onClick={inquiry ? (e) => handlePriorityClick(e, inquiry) : undefined}
                 sx={{ 
                     bgcolor: `${config.color}20`,
                     color: config.color,
-                    fontWeight: 500
+                    fontWeight: 500,
+                    ...(inquiry && {
+                        cursor: 'pointer',
+                        '&:hover': {
+                            opacity: 0.8,
+                            transform: 'scale(1.05)'
+                        }
+                    })
                 }}
             />
         );
@@ -771,13 +917,14 @@ export default function TrackInquiries() {
                                         <Typography variant="body2" sx={{ 
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap'
+                                            whiteSpace: 'nowrap',
+                                            textAlign: 'left'
                                         }}>
                                             {inquiry.content || 'ללא תוכן'}
                                         </Typography>
                                     </TableCell>
                                     <TableCell align="left">{inquiry.category || 'כללי'}</TableCell>
-                                    <TableCell align="left">{getPriorityComponent(inquiry.priority)}</TableCell>
+                                    <TableCell align="left">{getPriorityComponent(inquiry.priority, inquiry)}</TableCell>
                                     <TableCell align="left">
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <UserIcon size={16} color="#6b7280" />
@@ -794,14 +941,45 @@ export default function TrackInquiries() {
                                     </TableCell>
                                     <TableCell align="left">{getStatusComponent(inquiry.status)}</TableCell>
                                     <TableCell align="left">
-                                        <Button
-                                            size="small"
-                                            onClick={() => setSelectedInquiry(inquiry)}
-                                            startIcon={<Eye size={16} />}
-                                            sx={{ minWidth: 'auto' }}
-                                        >
-                                            צפייה
-                                        </Button>
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                            <Button
+                                                size="small"
+                                                onClick={() => setSelectedInquiry(inquiry)}
+                                                startIcon={<Eye size={16} />}
+                                                color="inherit"
+                                                sx={{ 
+                                                    minWidth: 'auto',
+                                                    color: 'grey.600',
+                                                    '&:hover': {
+                                                        bgcolor: 'grey.100'
+                                                    }
+                                                }}
+                                            >
+                                                צפייה
+                                            </Button>
+                                            {inquiry.status === 'pending' && (
+                                                <>
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => setRespondingInquiry(inquiry)}
+                                                        startIcon={<MessageSquare size={16} />}
+                                                        color="primary"
+                                                        sx={{ minWidth: 'auto' }}
+                                                    >
+                                                        מענה
+                                                    </Button>
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => handleQuickClose(inquiry)}
+                                                        startIcon={<XCircle size={16} />}
+                                                        color="error"
+                                                        sx={{ minWidth: 'auto' }}
+                                                    >
+                                                        סגור
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -889,27 +1067,27 @@ export default function TrackInquiries() {
 
             {/* View Inquiry Dialog */}
             <Dialog open={!!selectedInquiry} onClose={() => setSelectedInquiry(null)} maxWidth="md" fullWidth>
-                <DialogTitle>פרטי פנייה</DialogTitle>
-                <DialogContent>
+                <DialogTitle fontWeight="bold" sx={{ textAlign: 'left' }}>פרטי פנייה</DialogTitle>
+                <DialogContent sx={{ textAlign: 'left' }}>
                     {selectedInquiry && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-                            <Typography variant="h6">{selectedInquiry.subject}</Typography>
-                            <Typography variant="body1">{selectedInquiry.content}</Typography>
+                            <Typography textAlign="left" variant="h6">{selectedInquiry.subject}</Typography>
+                            <Typography textAlign="left" variant="body1">{selectedInquiry.content}</Typography>
                             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                                 {getStatusComponent(selectedInquiry.status)}
                                 {getPriorityComponent(selectedInquiry.priority)}
                                 <Chip label={selectedInquiry.category} size="small" />
                             </Box>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography textAlign="left" variant="body2" color="text.secondary">
                                 נשלח על ידי: {selectedInquiry.sender_name} ({selectedInquiry.sender_email})
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography textAlign="left" variant="body2" color="text.secondary">
                                 תאריך: {format(new Date(selectedInquiry.created_date), 'd MMM yyyy HH:mm', { locale: he })}
                             </Typography>
                             {selectedInquiry.admin_response && (
                                 <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-                                    <Typography variant="subtitle2" fontWeight="bold">תגובת המערכת:</Typography>
-                                    <Typography variant="body2">{selectedInquiry.admin_response}</Typography>
+                                    <Typography textAlign="left" variant="subtitle2" fontWeight="bold">תגובת המערכת:</Typography>
+                                    <Typography textAlign="left" variant="body2">{selectedInquiry.admin_response}</Typography>
                                 </Box>
                             )}
                         </Box>
@@ -919,6 +1097,112 @@ export default function TrackInquiries() {
                     <Button onClick={() => setSelectedInquiry(null)}>סגור</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Response Dialog */}
+            <Dialog open={!!respondingInquiry} onClose={() => setRespondingInquiry(null)} maxWidth="md" fullWidth>
+                <DialogTitle sx={{ textAlign: 'left' }}>מענה לפנייה</DialogTitle>
+                <DialogContent sx={{ textAlign: 'left' }}>
+                    {respondingInquiry && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                            <Typography textAlign="left" variant="h6">נושא: {respondingInquiry.subject}</Typography>
+                            <Typography textAlign="left" variant="body2" color="text.secondary">
+                                פנייה מאת: {respondingInquiry.sender_name} ({respondingInquiry.sender_email})
+                            </Typography>
+                            <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                                <Typography textAlign="left" variant="body2" fontWeight="bold">תוכן הפנייה:</Typography>
+                                <Typography textAlign="left" variant="body2">{respondingInquiry.content}</Typography>
+                            </Box>
+                            <TextField
+                                multiline
+                                rows={4}
+                                fullWidth
+                                label="תגובה"
+                                value={response}
+                                onChange={(e) => setResponse(e.target.value)}
+                                placeholder="כתוב את התגובה שלך כאן..."
+                                required
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setRespondingInquiry(null)}>ביטול</Button>
+                    <Button 
+                        onClick={() => respondingInquiry && handleRespondToInquiry(respondingInquiry, response, 'handled')}
+                        variant="contained"
+                        disabled={!response.trim()}
+                        startIcon={<CheckCircle size={16} />}
+                    >
+                        שלח מענה
+                    </Button>
+                    <Button 
+                        onClick={() => respondingInquiry && handleRespondToInquiry(respondingInquiry, response || 'הפנייה נסגרה.', 'closed')}
+                        color="error"
+                        disabled={!response.trim()}
+                        startIcon={<XCircle size={16} />}
+                    >
+                        סגור פנייה
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Priority Menu */}
+            <Menu
+                anchorEl={priorityMenuAnchor}
+                open={Boolean(priorityMenuAnchor)}
+                onClose={() => {
+                    setPriorityMenuAnchor(null);
+                    setEditingPriorityInquiry(null);
+                }}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'center',
+                }}
+            >
+                <MenuItem onClick={() => handlePriorityUpdate('high')}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box 
+                            sx={{ 
+                                width: 12, 
+                                height: 12, 
+                                borderRadius: '50%', 
+                                bgcolor: priorityConfig.high.color 
+                            }} 
+                        />
+                        <Typography>{priorityConfig.high.label}</Typography>
+                    </Box>
+                </MenuItem>
+                <MenuItem onClick={() => handlePriorityUpdate('medium')}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box 
+                            sx={{ 
+                                width: 12, 
+                                height: 12, 
+                                borderRadius: '50%', 
+                                bgcolor: priorityConfig.medium.color 
+                            }} 
+                        />
+                        <Typography>{priorityConfig.medium.label}</Typography>
+                    </Box>
+                </MenuItem>
+                <MenuItem onClick={() => handlePriorityUpdate('low')}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box 
+                            sx={{ 
+                                width: 12, 
+                                height: 12, 
+                                borderRadius: '50%', 
+                                bgcolor: priorityConfig.low.color 
+                            }} 
+                        />
+                        <Typography>{priorityConfig.low.label}</Typography>
+                    </Box>
+                </MenuItem>
+            </Menu>
         </Box>
     );
 }

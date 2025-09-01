@@ -323,7 +323,7 @@ export default function Settings() {
             <Card elevation={2}>
               <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Palette /> ערכת נושא</Typography>} />
               <CardContent>
-                <Typography color="text.secondary" mb={2}>בחר את התצוגה המועדפת עליך</Typography>
+                <Typography textAlign="left" color="text.secondary" mb={2}>בחר את התצוגה המועדפת עליך</Typography>
                 <ToggleButtonGroup value={theme} exclusive onChange={handleThemeChange} fullWidth>
                   <ToggleButton value="light"><Sun style={{ marginLeft: 8 }} />בהיר</ToggleButton>
                   <ToggleButton value="dark"><Moon style={{ marginLeft: 8 }}/>כהה</ToggleButton>
@@ -340,13 +340,13 @@ export default function Settings() {
               <Card elevation={2}>
                 <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><GraduationCap /> מסלולים אקדמיים</Typography>} />
                 <CardContent>
-                  <Typography color="text.secondary" mb={2}>המסלולים שלך במערכת:</Typography>
+                  <Typography textAlign="left" color="text.secondary" mb={2}>המסלולים שלך במערכת:</Typography>
                     {userTracks.length > 0 ? (
                       userTracks.map((track: AcademicTrack) => (
                       <Alert icon={<CheckCircle />} severity="success" key={track.id} sx={{ mb: 1 }}>{track.name} - {track.department}</Alert>
                     ))
                   ) : (
-                    <Typography>עדיין לא שויכת למסלולים אקדמיים</Typography>
+                    <Typography textAlign="left">עדיין לא שויכת למסלולים אקדמיים</Typography>
                   )}
 
                   <Button fullWidth variant="outlined" startIcon={<Plus />} sx={{ mt: 2 }} onClick={() => setShowTrackRequestForm(!showTrackRequestForm)}>
@@ -382,7 +382,7 @@ export default function Settings() {
             <Card elevation={2}>
               <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Shield /> ניהול תפקידים</Typography>} />
               <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Typography color="text.secondary">התפקידים שלך במערכת:</Typography>
+                <Typography textAlign="left" color="text.secondary">התפקידים שלך במערכת:</Typography>
                   {userRoles.map(role => (
                   <Alert key={role} icon={<CheckCircle />} severity={user?.current_role === role ? "success" : "info"}>
                         תפקיד {role === 'student' ? 'סטודנט' : role === 'lecturer' ? 'מרצה' : 'מנהל'} {user?.current_role === role ? 'פעיל' : 'זמין'}
