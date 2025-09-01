@@ -364,10 +364,18 @@ export default function LecturerPendingFiles() {
 
     return (
         <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold">
-                    קבצים ממתינים לאישור
-                </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+                    <Clock />
+                </Avatar>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" textAlign="left">
+                        קבצים ממתינים לאישור
+                    </Typography>
+                    <Typography color="text.secondary" textAlign="left">
+                        ניהול ואישור קבצים שהועלו על ידי סטודנטים
+                    </Typography>
+                </Box>
             </Box>
 
             {/* Role Filter */}

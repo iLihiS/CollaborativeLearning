@@ -538,10 +538,18 @@ export default function MyFiles() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold">
-          הקבצים שלי
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+        <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+          <FileText />
+        </Avatar>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h4" fontWeight="bold" textAlign="left">
+            הקבצים שלי
+          </Typography>
+          <Typography color="text.secondary" textAlign="left">
+            ניהול הקבצים שהעליתי למערכת
+          </Typography>
+        </Box>
         <Button
           onClick={handleOpenDialog}
           variant="contained"

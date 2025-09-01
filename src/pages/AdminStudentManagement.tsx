@@ -8,7 +8,7 @@ import {
     Dialog, DialogContent, DialogTitle, DialogActions, TextField,
     Checkbox, FormControlLabel, FormGroup, Box, Typography, Paper,
     IconButton, CircularProgress, Chip, Avatar, ToggleButtonGroup, ToggleButton,
-    Alert
+    Alert, Autocomplete
 } from '@mui/material';
 import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap, ChevronUp, ChevronDown, Filter, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -667,8 +667,8 @@ export default function AdminStudentManagement() {
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="md">
         <DialogTitle textAlign="left" fontWeight="bold" >{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
-        <DialogContent sx={{ minHeight: 400 }}>
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
+        <DialogContent>
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             {formErrors.general && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {formErrors.general}
@@ -727,83 +727,52 @@ export default function AdminStudentManagement() {
             />
 
 
-            <FormGroup>
-              <Typography component="legend" variant="h6" textAlign="left" sx={{ mb: 2, fontWeight: 'bold' }}>
-                מסלולים אקדמיים
-              </Typography>
-              
-              {academicTracks.length === 0 ? (
-                <Typography color="error" sx={{ mb: 2 }}>
-                  🔄 טוען מסלולים אקדמיים...
-                </Typography>
-              ) : (
-                <Box sx={{ 
-                  maxHeight: 300, 
-                  overflowY: 'auto', 
-                  border: 2, 
-                  borderColor: 'primary.main', 
-                  borderRadius: 2, 
-                  p: 2,
-                  backgroundColor: 'grey.50'
-                }}>
-                  <Typography variant="body2" color="text.secondary" textAlign="left" sx={{ mb: 2 }}>
-                    בחר מסלול אקדמי או יותר עבור הסטודנט:
-                  </Typography>
-                  
-                  {academicTracks.map(track => (
-                    <FormControlLabel
-                      key={track.id}
-                      sx={{ 
-                        display: 'block', 
-                        mb: 1,
-                        p: 1,
-                        border: 1,
-                        borderColor: formData.academic_track_ids.includes(track.id) ? 'primary.main' : 'divider',
-                        borderRadius: 1,
-                        backgroundColor: formData.academic_track_ids.includes(track.id) ? 'primary.50' : 'white',
-                        '&:hover': {
-                          backgroundColor: 'grey.100'
-                        }
-                      }}
-                      control={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Checkbox
-                          checked={formData.academic_track_ids.includes(track.id)}
-                          onChange={() => handleTrackToggle(track.id)}
-                          name={track.id}
-                          color="primary"
-                        />
-                        <Typography variant="body1" fontWeight="medium" textAlign="left">
-                            {track.name}
-                          </Typography>
-                        </Box>
-                      }
-                      label={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary" textAlign="left">
-                            {track.department} • {track.degree_type}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  ))}
+            <Autocomplete
+              multiple
+              options={academicTracks}
+              getOptionLabel={(option) => option.name}
+              value={academicTracks.filter(track => formData.academic_track_ids.includes(track.id))}
+              onChange={(_, newValues) => {
+                setFormData(prev => ({
+                  ...prev,
+                  academic_track_ids: newValues.map(track => track.id)
+                }));
+              }}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="מסלולים אקדמיים" 
+                  required 
+                  fullWidth
+                  error={!!formErrors.academic_track_ids}
+                  helperText={formErrors.academic_track_ids || "בחר מסלול אקדמי אחד או יותר עבור הסטודנט"}
+                  placeholder="בחר מסלולים אקדמיים..."
+                />
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    variant="outlined"
+                    label={option.name}
+                    {...getTagProps({ index })}
+                    key={option.id}
+                  />
+                ))
+              }
+              renderOption={(props, option) => (
+                <Box component="li" {...props}>
+                  <Box>
+                    <Typography variant="body1" fontWeight="medium">
+                      {option.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {option.department} • {option.degree_type}
+                    </Typography>
+                  </Box>
                 </Box>
               )}
-              
-              {formErrors.academic_track_ids && (
-                <Alert severity="error" sx={{ mt: 1 }}>
-                  {formErrors.academic_track_ids}
-                </Alert>
-              )}
-              
-              {formData.academic_track_ids.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="primary">
-                    ✅ נבחרו {formData.academic_track_ids.length} מסלולים
-                  </Typography>
-                </Box>
-              )}
-            </FormGroup>
+              noOptionsText="אין מסלולים זמינים"
+            />
           </Box>
         </DialogContent>
         <DialogActions>

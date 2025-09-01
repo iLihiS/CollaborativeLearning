@@ -39,6 +39,8 @@ import Settings from "./Settings.tsx";
 
 import AdminManagement from "./AdminManagement.tsx";
 
+import { ValidationDemo } from "../components/ValidationDemo";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -80,6 +82,8 @@ const PAGES = {
     Settings: Settings,
     
     AdminManagement: AdminManagement,
+
+    ValidationDemo: ValidationDemo,
     
 }
 
@@ -146,6 +150,8 @@ function PagesContent() {
                     <Route path="/Settings" element={<Settings />} />
                     
                     <Route path="/AdminManagement" element={<AdminManagement />} />
+                    
+                    <Route path="/ValidationDemo" element={<ValidationDemo />} />
                     
                 </Routes>
             </Layout>

@@ -627,7 +627,7 @@ export default function Dashboard() {
                                     ))}
                                 </Box>
                             ) : (
-                                <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                                     <FileText sx={{ fontSize: 40, color: 'grey.300', mb: 1 }} />
                                     <Typography variant="body2" sx={{ textAlign: 'center' }}>אין פעילות אחרונה</Typography>
                                     <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>התחל להעלות קבצים</Typography>
@@ -681,7 +681,7 @@ export default function Dashboard() {
                                     ))}
                                 </Box>
                             ) : (
-                                                                 <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                                 <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
                                      <MessageSquare size={32} style={{ color: 'grey' }} />
                                      <Typography variant="body2" sx={{ textAlign: 'center' }}>אין פניות</Typography>
                                      <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>שלח פנייה חדשה</Typography>

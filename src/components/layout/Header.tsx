@@ -38,7 +38,7 @@ export const Header = ({
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
       }}
     >
-      <Toolbar sx={{ minHeight: '48px !important', py: 0, position: 'relative' }}>
+      <Toolbar sx={{ minHeight: { xs: '44px', md: '48px' }, py: 0, position: 'relative', px: { xs: 1, md: 2 } }}>
         {/* Left side - Menu and Logo */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton
@@ -46,7 +46,7 @@ export const Header = ({
             aria-label="toggle drawer"
             edge="start"
             onClick={onMenuToggle}
-            sx={{ mr: 2 }}
+            sx={{ mr: { xs: 1, md: 2 } }}
           >
             <Menu />
           </IconButton>
@@ -79,30 +79,37 @@ export const Header = ({
               <GraduationCap style={{ width: 18, height: 18, color: 'white' }} />
             </Box>
             
-            <Typography
-              variant="h6"
-              sx={{
-                color: 'white',
-                fontWeight: 'bold',
-                lineHeight: 1,
-                fontSize: { xs: '0.85rem', sm: '0.95rem', lg: '1.1rem' }
-              }}
-            >
-              למידה שיתופית
-            </Typography>
-            
-            <Typography 
-              variant="body1"
-              sx={{ 
-                color: 'white',
-                fontWeight: 300,
-                opacity: 0.9,
-                lineHeight: 1,
-                fontSize: { xs: '0.75rem', sm: '0.9rem', lg: '1rem' }
-              }}
-            >
-              בקריה האקדמית אונו
-            </Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: { xs: 0.2, sm: 1.5 }
+            }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                  lineHeight: 1,
+                  fontSize: { xs: '0.75rem', sm: '0.9rem', lg: '1.1rem' }
+                }}
+              >
+                למידה שיתופית
+              </Typography>
+              
+              <Typography 
+                variant="body1"
+                sx={{ 
+                  color: 'white',
+                  fontWeight: 300,
+                  opacity: 0.9,
+                  lineHeight: 1,
+                  fontSize: { xs: '0.65rem', sm: '0.8rem', lg: '1rem' }
+                }}
+              >
+                בקריה האקדמית אונו
+              </Typography>
+            </Box>
           </Box>
         </Box>
 
@@ -110,10 +117,9 @@ export const Header = ({
         <Box
           sx={{
             position: 'absolute',
-            left: { lg: '50%' },
-            right: { xs: '0px' , lg: 'auto'},
+            left: '50%',
             transform: 'translateX(-50%)',
-            display: { xs: 'none', md: 'block' }
+            display: { xs: 'none', lg: 'block' }
           }}
         >
           <Typography 
@@ -131,10 +137,10 @@ export const Header = ({
         </Box>
 
         {/* Right side - Role Switcher and Action buttons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1 }, ml: 'auto' }}>
           {/* Role Switcher */}
           {session && (
-            <Box sx={{ mr: 1 }}>
+            <Box sx={{ mr: { xs: 0.5, md: 1 } }}>
               <RoleSwitcher 
                 session={session} 
                 onRoleChange={switchRole}
@@ -152,7 +158,7 @@ export const Header = ({
             }}
           >
             <Badge badgeContent={unreadNotifications} color="error">
-              <Bell style={{ width: 20, height: 20 }} />
+              <Bell style={{ width: 18, height: 18 }} />
             </Badge>
           </IconButton>
           
@@ -166,7 +172,7 @@ export const Header = ({
             }}
           >
             <Badge badgeContent={unhandledInquiries} color="warning">
-              <MessageSquare style={{ width: 20, height: 20 }} />
+              <MessageSquare style={{ width: 18, height: 18 }} />
             </Badge>
           </IconButton>
           
@@ -178,7 +184,7 @@ export const Header = ({
               '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
             }}
           >
-            <HelpCircle style={{ width: 20, height: 20 }} />
+            <HelpCircle style={{ width: 18, height: 18 }} />
           </IconButton>
         </Box>
       </Toolbar>

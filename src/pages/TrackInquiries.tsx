@@ -431,10 +431,18 @@ export default function TrackInquiries() {
 
     return (
         <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold">
-                    מעקב פניות
-                </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+                    <MessageSquare />
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                    <Typography variant="h4" fontWeight="bold" textAlign="left">
+                        מעקב פניות
+                    </Typography>
+                    <Typography color="text.secondary" textAlign="left">
+                        מעקב אחר פניות שנשלחו למערכת ומענה עליהן
+                    </Typography>
+                </Box>
                 <Button
                     onClick={() => setShowNewInquiry(true)}
                     variant="contained"

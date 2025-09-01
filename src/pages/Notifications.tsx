@@ -340,10 +340,18 @@ export default function Notifications() {
 
     return (
         <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold">
-                    התראות
-                </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+                    <Bell />
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                    <Typography variant="h4" fontWeight="bold" textAlign="left">
+                        התראות
+                    </Typography>
+                    <Typography color="text.secondary" textAlign="left">
+                        צפייה וניהול התראות המערכת
+                    </Typography>
+                </Box>
                 <Button
                     onClick={markAllAsRead}
                     variant="contained"

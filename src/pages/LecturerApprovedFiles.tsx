@@ -325,10 +325,18 @@ export default function LecturerApprovedFiles() {
 
     return (
         <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold">
-                    קבצים מאושרים
-                </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
+                    <CheckCircle />
+                </Avatar>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" textAlign="left">
+                        קבצים מאושרים
+                    </Typography>
+                    <Typography color="text.secondary" textAlign="left">
+                        צפייה בקבצים שאושרו ופורסמו במערכת
+                    </Typography>
+                </Box>
             </Box>
 
             {/* Role Filter */}
