@@ -122,7 +122,7 @@ export default function CoursePage() {
   }
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button
         component={Link}
         to={createPageUrl(`Courses?track=${fromTrack || ''}&search=${fromSearch || ''}`)}

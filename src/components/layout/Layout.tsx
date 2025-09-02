@@ -157,6 +157,231 @@ export const Layout = ({ children }: LayoutProps) => {
           --lime-primary: #84cc16;
           --lime-secondary: #a3e635;
         }
+
+        /* Apply dark theme to body and main content */
+        .dark body,
+        .dark #root {
+          background-color: var(--bg-primary) !important;
+          color: var(--text-primary) !important;
+        }
+
+        .dark .MuiPaper-root:not(.MuiAppBar-root) {
+          background-color: var(--bg-card);
+          color: var(--text-primary);
+        }
+
+        .dark .MuiTypography-colorTextSecondary {
+          color: var(--text-secondary) !important;
+        }
+
+        .dark .MuiCard-root {
+          background-color: var(--bg-card);
+          color: var(--text-primary);
+        }
+
+        .dark .MuiCardContent-root {
+          color: var(--text-primary);
+        }
+
+        .dark .MuiTextField-root {
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiTextField-root .MuiInputBase-root {
+          color: var(--text-primary);
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiTextField-root .MuiInputLabel-root {
+          color: var(--text-secondary);
+        }
+
+        .dark .MuiFormControl-root {
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiSelect-root {
+          color: var(--text-primary);
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiMenuItem-root {
+          color: var(--text-primary);
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiMenuItem-root:hover {
+          background-color: var(--border-color);
+        }
+
+        .dark .MuiChip-root {
+          background-color: var(--border-color);
+          color: var(--text-primary);
+        }
+
+        .dark .MuiDivider-root {
+          border-color: var(--border-color);
+        }
+
+        .dark .MuiButton-text {
+          color: var(--text-primary);
+        }
+
+        .dark .MuiIconButton-root {
+          color: var(--text-secondary);
+        }
+
+        /* Handle skeleton loading in dark mode */
+        .dark .MuiSkeleton-root {
+          background-color: var(--border-color);
+        }
+
+        /* Handle autocomplete dropdown in dark mode */
+        .dark .MuiAutocomplete-popup {
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiAutocomplete-listbox {
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiAutocomplete-option {
+          color: var(--text-primary);
+        }
+
+        .dark .MuiAutocomplete-option[aria-selected="true"] {
+          background-color: var(--border-color);
+        }
+
+        /* Handle menu dropdowns */
+        .dark .MuiMenu-paper {
+          background-color: var(--bg-card);
+        }
+
+        /* Handle togglebutton groups */
+        .dark .MuiToggleButtonGroup-root {
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiToggleButton-root {
+          color: var(--text-primary);
+          background-color: var(--bg-card);
+          border-color: var(--border-color);
+        }
+
+        .dark .MuiToggleButton-root.Mui-selected {
+          background-color: var(--lime-primary);
+          color: white;
+        }
+
+        /* Handle grid backgrounds */
+        .dark .MuiGrid-root {
+          color: var(--text-primary);
+        }
+
+        /* Handle tables */
+        .dark .MuiTable-root {
+          background-color: var(--bg-card);
+        }
+
+        .dark .MuiTableHead-root {
+          background-color: var(--border-color);
+        }
+
+        .dark .MuiTableCell-root {
+          color: var(--text-primary);
+          border-color: var(--border-color);
+        }
+
+        .dark .MuiTableRow-root:hover {
+          background-color: var(--border-color);
+        }
+
+        /* Handle alerts and snackbars */
+        .dark .MuiAlert-root {
+          background-color: var(--bg-card);
+          color: var(--text-primary);
+        }
+
+        .dark .MuiSnackbar-root {
+          background-color: var(--bg-card);
+        }
+
+        /* Handle progress bars */
+        .dark .MuiLinearProgress-root {
+          background-color: var(--border-color);
+        }
+
+        /* Handle dialogs */
+        .dark .MuiDialog-paper {
+          background-color: var(--bg-card);
+          color: var(--text-primary);
+        }
+
+        .dark .MuiDialogTitle-root {
+          color: var(--text-primary);
+        }
+
+        .dark .MuiDialogContent-root {
+          color: var(--text-primary);
+        }
+
+        .dark .MuiDialogActions-root {
+          background-color: var(--bg-card);
+        }
+
+        /* Handle specific components that might have hard-coded colors */
+        .dark .MuiAccordion-root {
+          background-color: var(--bg-card);
+          color: var(--text-primary);
+        }
+
+        .dark .MuiAccordionSummary-root {
+          background-color: var(--bg-card);
+          color: var(--text-primary);
+        }
+
+        .dark .MuiAccordionDetails-root {
+          background-color: var(--bg-card);
+          color: var(--text-primary);
+        }
+
+        /* Handle text colors more selectively */
+        .dark .MuiCard-root .MuiTypography-root {
+          color: var(--text-primary);
+        }
+
+        .dark .MuiPaper-root .MuiTypography-root {
+          color: var(--text-primary);
+        }
+
+        /* Handle input focused states */
+        .dark .MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+          border-color: var(--lime-primary);
+        }
+
+        .dark .MuiTextField-root .MuiInputLabel-root.Mui-focused {
+          color: var(--lime-primary);
+        }
+
+        /* Keep Header and Sidebar user profile unchanged in dark mode */
+        .dark .MuiAppBar-root {
+          background: linear-gradient(to right, #84cc16, #65a30d) !important;
+          color: white !important;
+        }
+
+        .dark .MuiAppBar-root * {
+          color: white !important;
+        }
+
+        /* Keep Sidebar user profile colors unchanged in dark mode */
+        .dark .sidebar-user-profile .MuiTypography-root {
+          color: #1e293b !important;
+        }
+
+        .dark .sidebar-user-profile .MuiTypography-caption {
+          color: #65a30d !important;
+        }
       `}</style>
       
       <Header
@@ -182,10 +407,12 @@ export const Layout = ({ children }: LayoutProps) => {
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            bgcolor: 'var(--bg-primary)',
+            color: 'var(--text-primary)'
           }}
         >
-          <Box sx={{ flexGrow: 1, p: { xs: 1, sm: 1.5, lg: 2 }, overflow: 'auto' }}>
+          <Box sx={{ flexGrow: 1, p: { xs: 1, sm: 1.5, lg: 2 }, overflow: 'auto', bgcolor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {children}
           </Box>
         </Box>

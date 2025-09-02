@@ -198,7 +198,7 @@ export default function Insights() {
   return (
     <Box sx={{ 
       p: { xs: 1.5, md: 1 }, 
-      bgcolor: 'background.default', 
+              bgcolor: 'var(--bg-primary)', 
       height: { xs: 'auto', md: '100vh-64px' },
       minHeight: { xs: '100vh', md: 'auto' },
       overflow: { xs: 'visible', md: 'hidden' },

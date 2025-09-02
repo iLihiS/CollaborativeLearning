@@ -94,7 +94,7 @@ export default function AdminPanel() {
 
   return (
     <>
-    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '80vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '80vh' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 48, height: 48 }}>

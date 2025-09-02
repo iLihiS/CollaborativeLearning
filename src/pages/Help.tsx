@@ -49,7 +49,7 @@ export default function Help() {
   return (
     <Box sx={{ 
         p: 2, 
-        bgcolor: 'background.default', 
+        bgcolor: 'var(--bg-primary)', 
         minHeight: '87vh',
         display: 'flex',
         flexDirection: 'column'
@@ -131,7 +131,7 @@ export default function Help() {
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
                     <Button
                         variant="contained"
-                        sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.200' } }}
+                        sx={{ bgcolor: 'var(--bg-card)', color: 'primary.main', '&:hover': { bgcolor: 'var(--border-color)' } }}
                         onClick={() => window.open('tel:+972525551981', '_self')}
                     >
                         צור קשר

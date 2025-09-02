@@ -87,7 +87,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({ session, onRoleChang
             mr: { xs: 0, sm: 1 }
           },
           '&:hover': {
-            bgcolor: 'white',
+            bgcolor: 'rgba(255,255,255,0.9)',
             color: '#2e7d32',
             '& .MuiButton-startIcon': {
               color: '#2e7d32'
@@ -126,7 +126,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({ session, onRoleChang
             color: 'white'
           },
           '&:hover': {
-            bgcolor: 'white',
+            bgcolor: 'rgba(255,255,255,0.9)',
             color: '#2e7d32',
             '& .MuiButton-startIcon, & .MuiButton-endIcon': {
               color: '#2e7d32'

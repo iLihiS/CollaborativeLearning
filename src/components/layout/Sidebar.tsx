@@ -132,7 +132,7 @@ const SidebarContent = ({ user, onLogout }: { user: User | null; onLogout: () =>
       </List>
       <Divider />
       <Box sx={{ p: 2 }}>
-        <Paper elevation={0} sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '8px', background: 'linear-gradient(to right, #f0fdf4, #e2f5d8)'}}>
+        <Paper elevation={0} className="sidebar-user-profile" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '8px', background: 'linear-gradient(to right, #f0fdf4, #e2f5d8)'}}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
               <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 38, height: 38 }}>
                 {user.full_name?.charAt(0) || 'מ'}
@@ -214,7 +214,7 @@ export const Sidebar = ({
           height: '100%',
           transition: 'opacity 0.3s ease',
           overflow: 'auto',
-          bgcolor: 'background.default'
+          bgcolor: 'var(--bg-sidebar)'
         }}
       >
         {sidebarContent}

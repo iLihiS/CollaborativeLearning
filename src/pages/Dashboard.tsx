@@ -361,7 +361,7 @@ export default function Dashboard() {
 
     return (
         <>
-        <Box sx={{ bgcolor: 'background.default', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ bgcolor: 'var(--bg-primary)', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Paper elevation={0} sx={{
                 borderRadius: '24px',
                 p: { xs: 2, sm: 3, lg: 3, xl: 3 },
@@ -446,7 +446,7 @@ export default function Dashboard() {
                                         color: 'white'
                                     },
                                     '&:hover': { 
-                                        bgcolor: 'white', 
+                                        bgcolor: 'rgba(255,255,255,0.9)', 
                                         color: '#2e7d32',
                                         '& .MuiButton-startIcon, & .MuiButton-endIcon': {
                                             color: '#2e7d32'
@@ -531,9 +531,9 @@ export default function Dashboard() {
                             color="inherit" 
                             startIcon={<Upload />}
                             sx={{ 
-                                bgcolor: 'white', 
+                                bgcolor: 'rgba(255,255,255,0.9)', 
                                 color: 'primary.main', 
-                                border: '2px solid white',
+                                border: '2px solid rgba(255,255,255,0.9)',
                                 fontSize: { xs: '0.9rem', sm: '1rem' },
                                 px: 2,
                                 py: 1,

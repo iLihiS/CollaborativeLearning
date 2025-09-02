@@ -7,16 +7,16 @@ export const Footer = () => {
       sx={{
         py: 0.25,
         px: 2,
-        backgroundColor: 'grey.100',
+        backgroundColor: 'var(--bg-card)',
         borderTop: '1px solid',
-        borderColor: 'divider',
+        borderColor: 'var(--border-color)',
         textAlign: 'center',
         width: '100%',
         minHeight: 'auto'
       }}
     >
-      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-        © {new Date().getFullYear()} מערכת זו נבנתה על ידי <Box component="span" sx={{ fontWeight: 'bold' }}>ליהי סער</Box>
+      <Typography variant="caption" sx={{ fontSize: '0.65rem', lineHeight: 1.2, color: 'var(--text-secondary)' }}>
+        © {new Date().getFullYear()} מערכת זו נבנתה על ידי <Box component="span" sx={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>ליהי סער</Box>
       </Typography>
     </Box>
   );

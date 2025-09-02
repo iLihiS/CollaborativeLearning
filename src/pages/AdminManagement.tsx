@@ -386,7 +386,7 @@ export default function AdminManagement() {
   };
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         בחזרה לפאנל הניהול
       </Button>
