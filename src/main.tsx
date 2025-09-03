@@ -8,12 +8,24 @@ import createCache from '@emotion/cache';
 import { prefixer } from 'stylis';
 import rtlPlugin from 'stylis-plugin-rtl';
 import theme from './theme/theme.ts';
-import { LocalStorageService } from '@/services/localStorage';
-import { UserService } from '@/services/userService';
+import { FirestoreService } from '@/services/firestoreService';
+import { FirestoreUserService } from '@/services/firestoreUserService';
+import '@/utils/migrationHelper'; // Make migration helper available in console
 
-// Initialize both old and new systems
-LocalStorageService.initializeData();
-UserService.initializeUsers();
+// Initialize Firestore services
+async function initializeServices() {
+  try {
+    console.log('🔥 Initializing Firestore services...');
+    await FirestoreService.initializeData();
+    await FirestoreUserService.initializeUsers();
+    console.log('✅ Firestore services initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize Firestore services:', error);
+    throw error;
+  }
+}
+
+initializeServices();
 
 const cacheRtl = createCache({
   key: 'muirtl',

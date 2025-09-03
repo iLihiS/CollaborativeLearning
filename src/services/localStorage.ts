@@ -61,6 +61,8 @@ export interface FileEntity extends BaseEntity {
   rejection_reason?: string;
   download_count: number;
   tags: string[];
+  download_url?: string; // URL להורדה מ-Firebase Storage
+  storage_path?: string; // נתיב הקובץ ב-Firebase Storage
 }
 
 export interface Message extends BaseEntity {

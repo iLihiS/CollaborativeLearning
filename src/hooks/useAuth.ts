@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { User, UserSession, UserRole } from '@/types';
-import { UserService } from '@/services/userService';
-import { LocalStorageService } from '@/services/localStorage';
+import { FirestoreUserService } from '@/services/firestoreUserService';
+import { FirestoreService } from '@/services/firestoreService';
 import { createPageUrl } from '@/utils';
 
 export const useAuth = () => {
@@ -17,24 +17,24 @@ export const useAuth = () => {
       setLoading(true);
       
       // Initialize unified user system only
-      UserService.initializeUsers();
-      // Keep old system for backward compatibility but don't use for auth
-      LocalStorageService.initializeData();
+      await FirestoreUserService.initializeUsers();
+      // Initialize Firestore data
+      await FirestoreService.initializeData();
       
       // Check for existing unified session
-      let currentSession = UserService.getCurrentSession();
+      let currentSession = await FirestoreUserService.getCurrentSession();
       
       if (!currentSession) {
         // Always use the main demo user - no migration from old system
         console.log('🔄 No session found, creating demo session');
-        const demoUser = UserService.getUserByEmail('all.roles@ono.ac.il');
+        const demoUser = await FirestoreUserService.getUserByEmail('all.roles@ono.ac.il');
         if (demoUser) {
           currentSession = {
             user: demoUser,
             current_role: demoUser.current_role || 'admin',
             available_roles: demoUser.roles
           };
-          UserService.setCurrentSession(currentSession);
+          await FirestoreUserService.setCurrentSession(currentSession);
           console.log('✅ Demo session created:', currentSession);
         } else {
           console.log('❌ Demo user not found');
@@ -57,48 +57,56 @@ export const useAuth = () => {
     }
   };
 
-  const logout = () => {
-    UserService.clearCurrentSession();
-    setSession(null);
-    setLoginError('');
+  const logout = async () => {
+    try {
+      await FirestoreUserService.clearCurrentSession();
+      setSession(null);
+      setLoginError('');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
-  const switchRole = (newRole: UserRole) => {
+  const switchRole = async (newRole: UserRole) => {
     if (!session || !session.user.roles.includes(newRole)) return false;
     
     console.log(`🔄 Switching role from ${session.current_role} to ${newRole}`);
     
-    const success = UserService.switchUserRole(session.user.id, newRole);
-    if (success) {
-      const updatedUser = UserService.getUserById(session.user.id);
-      if (updatedUser) {
-        const updatedSession: UserSession = {
-          user: updatedUser,
-          current_role: newRole,
-          available_roles: updatedUser.roles
-        };
-        
-        // Update both session state and localStorage
-        setSession(updatedSession);
-        UserService.setCurrentSession(updatedSession);
-        
-        console.log(`✅ Role switched successfully to ${newRole}`);
-        
-        // Navigate to Dashboard
-        navigate(createPageUrl("Dashboard"), { replace: true });
-        
-        // Force a small delay to ensure state updates and then reload
-        setTimeout(() => {
-          console.log(`🔄 Reloading page to ensure full sync`);
-          window.location.href = createPageUrl("Dashboard");
-        }, 200);
-        
-        return true;
+    try {
+      const success = await FirestoreUserService.switchUserRole(session.user.id, newRole);
+      if (success) {
+        const updatedUser = await FirestoreUserService.getUserById(session.user.id);
+        if (updatedUser) {
+          const updatedSession: UserSession = {
+            user: updatedUser,
+            current_role: newRole,
+            available_roles: updatedUser.roles
+          };
+          
+          // Update session state
+          setSession(updatedSession);
+          
+          console.log(`✅ Role switched successfully to ${newRole}`);
+          
+          // Navigate to Dashboard
+          navigate(createPageUrl("Dashboard"), { replace: true });
+          
+          // Force a small delay to ensure state updates and then reload
+          setTimeout(() => {
+            console.log(`🔄 Reloading page to ensure full sync`);
+            window.location.href = createPageUrl("Dashboard");
+          }, 200);
+          
+          return true;
+        }
       }
+      
+      console.log(`❌ Failed to switch role to ${newRole}`);
+      return false;
+    } catch (error) {
+      console.error(`❌ Error switching role to ${newRole}:`, error);
+      return false;
     }
-    
-    console.log(`❌ Failed to switch role to ${newRole}`);
-    return false;
   };
 
   useEffect(() => {

@@ -1,3 +1,6 @@
+// Import Firestore Entity
+import { FirestoreEntity } from './firestoreEntities';
+
 // Generic API client for the CollaborativeLearning application
 class APIClient {
   baseURL: string;
@@ -272,98 +275,17 @@ const seedMockData = () => {
 
 seedMockData(); // Run on script load
 
-class Entity {
+  class Entity extends FirestoreEntity {
   api: APIClient;
-  entityName: string;
-  storageKey: string;
 
   constructor(apiClient: APIClient, entityName: string) {
+    super(apiClient, entityName);
     this.api = apiClient;
-    this.entityName = entityName;
-    this.storageKey = `mock_${entityName}`;
   }
 
-  // --- Mock Data Operations ---
-  async list() {
-    console.log(`Always using mock data for LIST ${this.entityName}`);
-    if (this.entityName === 'academic-tracks') {
-      try {
-        const response = await fetch('/academic-tracks.json');
-        if (!response.ok) throw new Error('Network response was not ok');
-        return await response.json();
-      } catch (error) {
-        console.error('Failed to fetch academic tracks:', error);
-        return Promise.resolve([]);
-      }
-    }
-    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-    return Promise.resolve(data);
-  }
-
-  async get(id: string) {
-    console.log(`Always using mock data for GET ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-    const item = data.find((i: any) => i.id === id);
-    if (item) {
-      return Promise.resolve(item);
-    } else {
-      return Promise.reject(new Error("Item not found"));
-    }
-  }
-
-  async create(newItemData: any) {
-    console.log(`Always using mock data for CREATE ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-    const newItem = { ...newItemData, id: `${this.entityName.slice(0, -1)}-${Date.now()}` };
-    data.push(newItem);
-    localStorage.setItem(this.storageKey, JSON.stringify(data));
-    return Promise.resolve(newItem);
-  }
-
-  async update(id: string, updatedItemData: any) {
-    console.log(`Always using mock data for UPDATE ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-    const itemIndex = data.findIndex((i: any) => i.id === id);
-    if (itemIndex > -1) {
-      data[itemIndex] = { ...data[itemIndex], ...updatedItemData };
-      localStorage.setItem(this.storageKey, JSON.stringify(data));
-      return Promise.resolve(data[itemIndex]);
-    }
-    return Promise.reject(new Error("Item not found"));
-  }
-
-  async delete(id: string) {
-    console.log(`Always using mock data for DELETE ${this.entityName}`);
-    const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-    const newData = data.filter((i: any) => i.id !== id);
-    localStorage.setItem(this.storageKey, JSON.stringify(newData));
-    return Promise.resolve({ success: true });
-  }
-  
+  // Alias methods to maintain compatibility with existing code
   async filter(filters: any) {
-    console.log(`Always using mock data for FILTER ${this.entityName}`);
-    if (this.entityName === 'academic-tracks') {
-      try {
-        const response = await fetch('/academic-tracks.json');
-        if (!response.ok) throw new Error('Network response was not ok');
-        let data = await response.json();
-        Object.keys(filters).forEach(key => {
-            data = data.filter((item: any) => item[key] === filters[key]);
-        });
-        return Promise.resolve(data);
-      } catch (error) {
-        console.error('Failed to fetch academic tracks for filtering:', error);
-        return Promise.resolve([]);
-      }
-    }
-    
-    let data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-    
-    Object.keys(filters).forEach(key => {
-        data = data.filter((item: any) => item[key] === filters[key]);
-    });
-    
-    return Promise.resolve(data);
+    return await this.query(filters);
   }
 }
 

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User as UserEntity, Course, File, Student, Lecturer, Message, Notification } from "@/api/entities";
 import { useAuth } from "@/hooks/useAuth";
+import { useDashboard } from "@/hooks/useDashboard";
+import DashboardCards from "@/components/DashboardCards";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -70,6 +72,7 @@ const NIGHT_START = 22;
 
 export default function Dashboard() {
     const { session, switchRole: authSwitchRole } = useAuth();
+    const { dashboardData, loading: dashboardLoading, refreshDashboard } = useDashboard();
     const navigate = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [recentFiles, setRecentFiles] = useState<any[]>([]);
@@ -196,7 +199,7 @@ export default function Dashboard() {
             console.log(`🎯 Dashboard: Switching to role ${newRole}`);
             
             // Use the new auth system to switch roles
-            const success = authSwitchRole(newRole as any);
+            const success = await authSwitchRole(newRole as any);
             if (success) {
                 console.log(`✅ Dashboard: Role switch successful`);
                 // The useAuth hook will handle navigation and reload
@@ -580,119 +583,19 @@ export default function Dashboard() {
                 </Grid>
             )}
 
-            <Grid container spacing={3} sx={{ mt: 2 }}>
-                <Grid size={{ xs: 12, lg: 4 }}>
-                     <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: { lg: '400px' } }}>
-                        <CardHeader 
-                                title="פעילויות אחרונות"
-                                sx={{ pb: 1 }}
-                                
-                                titleTypographyProps={{
-                                    align: 'left',
-                                    textAlign: 'left',
-                                    variant: 'h6',
-                                    fontWeight: 'bold'
-                                }}
-                        />
-                        <CardContent sx={{ flexGrow: 1, p: 2, overflow: 'auto' }}>
-                            {recentFiles.length > 0 ? (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                    {recentFiles.slice(0, 2).map((notification) => (
-                                        <Paper key={notification.id} variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: !notification.is_read ? 'primary.light' : 'transparent' }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Avatar variant="rounded" sx={{
-                                                    bgcolor: notification.type === 'file_approved' ? 'success.light' :
-                                                              notification.type === 'file_rejected' ? 'error.light' :
-                                                              notification.type === 'file_uploaded' ? 'info.light' : 'grey.200',
-                                                    width: 24,
-                                                    height: 24
-                                                }}>
-                                                    {notification.type === 'file_approved' && <CheckCircle sx={{ fontSize: 16 }} color="success" />}
-                                                    {notification.type === 'file_rejected' && <XCircle sx={{ fontSize: 16 }} color="error" />}
-                                                    {notification.type === 'file_uploaded' && <Upload sx={{ fontSize: 16 }} color="info" />}
-                                                     {!['file_approved', 'file_rejected', 'file_uploaded'].includes(notification.type) && <FileText sx={{ fontSize: 16 }} />}
-                                                </Avatar>
-                                                <Box>
-                                                     <Typography variant="caption" fontWeight="medium">{notification.title}</Typography>
-                                                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
-                                                        {notification.created_date && !isNaN(new Date(notification.created_date).getTime()) 
-                                                      ? format(new Date(notification.created_date), 'd בMMM', { locale: he })
-                                                      : 'תאריך לא תקין'
-                                                    }
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                             {!notification.is_read && <Chip label="חדש" color="primary" size="small" sx={{ fontSize: '0.6rem', height: 16 }} />}
-                                        </Paper>
-                                    ))}
-                                </Box>
-                            ) : (
-                                <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                    <FileText sx={{ fontSize: 40, color: 'grey.300', mb: 1 }} />
-                                    <Typography variant="body2" sx={{ textAlign: 'center' }}>אין פעילות אחרונה</Typography>
-                                    <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>התחל להעלות קבצים</Typography>
-                                </Box>
-                            )}
-                        </CardContent>
-                        <Box sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
-                            <Button component={Link} to={createPageUrl("Notifications")} fullWidth variant="outlined" size="small">הצג הכל</Button>
-                        </Box>
-                    </Card>
-                </Grid>
+            {/* הרכיבים החדשים לדשבורד */}
+            <Box sx={{ mt: 3 }}>
+                <DashboardCards
+                    userRole={session?.current_role || 'student'}
+                    recentNotifications={dashboardData.recentNotifications || []}
+                    recentMessages={dashboardData.recentMessages || []}
+                    recentFiles={dashboardData.recentFiles || []}
+                    myRecentMessages={dashboardData.myRecentMessages || []}
+                    myRecentFiles={dashboardData.myRecentFiles || []}
+                />
+            </Box>
 
-                 <Grid size={{ xs: 12, lg: 4 }}>
-                    <Card elevation={2} sx={{ display: 'flex', flexDirection: 'column', height: '100%', maxHeight: { lg: '400px' } }}>
-                        <CardHeader
-                            title="פניות אחרונות"
-                            sx={{ pb: 1 }}
-                            titleTypographyProps={{
-                                align: 'left',
-                                textAlign: 'left',
-                                variant: 'h6',
-                                fontWeight: 'bold'
-                            }}
-                            action={
-                                <IconButton component={Link} to={createPageUrl("TrackInquiries?new=true")} size="small">
-                                    <Plus size={16} />
-                                </IconButton>
-                            }
-                        />
-                        <CardContent sx={{ flexGrow: 1, p: 2, overflow: 'auto' }}>
-                           {recentInquiries.length > 0 ? (
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                    {recentInquiries.slice(0, 2).map((inquiry) => (
-                                        <Paper key={inquiry.id} variant="outlined" sx={{ p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                                                 <Avatar variant="rounded" sx={{ bgcolor: 'grey.200', width: 24, height: 24 }}>
-                                                      <MessageSquare size={16} />
-                                                 </Avatar>
-                                                <Box>
-                                                    <Typography variant="caption" fontWeight="medium" noWrap sx={{ maxWidth: 120 }}>{inquiry.subject}</Typography>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
-                                                        {inquiry.created_date && !isNaN(new Date(inquiry.created_date).getTime()) 
-                                                          ? format(new Date(inquiry.created_date), 'd בMMM', { locale: he })
-                                                          : 'תאריך לא תקין'
-                                                        }
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                            <Box sx={{ transform: 'scale(0.8)' }}>{getInquiryStatusBadge(inquiry.status)}</Box>
-                                        </Paper>
-                                    ))}
-                                </Box>
-                            ) : (
-                                                                 <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
-                                     <MessageSquare size={32} style={{ color: 'grey' }} />
-                                     <Typography variant="body2" sx={{ textAlign: 'center' }}>אין פניות</Typography>
-                                     <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>שלח פנייה חדשה</Typography>
-                                 </Box>
-                            )}
-                        </CardContent>
-                         <Box sx={{ p: 1.5, borderTop: 1, borderColor: 'divider' }}>
-                            <Button component={Link} to={createPageUrl("TrackInquiries")} fullWidth variant="outlined" size="medium">הצג הכל</Button>
-                        </Box>
-                    </Card>
-                </Grid>
+            <Grid container spacing={3} sx={{ mt: 2 }}>
 
                 <Grid size={{ xs: 12, lg: 4 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, height: '100%', maxHeight: { lg: '400px' } }}>
@@ -717,6 +620,17 @@ export default function Dashboard() {
                                     </Grid>
                                     <Grid size={12}>
                                         <Button component={Link} to={createPageUrl("MyFiles")} fullWidth variant="outlined" startIcon={<FileText />}>הקבצים שלי</Button>
+                                    </Grid>
+                                    <Grid size={12}>
+                                        <Button 
+                                            onClick={refreshDashboard}
+                                            fullWidth 
+                                            variant="outlined" 
+                                            startIcon={dashboardLoading ? <CircularProgress size={16} /> : <Heart />}
+                                            disabled={dashboardLoading}
+                                        >
+                                            {dashboardLoading ? 'מרענן...' : 'רענן דשבורד'}
+                                        </Button>
                                     </Grid>
                                 </Grid>
                             </CardContent>
