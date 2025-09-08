@@ -392,7 +392,8 @@ export default function admin_student_management() {
 
   return (
     /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
-    <Box className="MainContainer" sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+    /* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <main> instead of <div> */
+    <div className="MainContainer" style={{ padding: '16px', backgroundColor: 'var(--bg-primary)', minHeight: '100vh' }}>
       {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} 
               className="BackButton" style={{ marginBottom: '24px', borderColor: '#1976d2' }}>
@@ -400,6 +401,7 @@ export default function admin_student_management() {
       </Button>
 
       {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
+      {/* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <header> instead of <div> */}
       <div className="HeaderSection" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
         <div>
           <div className="TitleContainer" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
@@ -807,6 +809,6 @@ export default function admin_student_management() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 }
