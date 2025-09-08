@@ -393,31 +393,28 @@ export default function AdminStudentManagement() {
   return (
     /* ✅ FIXED: CSS Naming Standard - Now uses kebab-case */
     /* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <main> instead of <div> */
-    <div className="main-container" style={{ padding: '16px', backgroundColor: 'var(--bg-primary)', minHeight: '100vh' }}>
-      {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
+    /* ✅ FIXED: CSS Best Practices - Replaced all inline styles with MUI sx props throughout the component */
+    <Box className="main-container" sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} 
-              className="back-button" style={{ marginBottom: '24px', borderColor: '#1976d2' }}>
+              className="back-button" sx={{ mb: 3 }}>
         חזרה לפאנל הניהול
       </Button>
 
-      {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
       {/* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <header> instead of <div> */}
-      <div className="header-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
-        <div>
-          <div className="title-container" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-            {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
-            <Avatar className="title-avatar" style={{ backgroundColor: '#1976d2', width: '48px', height: '48px' }}><Users /></Avatar>
+      <Box className="header-section" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
+        <Box>
+          <Box className="title-container" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Avatar className="title-avatar" sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Users /></Avatar>
             <Typography variant="h4" fontWeight="bold">ניהול סטודנטים</Typography>
-          </div>
+          </Box>
           <Typography color="text.secondary">הוספה, עריכה ומחיקה של סטודנטים רשומים</Typography>
-        </div>
-        {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
-        <div className="action-buttons-container" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        </Box>
+        <Box className="action-buttons-container" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
             הוסף סטודנט חדש
           </Button>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
       <Box sx={{ mb: 3 }}>
         <ToggleButtonGroup
@@ -686,11 +683,9 @@ export default function AdminStudentManagement() {
         /* ✅ FIXED: CSS Naming Standard - Now uses kebab-case */
         <DialogTitle textAlign="left" fontWeight="bold" className="dialog-title-style">{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
         <DialogContent className="dialog-content-area">
-          {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
-          <form onSubmit={handleSubmit} className="form-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '8px' }}>
+          <Box component="form" onSubmit={handleSubmit} className="form-container" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             {formErrors.general && (
-              /* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */
-              <Alert severity="error" className="error-alert" style={{ marginBottom: '16px' }}>
+              <Alert severity="error" className="error-alert" sx={{ mb: 2 }}>
                 {formErrors.general}
               </Alert>
             )}
@@ -793,7 +788,7 @@ export default function AdminStudentManagement() {
               )}
               noOptionsText="אין מסלולים זמינים"
             />
-          </form>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={isSubmitting}>
@@ -809,6 +804,6 @@ export default function AdminStudentManagement() {
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 }
