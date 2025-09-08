@@ -391,20 +391,22 @@ export default function admin_student_management() {
   }, {});
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
-      <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
+    /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
+    <Box className="MainContainer" sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+      <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} 
+              className="BackButton" sx={{ mb: 3 }}>
         חזרה לפאנל הניהול
       </Button>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
+      <Box className="HeaderSection" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
         <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Users /></Avatar>
+          <Box className="TitleContainer" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <Avatar className="TitleAvatar" sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Users /></Avatar>
             <Typography variant="h4" fontWeight="bold">ניהול סטודנטים</Typography>
           </Box>
           <Typography color="text.secondary">הוספה, עריכה ומחיקה של סטודנטים רשומים</Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box className="ActionButtonsContainer" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
             הוסף סטודנט חדש
           </Button>
@@ -531,8 +533,9 @@ export default function admin_student_management() {
         </Box>
       </Box>
 
-      <Paper elevation={2}>
-        <TableContainer>
+      /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
+      <Paper elevation={2} className="StudentsTablePaper">
+        <TableContainer className="StudentsTableContainer">
           <Table>
             <TableHead>
               <TableRow>
@@ -674,11 +677,12 @@ export default function admin_student_management() {
       </Paper>
 
       <Dialog open={Is_Dialog_Open} onClose={handleCloseDialog} fullWidth maxWidth="md">
-        <DialogTitle textAlign="left" fontWeight="bold" >{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
-        <DialogContent>
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
+        <DialogTitle textAlign="left" fontWeight="bold" className="DialogTitleStyle">{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
+        <DialogContent className="DialogContentArea">
+          <Box component="form" onSubmit={handleSubmit} className="FormContainer" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             {formErrors.general && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" className="ErrorAlert" sx={{ mb: 2 }}>
                 {formErrors.general}
               </Alert>
             )}
