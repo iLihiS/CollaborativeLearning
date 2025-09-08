@@ -54,13 +54,13 @@ type form_errors = {
 /* ❌ VIOLATION: Component Naming Standard - Components should use PascalCase */
 export default function admin_student_management() {
   const [students, setStudents] = useState<student_data[]>([]);
-  /* ❌ VIOLATION: Variable Naming Standard - Variables should use camelCase */
-  const [Filtered_Students, setFiltered_Students] = useState<student_data[]>([]);
+  /* ✅ FIXED: Variable Naming Standard - Now uses camelCase */
+  const [filteredStudents, setFilteredStudents] = useState<student_data[]>([]);
   const [academicTracks, setAcademicTracks] = useState<academic_track_data[]>([]);
   const [academicTracksMap, setAcademicTracksMap] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
-  /* ❌ VIOLATION: Variable Naming Standard - Variables should use camelCase */
-  const [Is_Dialog_Open, setIs_Dialog_Open] = useState(false);
+  /* ✅ FIXED: Variable Naming Standard - Now uses camelCase */
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<student_data | null>(null);
   const [trackFilter, setTrackFilter] = useState('all');
   const [formData, setFormData] = useState<form_data>({
@@ -195,7 +195,7 @@ export default function admin_student_management() {
       return aId.localeCompare(bId, 'he');
     });
     
-    setFiltered_Students(filtered);
+    setFilteredStudents(filtered);
   }, [trackFilter, students, filters, sortField, sortDirection, academicTracksMap]);
 
   /* ✅ FIXED: Function Naming Standard - Now uses camelCase */
@@ -218,7 +218,7 @@ export default function admin_student_management() {
       });
       
       setStudents(validStudents);
-      setFiltered_Students(validStudents);
+      setFilteredStudents(validStudents);
       setAcademicTracks(validTracks);
       setAcademicTracksMap(tracksMap);
       console.log('Final academic tracks count:', validTracks.length);
@@ -226,7 +226,7 @@ export default function admin_student_management() {
     } catch (error) {
       console.error("Error loading data:", error);
       setStudents([]);
-      setFiltered_Students([]);
+      setFilteredStudents([]);
       setAcademicTracks([]);
     }
     setLoading(false);
@@ -259,11 +259,11 @@ export default function admin_student_management() {
       });
     }
     setFormErrors({});
-    setIs_Dialog_Open(true);
+    setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    setIs_Dialog_Open(false);
+    setIsDialogOpen(false);
     setEditingStudent(null);
   };
 
@@ -648,7 +648,7 @@ export default function admin_student_management() {
                 <TableRow>
                   <TableCell colSpan={6} align="center"><CircularProgress /></TableCell>
                 </TableRow>
-              ) : (Array.isArray(Filtered_Students) ? Filtered_Students : []).map((student) => (
+              ) : (Array.isArray(filteredStudents) ? filteredStudents : []).map((student) => (
                 <TableRow key={student.id} hover>
                   <TableCell align="left">{student.full_name || 'לא מוגדר'}</TableCell>
                   <TableCell align="left">
@@ -682,7 +682,7 @@ export default function admin_student_management() {
         </TableContainer>
       </Paper>
 
-      <Dialog open={Is_Dialog_Open} onClose={handleCloseDialog} fullWidth maxWidth="md">
+      <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="md">
         /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
         <DialogTitle textAlign="left" fontWeight="bold" className="DialogTitleStyle">{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
         <DialogContent className="DialogContentArea">
