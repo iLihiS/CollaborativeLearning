@@ -16,9 +16,9 @@ export const useAuth = () => {
     try {
       setLoading(true)
       
-      // Initialize unified user system and Firestore data
+      // Initialize unified user system and Firestore connection
       await FirestoreUserService.initializeUsers()
-      await FirestoreService.initializeData()
+      await FirestoreService.initializeConnection()
       
       // Check for existing unified session
       let currentSession = await FirestoreUserService.getCurrentSession()

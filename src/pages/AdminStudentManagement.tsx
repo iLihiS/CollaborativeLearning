@@ -2,7 +2,7 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { Student, AcademicTrack } from '@/api/entities';
 import { FormValidator } from '@/utils/validation';
-import { LocalStorageService } from '@/services/localStorage';
+import { FirestoreService } from '@/services/firestoreService';
 import {
     Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Dialog, DialogContent, DialogTitle, DialogActions, TextField,

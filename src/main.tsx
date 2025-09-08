@@ -11,13 +11,13 @@ import theme from '@/theme/theme.ts'
 import { FirestoreService } from '@/services/firestoreService'
 import { FirestoreUserService } from '@/services/firestoreUserService'
 import '@/index.css'
-import '@/utils/migrationHelper' // Make migration helper available in console
+
 
 // Initialize Firestore services on app startup
 async function initializeServices() {
   try {
     console.log('🔥 Initializing Firestore services...')
-    await FirestoreService.initializeData()
+    await FirestoreService.initializeConnection()
     await FirestoreUserService.initializeUsers()
     console.log('✅ Firestore services initialized successfully')
   } catch (error) {

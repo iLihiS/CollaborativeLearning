@@ -17,15 +17,93 @@ import {
   DocumentSnapshot
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { 
-  Student, 
-  Lecturer, 
-  Course, 
-  FileEntity, 
-  Message, 
-  NotificationEntity 
-} from '@/services/localStorage';
 import { User } from '@/types';
+
+// Define entity interfaces locally (previously imported from localStorage)
+interface BaseEntity {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Student extends BaseEntity {
+  full_name: string;
+  email: string;
+  student_id: string;
+  national_id?: string;
+  academic_track: string;
+  academic_track_ids: string[];
+  year: number;
+  phone?: string;
+  status: 'active' | 'inactive' | 'graduated';
+}
+
+export interface Lecturer extends BaseEntity {
+  full_name: string;
+  email: string;
+  employee_id: string;
+  national_id?: string;
+  department: string;
+  specialization: string;
+  phone?: string;
+  status: 'active' | 'inactive';
+  academic_tracks: string[];
+}
+
+export interface Course extends BaseEntity {
+  name: string;
+  code: string;
+  description: string;
+  credits: number;
+  semester: 'א' | 'ב' | 'קיץ';
+  year: number;
+  lecturer_id: string;
+  academic_track: string;
+  max_students: number;
+  enrolled_students: number;
+  status: 'active' | 'inactive';
+}
+
+export interface FileEntity extends BaseEntity {
+  filename: string;
+  original_name: string;
+  file_type: string;
+  file_size: number;
+  file_code?: string;
+  course_id: string;
+  uploader_id: string;
+  uploader_type: 'student' | 'lecturer' | 'admin';
+  status: 'pending' | 'approved' | 'rejected';
+  approval_date?: string;
+  approved_by?: string;
+  rejection_reason?: string;
+  download_count: number;
+  tags: string[];
+  download_url?: string;
+  storage_path?: string;
+}
+
+export interface Message extends BaseEntity {
+  sender_id: string;
+  sender_type: 'student' | 'lecturer' | 'admin';
+  recipient_id?: string;
+  subject: string;
+  content: string;
+  message_type: 'inquiry' | 'support' | 'general';
+  status: 'open' | 'in_progress' | 'closed';
+  priority: 'low' | 'medium' | 'high';
+  category: string;
+}
+
+export interface NotificationEntity extends BaseEntity {
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  action_url?: string;
+  action_text?: string;
+}
 
 // Collection names
 const COLLECTIONS = {
@@ -40,239 +118,211 @@ const COLLECTIONS = {
 } as const;
 
 export class FirestoreService {
-  // Initialize data if collections are empty
-  static async initializeData(): Promise<void> {
-    console.log('🔄 Initializing Firestore data...');
+  // Initialize Firestore connection and ensure demo data exists
+  static async initializeConnection(): Promise<void> {
+    console.log('🔥 Initializing Firestore connection...');
     
     try {
-      // Check if students collection is empty or has incomplete data
-      const studentsSnapshot = await getDocs(collection(db, COLLECTIONS.STUDENTS));
-      const filesSnapshot = await getDocs(collection(db, COLLECTIONS.FILES));
+      // Just verify connection is working
+      const testSnapshot = await getDocs(collection(db, COLLECTIONS.STUDENTS));
+      console.log('✅ Firestore connection established');
       
-      if (studentsSnapshot.empty) {
-        console.log('📚 No data found - importing from localStorage or generating...');
-        await this.migrateFromLocalStorage();
-      } else {
-        // ודא שיש מספיק נתונים ושיש קבצים בכל הסטטוסים
-        await this.ensureDataCompleteness();
+      // Check if we have data, if not create demo data
+      if (testSnapshot.empty) {
+        console.log('📚 No data found - creating demo data...');
+        await this.createDemoData();
       }
-      
-      console.log('✅ Firestore data initialization complete');
     } catch (error) {
-      console.error('❌ Error initializing Firestore data:', error);
-      // Fallback to generating mock data if migration fails
-      await this.generateMockData();
-    }
-  }
-
-  // ודא שיש מספיק נתונים ושהם מחולקים נכון
-  private static async ensureDataCompleteness(): Promise<void> {
-    console.log('🔍 Checking data completeness...');
-    
-    const files = await this.getFiles();
-    const students = await this.getStudents();
-    const courses = await this.getCourses();
-    const lecturers = await this.getLecturers();
-
-    // ספירת קבצים לפי סטטוס
-    const statusCounts = {
-      pending: files.filter(f => f.status === 'pending').length,
-      approved: files.filter(f => f.status === 'approved').length,
-      rejected: files.filter(f => f.status === 'rejected').length
-    };
-
-    console.log(`📊 Current data: ${students.length} students, ${lecturers.length} lecturers, ${courses.length} courses`);
-    console.log(`📋 Files by status: ${statusCounts.pending} pending, ${statusCounts.approved} approved, ${statusCounts.rejected} rejected`);
-
-    // אם אין מספיק קבצים או שהחלוקה לא טובה, הוסף עוד
-    const totalFiles = files.length;
-    const needsMoreFiles = totalFiles < 50 || statusCounts.pending < 10 || statusCounts.approved < 15 || statusCounts.rejected < 5;
-
-    if (needsMoreFiles) {
-      console.log('📝 Adding more files to ensure good distribution...');
-      await this.addMoreFiles(courses, students, statusCounts);
-    }
-  }
-
-  // הוסף עוד קבצים אם צריך
-  private static async addMoreFiles(courses: any[], students: any[], currentCounts: any): Promise<void> {
-    const localStorageModule = await import('@/services/localStorage');
-    const MockDataGenerator = (localStorageModule as any).MockDataGenerator;
-    
-    // יצירת קבצים נוספים
-    const additionalFiles = MockDataGenerator.generateFiles(60, courses, students);
-    
-    // ודא חלוקה טובה של הקבצים החדשים
-    this.ensureFileStatusDistribution(additionalFiles);
-    
-    // הוסף לFirestore
-    const batch = writeBatch(db);
-    additionalFiles.forEach((file: any) => {
-      const docRef = doc(db, COLLECTIONS.FILES, file.id);
-      batch.set(docRef, file);
-    });
-    
-    await batch.commit();
-    console.log(`✅ Added ${additionalFiles.length} additional files to ensure completeness`);
-  }
-
-  // Migration from localStorage
-  static async migrateFromLocalStorage(): Promise<void> {
-    console.log('🔄 Starting migration from localStorage to Firestore...');
-    
-    try {
-      // Get data from localStorage
-      const students = JSON.parse(localStorage.getItem('app_students') || '[]');
-      const lecturers = JSON.parse(localStorage.getItem('app_lecturers') || '[]');
-      const courses = JSON.parse(localStorage.getItem('app_courses') || '[]');
-      const files = JSON.parse(localStorage.getItem('app_files') || '[]');
-      const messages = JSON.parse(localStorage.getItem('app_messages') || '[]');
-      const notifications = JSON.parse(localStorage.getItem('app_notifications') || '[]');
-
-      // Use batch operations for better performance
-      const batch = writeBatch(db);
-
-      // Migrate students
-      students.forEach((student: Student) => {
-        const docRef = doc(db, COLLECTIONS.STUDENTS, student.id);
-        batch.set(docRef, student);
-      });
-
-      // Migrate lecturers
-      lecturers.forEach((lecturer: Lecturer) => {
-        const docRef = doc(db, COLLECTIONS.LECTURERS, lecturer.id);
-        batch.set(docRef, lecturer);
-      });
-
-      // Migrate courses
-      courses.forEach((course: Course) => {
-        const docRef = doc(db, COLLECTIONS.COURSES, course.id);
-        batch.set(docRef, course);
-      });
-
-      // Migrate files
-      files.forEach((file: FileEntity) => {
-        const docRef = doc(db, COLLECTIONS.FILES, file.id);
-        batch.set(docRef, file);
-      });
-
-      // Migrate messages
-      messages.forEach((message: Message) => {
-        const docRef = doc(db, COLLECTIONS.MESSAGES, message.id);
-        batch.set(docRef, message);
-      });
-
-      // Migrate notifications
-      notifications.forEach((notification: NotificationEntity) => {
-        const docRef = doc(db, COLLECTIONS.NOTIFICATIONS, notification.id);
-        batch.set(docRef, notification);
-      });
-
-      // Commit the batch
-      await batch.commit();
-      
-      console.log(`✅ Migration completed successfully! Migrated ${students.length} students, ${lecturers.length} lecturers, ${courses.length} courses, ${files.length} files, ${messages.length} messages, ${notifications.length} notifications`);
-    } catch (error) {
-      console.error('❌ Error during migration:', error);
+      console.error('❌ Error connecting to Firestore:', error);
       throw error;
     }
   }
 
-  // Generate mock data if no localStorage data exists
-  static async generateMockData(): Promise<void> {
-    console.log('🔄 Generating mock data for Firestore...');
+  // Create demo data for development/testing
+  static async createDemoData(): Promise<void> {
+    console.log('🔄 Creating demo data for Firestore...');
     
-    // Import mock data generator from localStorage service
-    const localStorageModule = await import('@/services/localStorage');
-    const MockDataGenerator = (localStorageModule as any).MockDataGenerator;
-    
-    const students = MockDataGenerator.generateStudents(15);
-    const lecturers = MockDataGenerator.generateLecturers(12);
-    const courses = MockDataGenerator.generateCourses(20, lecturers);
-    const files = MockDataGenerator.generateFiles(150, courses, students); // יותר קבצים
-    const messages = MockDataGenerator.generateMessages(30);
-    const notifications = MockDataGenerator.generateNotifications(25);
+    try {
+      const batch = writeBatch(db);
 
-    // ודא שיש קבצים בכל הסטטוסים
-    this.ensureFileStatusDistribution(files);
+      // Create demo students
+      const demoStudents: Student[] = [
+        {
+          id: 'student-001',
+          full_name: 'יוסי כהן',
+          email: 'yossi.cohen@student.ono.ac.il',
+          student_id: 'STU001',
+          national_id: '123456789',
+          academic_track: 'cs-undergrad',
+          academic_track_ids: ['cs-undergrad'],
+          year: 2,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'student-002',
+          full_name: 'שרה לוי',
+          email: 'sarah.levi@student.ono.ac.il',
+          student_id: 'STU002',
+          national_id: '987654321',
+          academic_track: 'business-undergrad',
+          academic_track_ids: ['business-undergrad'],
+          year: 3,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-    // Use batch operations
-    const batch = writeBatch(db);
+      // Create demo lecturers
+      const demoLecturers: Lecturer[] = [
+        {
+          id: 'lecturer-001',
+          full_name: 'ד"ר מיכל רוזן',
+          email: 'michal.rosen@ono.ac.il',
+          employee_id: 'EMP001',
+          national_id: '555666777',
+          department: 'מדעי המחשב',
+          specialization: 'בינה מלאכותית',
+          status: 'active',
+          academic_tracks: ['cs-undergrad', 'cs-grad'],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-    students.forEach((student: Student) => {
-      const docRef = doc(db, COLLECTIONS.STUDENTS, student.id);
-      batch.set(docRef, student);
-    });
+      // Create demo courses
+      const demoCourses: Course[] = [
+        {
+          id: 'course-001',
+          name: 'מבוא למדעי המחשב',
+          code: 'CS101',
+          description: 'קורס מבוא למדעי המחשב',
+          credits: 4,
+          semester: 'א',
+          year: 2024,
+          lecturer_id: 'lecturer-001',
+          academic_track: 'cs-undergrad',
+          max_students: 30,
+          enrolled_students: 15,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-    lecturers.forEach((lecturer: Lecturer) => {
-      const docRef = doc(db, COLLECTIONS.LECTURERS, lecturer.id);
-      batch.set(docRef, lecturer);
-    });
+      // Create demo files
+      const demoFiles: FileEntity[] = [
+        {
+          id: 'file-001',
+          filename: 'lecture1.pdf',
+          original_name: 'הרצאה 1 - מבוא.pdf',
+          file_type: 'pdf',
+          file_size: 1024000,
+          file_code: 'CS101-L001',
+          course_id: 'course-001',
+          uploader_id: 'student-001',
+          uploader_type: 'student',
+          status: 'pending',
+          download_count: 0,
+          tags: ['הרצאה', 'מבוא'],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'file-002',
+          filename: 'assignment1.pdf',
+          original_name: 'תרגיל 1.pdf',
+          file_type: 'pdf',
+          file_size: 512000,
+          file_code: 'CS101-A001',
+          course_id: 'course-001',
+          uploader_id: 'student-002',
+          uploader_type: 'student',
+          status: 'approved',
+          approval_date: new Date().toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 5,
+          tags: ['תרגיל'],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-    courses.forEach((course: Course) => {
-      const docRef = doc(db, COLLECTIONS.COURSES, course.id);
-      batch.set(docRef, course);
-    });
+      // Create demo messages
+      const demoMessages: Message[] = [
+        {
+          id: 'message-001',
+          sender_id: 'student-001',
+          sender_type: 'student',
+          recipient_id: 'lecturer-001',
+          subject: 'שאלה לגבי התרגיל',
+          content: 'שלום, יש לי שאלה לגבי התרגיל הראשון...',
+          message_type: 'inquiry',
+          status: 'open',
+          priority: 'medium',
+          category: 'אקדמי',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-    files.forEach((file: FileEntity) => {
-      const docRef = doc(db, COLLECTIONS.FILES, file.id);
-      batch.set(docRef, file);
-    });
+      // Create demo notifications
+      const demoNotifications: NotificationEntity[] = [
+        {
+          id: 'notification-001',
+          user_id: 'student-001',
+          title: 'קובץ אושר',
+          message: 'הקובץ שלך אושר בהצלחה',
+          type: 'success',
+          read: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
 
-    messages.forEach((message: Message) => {
-      const docRef = doc(db, COLLECTIONS.MESSAGES, message.id);
-      batch.set(docRef, message);
-    });
+      // Add all demo data to batch
+      demoStudents.forEach(student => {
+        const docRef = doc(db, COLLECTIONS.STUDENTS, student.id);
+        batch.set(docRef, student);
+      });
 
-    notifications.forEach((notification: NotificationEntity) => {
-      const docRef = doc(db, COLLECTIONS.NOTIFICATIONS, notification.id);
-      batch.set(docRef, notification);
-    });
+      demoLecturers.forEach(lecturer => {
+        const docRef = doc(db, COLLECTIONS.LECTURERS, lecturer.id);
+        batch.set(docRef, lecturer);
+      });
 
-    await batch.commit();
-    console.log('✅ Mock data generated successfully in Firestore');
-    console.log(`📊 Generated: ${students.length} students, ${lecturers.length} lecturers, ${courses.length} courses, ${files.length} files (with varied statuses), ${messages.length} messages, ${notifications.length} notifications`);
+      demoCourses.forEach(course => {
+        const docRef = doc(db, COLLECTIONS.COURSES, course.id);
+        batch.set(docRef, course);
+      });
+
+      demoFiles.forEach(file => {
+        const docRef = doc(db, COLLECTIONS.FILES, file.id);
+        batch.set(docRef, file);
+      });
+
+      demoMessages.forEach(message => {
+        const docRef = doc(db, COLLECTIONS.MESSAGES, message.id);
+        batch.set(docRef, message);
+      });
+
+      demoNotifications.forEach(notification => {
+        const docRef = doc(db, COLLECTIONS.NOTIFICATIONS, notification.id);
+        batch.set(docRef, notification);
+      });
+
+      await batch.commit();
+      console.log('✅ Demo data created successfully in Firestore');
+      console.log(`📊 Created: ${demoStudents.length} students, ${demoLecturers.length} lecturers, ${demoCourses.length} courses, ${demoFiles.length} files, ${demoMessages.length} messages, ${demoNotifications.length} notifications`);
+    } catch (error) {
+      console.error('❌ Error creating demo data:', error);
+      throw error;
+    }
   }
 
-  // ודא חלוקה טובה של סטטוסי קבצים
-  private static ensureFileStatusDistribution(files: any[]): void {
-    const statusCounts = { pending: 0, approved: 0, rejected: 0 };
-    
-    files.forEach((file, index) => {
-      // חלוקה של סטטוסים: 40% pending, 45% approved, 15% rejected
-      if (index % 20 < 8) {
-        file.status = 'pending';
-        statusCounts.pending++;
-      } else if (index % 20 < 17) {
-        file.status = 'approved';
-        file.approval_date = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
-        file.approved_by = `lecturer-${String(Math.floor(Math.random() * 12) + 1).padStart(3, '0')}`;
-        statusCounts.approved++;
-      } else {
-        file.status = 'rejected';
-        file.rejection_reason = this.getRandomRejectionReason();
-        file.approval_date = new Date(Date.now() - Math.random() * 15 * 24 * 60 * 60 * 1000).toISOString();
-        file.approved_by = `lecturer-${String(Math.floor(Math.random() * 12) + 1).padStart(3, '0')}`;
-        statusCounts.rejected++;
-      }
-    });
-    
-    console.log(`📋 File status distribution: ${statusCounts.pending} pending, ${statusCounts.approved} approved, ${statusCounts.rejected} rejected`);
-  }
 
-  private static getRandomRejectionReason(): string {
-    const reasons = [
-      'הקובץ אינו רלוונטי לקורס',
-      'איכות הקובץ אינה מספקת',
-      'הקובץ כבר קיים במערכת',
-      'תוכן הקובץ אינו מתאים',
-      'הקובץ פגום או לא ניתן לקריאה',
-      'זכויות יוצרים - הקובץ מוגן',
-      'הקובץ לא עומד בדרישות הקורס',
-      'מידע שגוי או לא מעודכן'
-    ];
-    return reasons[Math.floor(Math.random() * reasons.length)];
-  }
 
   // Generic CRUD operations
   private static async getCollection<T>(collectionName: string): Promise<T[]> {
@@ -733,51 +783,7 @@ export class FirestoreService {
     }
   }
 
-  static async resetAllData(): Promise<void> {
-    console.log('🔄 Resetting all Firestore data...');
-    await this.clearAllData();
-    await this.generateMockData();
-    console.log('✅ All Firestore data has been reset and reinitialized');
-  }
 
-  static async refreshAllData(): Promise<void> {
-    console.log('🔄 Refreshing all Firestore data with new mock data...');
-    await this.clearAllData();
-    await this.generateMockData();
-    console.log('✅ All Firestore data refreshed successfully!');
-  }
-
-  // פונקציה מיוחדת לוודא שיש קבצים בכל הסטטוסים (לקריאה מהקונסול)
-  static async ensureFileVariety(): Promise<void> {
-    console.log('🎯 Ensuring file status variety...');
-    
-    const files = await this.getFiles();
-    const statusCounts = {
-      pending: files.filter(f => f.status === 'pending').length,
-      approved: files.filter(f => f.status === 'approved').length,
-      rejected: files.filter(f => f.status === 'rejected').length
-    };
-
-    console.log(`📋 Current distribution: ${statusCounts.pending} pending, ${statusCounts.approved} approved, ${statusCounts.rejected} rejected`);
-
-    // אם החלוקה לא טובה, הוסף קבצים
-    if (statusCounts.pending < 10 || statusCounts.approved < 15 || statusCounts.rejected < 5) {
-      const courses = await this.getCourses();
-      const students = await this.getStudents();
-      await this.addMoreFiles(courses, students, statusCounts);
-      
-      // הדפס את החלוקה החדשה
-      const newFiles = await this.getFiles();
-      const newCounts = {
-        pending: newFiles.filter(f => f.status === 'pending').length,
-        approved: newFiles.filter(f => f.status === 'approved').length,
-        rejected: newFiles.filter(f => f.status === 'rejected').length
-      };
-      console.log(`📋 New distribution: ${newCounts.pending} pending, ${newCounts.approved} approved, ${newCounts.rejected} rejected`);
-    } else {
-      console.log('✅ File distribution is already good!');
-    }
-  }
 
   // Real-time listeners (optional for future use)
   static subscribeToStudents(callback: (students: Student[]) => void): () => void {
@@ -814,15 +820,12 @@ export class FirestoreService {
 // Expose utility functions to window for debug/admin use (similar to localStorage service)
 if (typeof window !== 'undefined') {
   (window as any).FirestoreUtils = {
-    resetAllData: () => FirestoreService.resetAllData(),
     clearAllData: () => FirestoreService.clearAllData(),
-    refreshAllData: () => FirestoreService.refreshAllData(),
+    createDemoData: () => FirestoreService.createDemoData(),
     getStudents: () => FirestoreService.getStudents(),
     getFiles: () => FirestoreService.getFiles(),
     getCourses: () => FirestoreService.getCourses(),
     getLecturers: () => FirestoreService.getLecturers(),
-    migrateFromLocalStorage: () => FirestoreService.migrateFromLocalStorage(),
-    ensureFileVariety: () => FirestoreService.ensureFileVariety(),
     checkFileStatus: async () => {
       const files = await FirestoreService.getFiles();
       const counts = {
@@ -834,73 +837,22 @@ if (typeof window !== 'undefined') {
       console.log('📊 File Status Report:', counts);
       return counts;
     },
-    generateMoreContent: async () => {
-      console.log('🎯 Generating more varied content for all entity types...');
-      
-      const localStorageModule = await import('@/services/localStorage');
-      const MockDataGenerator = (localStorageModule as any).MockDataGenerator;
-      
-      // צור עוד נתונים מגוונים
-      const additionalStudents = MockDataGenerator.generateStudents(10);
-      const additionalLecturers = MockDataGenerator.generateLecturers(5);
-      const additionalCourses = MockDataGenerator.generateCourses(15, additionalLecturers);
-      const additionalFiles = MockDataGenerator.generateFiles(80, additionalCourses, additionalStudents);
-      const additionalMessages = MockDataGenerator.generateMessages(40);
-      const additionalNotifications = MockDataGenerator.generateNotifications(35);
-      
-             // ודא חלוקה טובה של הקבצים - חלוקה פנימית
-       additionalFiles.forEach((file: any, index: number) => {
-         if (index % 20 < 8) {
-           file.status = 'pending';
-         } else if (index % 20 < 17) {
-           file.status = 'approved';
-           file.approval_date = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString();
-         } else {
-           file.status = 'rejected';
-           file.rejection_reason = 'הקובץ אינו מתאים לדרישות';
-         }
-       });
-       
-       // הוסף הכל לFirestore
-       const batch = writeBatch(db);
-       
-       [...additionalStudents, ...additionalLecturers, ...additionalCourses, 
-        ...additionalFiles, ...additionalMessages, ...additionalNotifications].forEach((item: any, index) => {
-         const collection = item.id.startsWith('student') ? COLLECTIONS.STUDENTS :
-                           item.id.startsWith('lecturer') ? COLLECTIONS.LECTURERS :
-                           item.id.startsWith('course') ? COLLECTIONS.COURSES :
-                           item.id.startsWith('file') ? COLLECTIONS.FILES :
-                           item.id.startsWith('message') ? COLLECTIONS.MESSAGES :
-                           COLLECTIONS.NOTIFICATIONS;
-         
-         const docRef = doc(db, collection, item.id);
-         batch.set(docRef, item);
-       });
-       
-       await batch.commit();
-       console.log('✅ Generated additional varied content successfully!');
-       
-       // הצג סטטיסטיקות
-       const files = await FirestoreService.getFiles();
-       const counts = {
-         pending: files.filter(f => f.status === 'pending').length,
-         approved: files.filter(f => f.status === 'approved').length,
-         rejected: files.filter(f => f.status === 'rejected').length,
-         total: files.length
-       };
-       console.log('📊 Updated File Status Report:', counts);
+    resetWithDemoData: async () => {
+      console.log('🔄 Resetting Firestore with fresh demo data...');
+      await FirestoreService.clearAllData();
+      await FirestoreService.createDemoData();
+      console.log('✅ Firestore reset with demo data complete!');
     }
   };
   
   console.log('%c🔥 FirestoreUtils available in console:', 'color: #FF5722; font-weight: bold; font-size: 14px;');
-  console.log('%c✨ New commands for dashboard and file management:', 'color: #4CAF50; font-weight: bold;');
-  console.log('- FirestoreUtils.refreshAllData() - רענון נתונים עם נתונים מלאים חדשים!');
-  console.log('- FirestoreUtils.ensureFileVariety() - ודא שיש קבצים בכל הסטטוסים');
+  console.log('%c✨ Available commands:', 'color: #4CAF50; font-weight: bold;');
+  console.log('- FirestoreUtils.createDemoData() - צור נתוני דמו');
+  console.log('- FirestoreUtils.resetWithDemoData() - אפס ויצור נתוני דמו חדשים');
   console.log('- FirestoreUtils.checkFileStatus() - בדוק חלוקת סטטוסי הקבצים');
-  console.log('- FirestoreUtils.generateMoreContent() - צור עוד תוכן מגוון לכל הישויות');
-  console.log('- FirestoreUtils.resetAllData() - מאפס את כל הנתונים');
   console.log('- FirestoreUtils.clearAllData() - מוחק את כל הנתונים');
   console.log('- FirestoreUtils.getStudents() - מציג רשימת סטודנטים');
   console.log('- FirestoreUtils.getCourses() - מציג רשימת קורסים');
-  console.log('- FirestoreUtils.migrateFromLocalStorage() - מיגרציה מ-localStorage');
+  console.log('- FirestoreUtils.getFiles() - מציג רשימת קבצים');
+  console.log('- FirestoreUtils.getLecturers() - מציג רשימת מרצים');
 } 

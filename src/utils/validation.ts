@@ -532,16 +532,16 @@ export class UniquenessValidator {
     excludeId?: string
   ): Promise<ValidationResult> {
     try {
-      const { LocalStorageService } = await import('@/services/localStorage')
+      const { FirestoreService } = await import('@/services/firestoreService')
       
       let existingRecords: any[] = []
       
       switch (entityType) {
         case 'students':
-          existingRecords = LocalStorageService.getStudents()
+          existingRecords = await FirestoreService.getStudents()
           break
         case 'lecturers':
-          existingRecords = LocalStorageService.getLecturers()
+          existingRecords = await FirestoreService.getLecturers()
           break
         default:
           return { isValid: true }
@@ -577,16 +577,16 @@ export class UniquenessValidator {
     excludeId?: string
   ): Promise<ValidationResult> {
     try {
-      const { LocalStorageService } = await import('@/services/localStorage')
+      const { FirestoreService } = await import('@/services/firestoreService')
       
       let existingRecords: any[] = []
       
       switch (entityType) {
         case 'students':
-          existingRecords = LocalStorageService.getStudents()
+          existingRecords = await FirestoreService.getStudents()
           break
         case 'lecturers':
-          existingRecords = LocalStorageService.getLecturers()
+          existingRecords = await FirestoreService.getLecturers()
           break
         default:
           return { isValid: true }
@@ -618,16 +618,16 @@ export class UniquenessValidator {
     excludeId?: string
   ): Promise<ValidationResult> {
     try {
-      const { LocalStorageService } = await import('@/services/localStorage')
+      const { FirestoreService } = await import('@/services/firestoreService')
       
       let existingRecords: any[] = []
       
       switch (entityType) {
         case 'students':
-          existingRecords = LocalStorageService.getStudents()
+          existingRecords = await FirestoreService.getStudents()
           break
         case 'lecturers':
-          existingRecords = LocalStorageService.getLecturers()
+          existingRecords = await FirestoreService.getLecturers()
           break
         default:
           return { isValid: true }

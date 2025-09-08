@@ -1,26 +1,21 @@
 import { apiClient } from './apiClient.ts';
-import { LocalStorageService } from '@/services/localStorage';
+import { FirestoreService } from '@/services/firestoreService';
 
 // Import the correct Entity class from apiClient
 import './apiClient.ts'; // This ensures Entity class is loaded
 
-class MockEntity {
+class FirestoreEntity {
   apiClient: any;
   entityName: string;
-  storageKey: string;
 
   constructor(apiClient: any, entityName: string) {
     this.apiClient = apiClient;
     this.entityName = entityName;
-    this.storageKey = `mock_${entityName}`;
   }
 
-  // Mock Data Operations that read directly from localStorage
+  // Firestore Data Operations
   async list() {
-    console.log(`Using localStorage for LIST ${this.entityName}`);
-    
-    // Initialize data if not exists
-    LocalStorageService.initializeData();
+    console.log(`Using Firestore for LIST ${this.entityName}`);
     
     if (this.entityName === 'academic-tracks') {
       try {
@@ -32,137 +27,137 @@ class MockEntity {
         return data;
       } catch (error) {
         console.error('Failed to fetch academic tracks:', error);
-        return Promise.resolve([]);
+        return [];
       }
     }
     
     switch (this.entityName) {
       case 'students':
-        return Promise.resolve(LocalStorageService.getStudents());
+        return await FirestoreService.getStudents();
       case 'lecturers':
-        return Promise.resolve(LocalStorageService.getLecturers());
+        return await FirestoreService.getLecturers();
       case 'courses':
-        return Promise.resolve(LocalStorageService.getCourses());
+        return await FirestoreService.getCourses();
       case 'files':
-        return Promise.resolve(LocalStorageService.getFiles());
+        return await FirestoreService.getFiles();
       case 'messages':
-        return Promise.resolve(LocalStorageService.getMessages());
+        return await FirestoreService.getMessages();
       case 'notifications':
-        return Promise.resolve(LocalStorageService.getNotifications());
+        return await FirestoreService.getNotifications();
       default:
-        // Fallback to old localStorage method for other entities
-        const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-        return Promise.resolve(data);
+        console.warn(`Unknown entity type: ${this.entityName}`);
+        return [];
     }
   }
 
   async get(id: string) {
-    console.log(`Using localStorage for GET ${this.entityName}`);
-    LocalStorageService.initializeData();
+    console.log(`Using Firestore for GET ${this.entityName}/${id}`);
     
     switch (this.entityName) {
-      case 'students':
-        const student = LocalStorageService.getStudents().find(s => s.id === id);
-        return Promise.resolve(student);
-      case 'lecturers':
-        const lecturer = LocalStorageService.getLecturers().find(l => l.id === id);
-        return Promise.resolve(lecturer);
-      case 'courses':
-        const course = LocalStorageService.getCourses().find(c => c.id === id);
-        return Promise.resolve(course);
-      case 'files':
-        const file = LocalStorageService.getFiles().find(f => f.id === id);
-        return Promise.resolve(file);
-      case 'messages':
-        const message = LocalStorageService.getMessages().find(m => m.id === id);
-        return Promise.resolve(message);
-      case 'notifications':
-        const notification = LocalStorageService.getNotifications().find(n => n.id === id);
-        return Promise.resolve(notification);
+      case 'students': {
+        const students = await FirestoreService.getStudents();
+        return students.find(s => s.id === id) || null;
+      }
+      case 'lecturers': {
+        const lecturers = await FirestoreService.getLecturers();
+        return lecturers.find(l => l.id === id) || null;
+      }
+      case 'courses': {
+        const courses = await FirestoreService.getCourses();
+        return courses.find(c => c.id === id) || null;
+      }
+      case 'files': {
+        const files = await FirestoreService.getFiles();
+        return files.find(f => f.id === id) || null;
+      }
+      case 'messages': {
+        const messages = await FirestoreService.getMessages();
+        return messages.find(m => m.id === id) || null;
+      }
+      case 'notifications': {
+        const notifications = await FirestoreService.getNotifications();
+        return notifications.find(n => n.id === id) || null;
+      }
       default:
-        // Fallback to old localStorage method
-        const data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-        const item = data.find((item: any) => item.id === id);
-        return Promise.resolve(item);
+        console.warn(`Unknown entity type: ${this.entityName}`);
+        return null;
     }
   }
 
   async create(data: any) {
-    console.log(`Using localStorage for CREATE ${this.entityName}`);
-    LocalStorageService.initializeData();
+    console.log(`Using Firestore for CREATE ${this.entityName}`);
     
     switch (this.entityName) {
       case 'students':
-        const newStudent = LocalStorageService.addStudent(data);
-        return Promise.resolve(newStudent);
+        return await FirestoreService.addStudent(data);
       case 'lecturers':
-        const newLecturer = LocalStorageService.addLecturer(data);
-        return Promise.resolve(newLecturer);
+        return await FirestoreService.addLecturer(data);
       case 'courses':
-        const newCourse = LocalStorageService.addCourse(data);
-        return Promise.resolve(newCourse);
+        return await FirestoreService.addCourse(data);
+      case 'files':
+        return await FirestoreService.addFile(data);
+      case 'messages':
+        return await FirestoreService.addMessage(data);
+      case 'notifications':
+        return await FirestoreService.addNotification(data);
       default:
-        // Fallback to old localStorage method
-        const existingData = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-        const newItem = { ...data, id: data.id || `${this.entityName}-${Date.now()}` };
-        existingData.push(newItem);
-        localStorage.setItem(this.storageKey, JSON.stringify(existingData));
-        return Promise.resolve(newItem);
+        console.warn(`Create operation not supported for entity type: ${this.entityName}`);
+        throw new Error(`Create operation not supported for entity type: ${this.entityName}`);
     }
   }
 
   async update(id: string, data: any) {
-    console.log(`Using localStorage for UPDATE ${this.entityName}`);
-    LocalStorageService.initializeData();
+    console.log(`Using Firestore for UPDATE ${this.entityName}/${id}`);
     
     switch (this.entityName) {
       case 'students':
-        const updatedStudent = LocalStorageService.updateStudent(id, data);
-        return Promise.resolve(updatedStudent);
+        return await FirestoreService.updateStudent(id, data);
       case 'lecturers':
-        const updatedLecturer = LocalStorageService.updateLecturer(id, data);
-        return Promise.resolve(updatedLecturer);
+        return await FirestoreService.updateLecturer(id, data);
       case 'courses':
-        const updatedCourse = LocalStorageService.updateCourse(id, data);
-        return Promise.resolve(updatedCourse);
+        return await FirestoreService.updateCourse(id, data);
+      case 'files':
+        return await FirestoreService.updateFile(id, data);
+      case 'messages':
+        return await FirestoreService.updateMessage(id, data);
+      case 'notifications':
+        return await FirestoreService.updateNotification(id, data);
       default:
-        // Fallback to old localStorage method
-        const existingData = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-        const index = existingData.findIndex((item: any) => item.id === id);
-        if (index !== -1) {
-          existingData[index] = { ...existingData[index], ...data };
-          localStorage.setItem(this.storageKey, JSON.stringify(existingData));
-        }
-        return Promise.resolve(existingData[index]);
+        console.warn(`Update operation not supported for entity type: ${this.entityName}`);
+        throw new Error(`Update operation not supported for entity type: ${this.entityName}`);
     }
   }
 
   async delete(id: string) {
-    console.log(`Using localStorage for DELETE ${this.entityName}`);
-    LocalStorageService.initializeData();
+    console.log(`Using Firestore for DELETE ${this.entityName}/${id}`);
     
     switch (this.entityName) {
       case 'students':
-        const deletedStudent = LocalStorageService.deleteStudent(id);
-        return Promise.resolve({ success: deletedStudent });
+        const deletedStudent = await FirestoreService.deleteStudent(id);
+        return { success: deletedStudent };
       case 'lecturers':
-        const deletedLecturer = LocalStorageService.deleteLecturer(id);
-        return Promise.resolve({ success: deletedLecturer });
+        const deletedLecturer = await FirestoreService.deleteLecturer(id);
+        return { success: deletedLecturer };
       case 'courses':
-        const deletedCourse = LocalStorageService.deleteCourse(id);
-        return Promise.resolve({ success: deletedCourse });
+        const deletedCourse = await FirestoreService.deleteCourse(id);
+        return { success: deletedCourse };
+      case 'files':
+        const deletedFile = await FirestoreService.deleteFile(id);
+        return { success: deletedFile };
+      case 'messages':
+        const deletedMessage = await FirestoreService.deleteMessage(id);
+        return { success: deletedMessage };
+      case 'notifications':
+        const deletedNotification = await FirestoreService.deleteNotification(id);
+        return { success: deletedNotification };
       default:
-        // Fallback to old localStorage method
-        const existingData = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-        const filteredData = existingData.filter((item: any) => item.id !== id);
-        localStorage.setItem(this.storageKey, JSON.stringify(filteredData));
-        return Promise.resolve({ success: true });
+        console.warn(`Delete operation not supported for entity type: ${this.entityName}`);
+        throw new Error(`Delete operation not supported for entity type: ${this.entityName}`);
     }
   }
   
   async filter(filters: any) {
-    console.log(`Using localStorage for FILTER ${this.entityName}`);
-    LocalStorageService.initializeData();
+    console.log(`Using Firestore for FILTER ${this.entityName}`);
     
     if (this.entityName === 'academic-tracks') {
       try {
@@ -174,43 +169,30 @@ class MockEntity {
             data = data.filter((item: any) => item[key] === filters[key]);
         });
         console.log('Academic tracks filtered:', data.length, 'tracks match filters');
-        return Promise.resolve(data);
+        return data;
       } catch (error) {
         console.error('Failed to fetch academic tracks for filtering:', error);
-        return Promise.resolve([]);
+        return [];
       }
     }
     
-    let data: any[] = [];
+    // Get all data first, then filter locally
+    // In a real implementation, you would use Firestore queries
+    const allData = await this.list();
     
-    switch (this.entityName) {
-      case 'students':
-        data = LocalStorageService.getStudents();
-        break;
-      case 'lecturers':
-        data = LocalStorageService.getLecturers();
-        break;
-      case 'courses':
-        data = LocalStorageService.getCourses();
-        break;
-      case 'files':
-        data = LocalStorageService.getFiles();
-        break;
-      case 'messages':
-        data = LocalStorageService.getMessages();
-        break;
-      case 'notifications':
-        data = LocalStorageService.getNotifications();
-        break;
-      default:
-        data = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-    }
-    
+    let filteredData = allData;
     Object.keys(filters).forEach(key => {
-        data = data.filter((item: any) => item[key] === filters[key]);
+      filteredData = filteredData.filter((item: any) => {
+        if (Array.isArray(item[key])) {
+          // Handle array fields (like academic_track_ids)
+          return item[key].includes(filters[key]);
+        } else {
+          return item[key] === filters[key];
+        }
+      });
     });
     
-    return Promise.resolve(data);
+    return filteredData;
   }
 
   // Legacy methods for compatibility
@@ -231,14 +213,14 @@ class MockEntity {
   }
 }
 
-export const User = new MockEntity(apiClient, 'users');
-export const Course = new MockEntity(apiClient, 'courses');
-export const File = new MockEntity(apiClient, 'files');
-export const Student = new MockEntity(apiClient, 'students');
-export const Lecturer = new MockEntity(apiClient, 'lecturers');
-export const AcademicTrack = new MockEntity(apiClient, 'academic-tracks');
-export const Message = new MockEntity(apiClient, 'messages');
-export const Notification = new MockEntity(apiClient, 'notifications');
+export const User = new FirestoreEntity(apiClient, 'users');
+export const Course = new FirestoreEntity(apiClient, 'courses');
+export const File = new FirestoreEntity(apiClient, 'files');
+export const Student = new FirestoreEntity(apiClient, 'students');
+export const Lecturer = new FirestoreEntity(apiClient, 'lecturers');
+export const AcademicTrack = new FirestoreEntity(apiClient, 'academic-tracks');
+export const Message = new FirestoreEntity(apiClient, 'messages');
+export const Notification = new FirestoreEntity(apiClient, 'notifications');
 
 export type User = {
     id: string;

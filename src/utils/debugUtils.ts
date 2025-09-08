@@ -1,108 +1,172 @@
-import { LocalStorageService } from '@/services/localStorage'
+import { FirestoreService } from '@/services/firestoreService'
 
-// Debug utilities for localStorage operations
-export const debugLocalStorage = {
+// Debug utilities for Firestore operations
+export const debugFirestore = {
   // Print all data to console
-  logAll: () => {
-    console.group('🔍 LocalStorage Debug Data')
+  logAll: async () => {
+    console.group('🔍 Firestore Debug Data')
     
-    console.log('👥 Students:', LocalStorageService.getStudents().length, 'items')
-    console.log('🎓 Lecturers:', LocalStorageService.getLecturers().length, 'items')
-    console.log('📚 Courses:', LocalStorageService.getCourses().length, 'items')
-    console.log('📁 Files:', LocalStorageService.getFiles().length, 'items')
-    console.log('💬 Messages:', LocalStorageService.getMessages().length, 'items')
-    console.log('🔔 Notifications:', LocalStorageService.getNotifications().length, 'items')
-    console.log('👤 User Session:', LocalStorageService.getUserSession())
+    try {
+      const students = await FirestoreService.getStudents();
+      const lecturers = await FirestoreService.getLecturers();
+      const courses = await FirestoreService.getCourses();
+      const files = await FirestoreService.getFiles();
+      const messages = await FirestoreService.getMessages();
+      const notifications = await FirestoreService.getNotifications();
+      
+      console.log('👥 Students:', students.length, 'items')
+      console.log('🎓 Lecturers:', lecturers.length, 'items')
+      console.log('📚 Courses:', courses.length, 'items')
+      console.log('📁 Files:', files.length, 'items')
+      console.log('💬 Messages:', messages.length, 'items')
+      console.log('🔔 Notifications:', notifications.length, 'items')
+    } catch (error) {
+      console.error('❌ Error loading Firestore data:', error);
+    }
     
     console.groupEnd()
   },
   
   // Add a test student and verify it's saved
-  testAddStudent: () => {
-    const testStudent = {
-      full_name: 'סטודנט בדיקה',
-      email: 'test@ono.ac.il',
-      student_id: '2024TEST',
-      academic_track: 'cs-undergrad',
-      academic_track_ids: ['cs-undergrad'],
-      year: 1,
-      status: 'active' as const
+  testAddStudent: async () => {
+    try {
+      const testStudent = {
+        full_name: 'סטודנט בדיקה',
+        email: 'test@ono.ac.il',
+        student_id: '2024TEST',
+        national_id: '123456789',
+        academic_track: 'cs-undergrad',
+        academic_track_ids: ['cs-undergrad'],
+        year: 1,
+        status: 'active' as const
+      }
+      
+      const before = (await FirestoreService.getStudents()).length
+      const newStudent = await FirestoreService.addStudent(testStudent)
+      const after = (await FirestoreService.getStudents()).length
+      
+      console.log('✅ Test Add Student:')
+      console.log('Before:', before, 'After:', after)
+      console.log('New student:', newStudent)
+      
+      return newStudent
+    } catch (error) {
+      console.error('❌ Error adding test student:', error);
+      return null;
     }
-    
-    const before = LocalStorageService.getStudents().length
-    const newStudent = LocalStorageService.addStudent(testStudent)
-    const after = LocalStorageService.getStudents().length
-    
-    console.log('✅ Test Add Student:')
-    console.log('Before:', before, 'After:', after)
-    console.log('New student:', newStudent)
-    
-    return newStudent
   },
   
   // Update a student and verify
-  testUpdateStudent: (studentId: string) => {
-    const updates = { full_name: 'שם מעודכן' }
-    const updated = LocalStorageService.updateStudent(studentId, updates)
-    
-    console.log('✅ Test Update Student:')
-    console.log('Updated:', updated)
-    
-    return updated
+  testUpdateStudent: async (studentId: string) => {
+    try {
+      const updates = { full_name: 'שם מעודכן' }
+      const updated = await FirestoreService.updateStudent(studentId, updates)
+      
+      console.log('✅ Test Update Student:')
+      console.log('Updated:', updated)
+      
+      return updated
+    } catch (error) {
+      console.error('❌ Error updating test student:', error);
+      return null;
+    }
   },
   
   // Delete a student and verify
-  testDeleteStudent: (studentId: string) => {
-    const before = LocalStorageService.getStudents().length
-    const deleted = LocalStorageService.deleteStudent(studentId)
-    const after = LocalStorageService.getStudents().length
-    
-    console.log('✅ Test Delete Student:')
-    console.log('Before:', before, 'After:', after, 'Success:', deleted)
-    
-    return deleted
+  testDeleteStudent: async (studentId: string) => {
+    try {
+      const before = (await FirestoreService.getStudents()).length
+      const deleted = await FirestoreService.deleteStudent(studentId)
+      const after = (await FirestoreService.getStudents()).length
+      
+      console.log('✅ Test Delete Student:')
+      console.log('Before:', before, 'After:', after, 'Success:', deleted)
+      
+      return deleted
+    } catch (error) {
+      console.error('❌ Error deleting test student:', error);
+      return false;
+    }
   },
   
   // Full CRUD test
-  runFullTest: () => {
+  runFullTest: async () => {
     console.group('🧪 Full CRUD Test')
     
-    const newStudent = debugLocalStorage.testAddStudent()
-    const updated = debugLocalStorage.testUpdateStudent(newStudent.id)
-    const deleted = debugLocalStorage.testDeleteStudent(newStudent.id)
-    
-    console.log('✅ Full test completed!')
-    console.groupEnd()
-    
-    return { added: newStudent, updated, deleted }
+    try {
+      const newStudent = await debugFirestore.testAddStudent()
+      if (!newStudent) {
+        console.error('❌ Failed to add student');
+        return null;
+      }
+      
+      const updated = await debugFirestore.testUpdateStudent(newStudent.id)
+      const deleted = await debugFirestore.testDeleteStudent(newStudent.id)
+      
+      console.log('✅ Full test completed!')
+      console.groupEnd()
+      
+      return { added: newStudent, updated, deleted }
+    } catch (error) {
+      console.error('❌ Error in full test:', error);
+      console.groupEnd();
+      return null;
+    }
   },
   
-  // Check localStorage size
-  checkSize: () => {
-    let total = 0
-    Object.keys(localStorage).forEach(key => {
-      const size = localStorage.getItem(key)?.length || 0
-      total += size
-      if (key.startsWith('app_')) {
-        console.log(`📦 ${key}: ${(size / 1024).toFixed(2)} KB`)
-      }
-    })
-    
-    console.log(`💾 Total localStorage size: ${(total / 1024).toFixed(2)} KB`)
-    return total
+  // Check Firestore collection sizes
+  checkCollectionSizes: async () => {
+    try {
+      const students = await FirestoreService.getStudents();
+      const lecturers = await FirestoreService.getLecturers();
+      const courses = await FirestoreService.getCourses();
+      const files = await FirestoreService.getFiles();
+      const messages = await FirestoreService.getMessages();
+      const notifications = await FirestoreService.getNotifications();
+
+      console.log('📊 Firestore Collection Sizes:');
+      console.log(`👥 Students: ${students.length}`);
+      console.log(`🎓 Lecturers: ${lecturers.length}`);
+      console.log(`📚 Courses: ${courses.length}`);
+      console.log(`📁 Files: ${files.length}`);
+      console.log(`💬 Messages: ${messages.length}`);
+      console.log(`🔔 Notifications: ${notifications.length}`);
+      
+      return {
+        students: students.length,
+        lecturers: lecturers.length,
+        courses: courses.length,
+        files: files.length,
+        messages: messages.length,
+        notifications: notifications.length
+      };
+    } catch (error) {
+      console.error('❌ Error checking collection sizes:', error);
+      return null;
+    }
   },
 
-  // Force refresh all data (useful after schema changes)
-  forceRefresh: () => {
-    console.log('🔄 Force refreshing all data...')
-    LocalStorageService.clearAllData()
-    LocalStorageService.initializeData()
-    console.log('✅ Data refreshed!')
-    debugLocalStorage.logAll()
+  // Clear all Firestore data (be careful!)
+  clearAllData: async () => {
+    try {
+      console.log('🗑️ Clearing all Firestore data...')
+      await FirestoreService.clearAllData()
+      console.log('✅ All data cleared!')
+      await debugFirestore.logAll()
+    } catch (error) {
+      console.error('❌ Error clearing data:', error);
+    }
   }
 }
 
 // Make it available globally for console access
 if (typeof window !== 'undefined') {
-  (window as any).debugLS = debugLocalStorage
+  (window as any).debugFirestore = debugFirestore
+  
+  console.log('%c🔥 Firestore Debug Utils available:', 'color: #FF5722; font-weight: bold;');
+  console.log('- debugFirestore.logAll() - הצג את כל הנתונים');
+  console.log('- debugFirestore.checkCollectionSizes() - בדוק גדלי קולקציות');
+  console.log('- debugFirestore.testAddStudent() - בדוק הוספת סטודנט');
+  console.log('- debugFirestore.runFullTest() - הרץ בדיקה מלאה');
+  console.log('- debugFirestore.clearAllData() - נקה את כל הנתונים (זהירות!)');
 } 

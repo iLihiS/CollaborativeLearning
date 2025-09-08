@@ -14,9 +14,6 @@ class FirestoreEntity {
   async list() {
     console.log(`Using Firestore for LIST ${this.entityName}`)
     
-    // Initialize data if not exists
-    await FirestoreService.initializeData()
-    
     if (this.entityName === 'academic-tracks') {
       try {
         console.log('Fetching academic tracks from JSON file...')
@@ -53,9 +50,6 @@ class FirestoreEntity {
   async get(id: string) {
     console.log(`Using Firestore for GET ${this.entityName}/${id}`)
     
-    // Initialize data if not exists
-    await FirestoreService.initializeData()
-    
     switch (this.entityName) {
       case 'students': {
         const students = await FirestoreService.getStudents()
@@ -90,9 +84,6 @@ class FirestoreEntity {
   async create(data: any) {
     console.log(`Using Firestore for CREATE ${this.entityName}`)
     
-    // Initialize data if not exists
-    await FirestoreService.initializeData()
-    
     switch (this.entityName) {
       case 'students':
         return await FirestoreService.addStudent(data)
@@ -115,9 +106,6 @@ class FirestoreEntity {
   async update(id: string, data: any) {
     console.log(`Using Firestore for UPDATE ${this.entityName}/${id}`)
     
-    // Initialize data if not exists
-    await FirestoreService.initializeData()
-    
     switch (this.entityName) {
       case 'students':
         return await FirestoreService.updateStudent(id, data)
@@ -139,9 +127,6 @@ class FirestoreEntity {
 
   async delete(id: string) {
     console.log(`Using Firestore for DELETE ${this.entityName}/${id}`)
-    
-    // Initialize data if not exists
-    await FirestoreService.initializeData()
     
     switch (this.entityName) {
       case 'students':
