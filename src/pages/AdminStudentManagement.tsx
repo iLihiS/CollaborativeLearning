@@ -91,7 +91,7 @@ export default function admin_student_management() {
   });
 
   useEffect(() => {
-    load_data();
+    loadData();
     // Set default sorting on initial load
     setSortField('full_name');
     setSortDirection('asc');
@@ -198,8 +198,8 @@ export default function admin_student_management() {
     setFiltered_Students(filtered);
   }, [trackFilter, students, filters, sortField, sortDirection, academicTracksMap]);
 
-  /* ❌ VIOLATION: Function Naming Standard - Functions should use camelCase */
-  const load_data = async () => {
+  /* ✅ FIXED: Function Naming Standard - Now uses camelCase */
+  const loadData = async () => {
     setLoading(true);
     try {
       const [studentList, trackList] = await Promise.all([
@@ -364,7 +364,7 @@ export default function admin_student_management() {
         await Student.create(studentData);
       }
       handleCloseDialog();
-      load_data();
+      loadData();
     } catch (error) {
       console.error("Failed to save student:", error);
       setFormErrors({ general: 'שגיאה בשמירת הסטודנט. אנא נסה שוב.' });
@@ -377,7 +377,7 @@ export default function admin_student_management() {
     if (window.confirm('האם אתה בטוח שברצונך למחוק סטודנט זה?')) {
       try {
         await Student.delete(studentId);
-        load_data();
+        loadData();
       } catch (error) {
         console.error("Failed to delete student:", error);
         alert('שגיאה במחיקת הסטודנט.');
