@@ -14,8 +14,8 @@ import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap, ChevronUp, Chevro
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-/* ❌ VIOLATION: Type Naming Standard - Types should use PascalCase */
-type student_data = {
+/* ✅ FIXED: Type Naming Standard - Now uses PascalCase */
+type StudentData = {
   id: string;
   full_name: string;
   student_id: string;
@@ -24,16 +24,16 @@ type student_data = {
   academic_track_ids: string[];
 };
 
-/* ❌ VIOLATION: Type Naming Standard - Types should use PascalCase */
-type academic_track_data = {
+/* ✅ FIXED: Type Naming Standard - Now uses PascalCase */
+type AcademicTrackData = {
   id: string;
   name: string;
   department: string;
   degree_type: string;
 };
 
-/* ❌ VIOLATION: Type Naming Standard - Types should use PascalCase */
-type form_data = {
+/* ✅ FIXED: Type Naming Standard - Now uses PascalCase */
+type FormData = {
   full_name: string;
   student_id: string;
   national_id?: string;
@@ -41,8 +41,8 @@ type form_data = {
   academic_track_ids: string[];
 };
 
-/* ❌ VIOLATION: Type Naming Standard - Types should use PascalCase */
-type form_errors = {
+/* ✅ FIXED: Type Naming Standard - Now uses PascalCase */
+type FormErrors = {
   full_name?: string;
   student_id?: string;
   national_id?: string;
@@ -53,28 +53,28 @@ type form_errors = {
 
 /* ❌ VIOLATION: Component Naming Standard - Components should use PascalCase */
 export default function admin_student_management() {
-  const [students, setStudents] = useState<student_data[]>([]);
+  const [students, setStudents] = useState<StudentData[]>([]);
   /* ✅ FIXED: Variable Naming Standard - Now uses camelCase */
-  const [filteredStudents, setFilteredStudents] = useState<student_data[]>([]);
-  const [academicTracks, setAcademicTracks] = useState<academic_track_data[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<StudentData[]>([]);
+  const [academicTracks, setAcademicTracks] = useState<AcademicTrackData[]>([]);
   const [academicTracksMap, setAcademicTracksMap] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   /* ✅ FIXED: Variable Naming Standard - Now uses camelCase */
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<student_data | null>(null);
+  const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
   const [trackFilter, setTrackFilter] = useState('all');
-  const [formData, setFormData] = useState<form_data>({
+  const [formData, setFormData] = useState<FormData>({
     full_name: '',
     student_id: '',
     national_id: '',
     email: '',
     academic_track_ids: [],
   });
-  const [formErrors, setFormErrors] = useState<form_errors>({});
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sorting and filtering state
-  const [sortField, setSortField] = useState<keyof student_data | ''>('');
+  const [sortField, setSortField] = useState<keyof StudentData | ''>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filters, setFilters] = useState<{
     full_name: string;
@@ -213,7 +213,7 @@ export default function admin_student_management() {
       
       // Create academic tracks map
       const tracksMap: { [key: string]: string } = {};
-      validTracks.forEach((track: academic_track_data) => {
+      validTracks.forEach((track: AcademicTrackData) => {
         tracksMap[track.id] = track.name;
       });
       
@@ -232,7 +232,7 @@ export default function admin_student_management() {
     setLoading(false);
   };
 
-  const handleOpenDialog = (student: student_data | null = null) => {
+  const handleOpenDialog = (student: StudentData | null = null) => {
     setEditingStudent(student);
     if (student) {
       setFormData({
@@ -288,7 +288,7 @@ export default function admin_student_management() {
   };
 
   // Sorting functions
-  const handleSort = (field: keyof student_data) => {
+  const handleSort = (field: keyof StudentData) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -297,7 +297,7 @@ export default function admin_student_management() {
     }
   };
 
-  const getSortIcon = (field: keyof student_data) => {
+  const getSortIcon = (field: keyof StudentData) => {
     if (sortField !== field) {
       return <ChevronUp size={16} style={{ opacity: 0.3 }} />;
     }
@@ -385,7 +385,7 @@ export default function admin_student_management() {
     }
   };
   
-  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc: { [key: string]: string }, track: academic_track_data) => {
+  const tracksMap = (Array.isArray(academicTracks) ? academicTracks : []).reduce((acc: { [key: string]: string }, track: AcademicTrackData) => {
     if (track) acc[track.id] = track.name;
     return acc;
   }, {});
