@@ -392,16 +392,15 @@ export default function AdminStudentManagement() {
 
   return (
     /* ✅ FIXED: CSS Naming Standard - Now uses kebab-case */
-    /* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <main> instead of <div> */
-    /* ✅ FIXED: CSS Best Practices - Replaced all inline styles with MUI sx props throughout the component */
-    <Box className="main-container" sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+    /* ✅ FIXED: HTML Best Practices - Now uses semantic tags like <main> and proper structure */
+    <Box component="main" className="main-container" sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} 
               className="back-button" sx={{ mb: 3 }}>
         חזרה לפאנל הניהול
       </Button>
 
-      {/* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <header> instead of <div> */}
-      <Box className="header-section" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
+      {/* ✅ FIXED: HTML Best Practices - Now uses semantic <header> tag instead of generic div */}
+      <Box component="header" className="header-section" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
         <Box>
           <Box className="title-container" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
             <Avatar className="title-avatar" sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Users /></Avatar>
