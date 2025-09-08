@@ -393,25 +393,29 @@ export default function admin_student_management() {
   return (
     /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
     <Box className="MainContainer" sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+      {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} 
-              className="BackButton" sx={{ mb: 3 }}>
+              className="BackButton" style={{ marginBottom: '24px', borderColor: '#1976d2' }}>
         חזרה לפאנל הניהול
       </Button>
 
-      <Box className="HeaderSection" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 4 }}>
-        <Box>
-          <Box className="TitleContainer" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            <Avatar className="TitleAvatar" sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}><Users /></Avatar>
+      {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
+      <div className="HeaderSection" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
+        <div>
+          <div className="TitleContainer" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+            {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
+            <Avatar className="TitleAvatar" style={{ backgroundColor: '#1976d2', width: '48px', height: '48px' }}><Users /></Avatar>
             <Typography variant="h4" fontWeight="bold">ניהול סטודנטים</Typography>
-          </Box>
+          </div>
           <Typography color="text.secondary">הוספה, עריכה ומחיקה של סטודנטים רשומים</Typography>
-        </Box>
-        <Box className="ActionButtonsContainer" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        </div>
+        {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
+        <div className="ActionButtonsContainer" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
             הוסף סטודנט חדש
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       <Box sx={{ mb: 3 }}>
         <ToggleButtonGroup
@@ -680,9 +684,11 @@ export default function admin_student_management() {
         /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
         <DialogTitle textAlign="left" fontWeight="bold" className="DialogTitleStyle">{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
         <DialogContent className="DialogContentArea">
-          <Box component="form" onSubmit={handleSubmit} className="FormContainer" sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
+          <form onSubmit={handleSubmit} className="FormContainer" style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '8px' }}>
             {formErrors.general && (
-              <Alert severity="error" className="ErrorAlert" sx={{ mb: 2 }}>
+              /* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */
+              <Alert severity="error" className="ErrorAlert" style={{ marginBottom: '16px' }}>
                 {formErrors.general}
               </Alert>
             )}
@@ -785,7 +791,7 @@ export default function admin_student_management() {
               )}
               noOptionsText="אין מסלולים זמינים"
             />
-          </Box>
+          </form>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} disabled={isSubmitting}>
