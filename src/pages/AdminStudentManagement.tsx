@@ -391,28 +391,28 @@ export default function AdminStudentManagement() {
   }, {});
 
   return (
-    /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
+    /* ✅ FIXED: CSS Naming Standard - Now uses kebab-case */
     /* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <main> instead of <div> */
-    <div className="MainContainer" style={{ padding: '16px', backgroundColor: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <div className="main-container" style={{ padding: '16px', backgroundColor: 'var(--bg-primary)', minHeight: '100vh' }}>
       {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} 
-              className="BackButton" style={{ marginBottom: '24px', borderColor: '#1976d2' }}>
+              className="back-button" style={{ marginBottom: '24px', borderColor: '#1976d2' }}>
         חזרה לפאנל הניהול
       </Button>
 
       {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
       {/* ❌ VIOLATION: HTML Best Practices - Should use semantic tags like <header> instead of <div> */}
-      <div className="HeaderSection" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
+      <div className="header-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
         <div>
-          <div className="TitleContainer" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+          <div className="title-container" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
             {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
-            <Avatar className="TitleAvatar" style={{ backgroundColor: '#1976d2', width: '48px', height: '48px' }}><Users /></Avatar>
+            <Avatar className="title-avatar" style={{ backgroundColor: '#1976d2', width: '48px', height: '48px' }}><Users /></Avatar>
             <Typography variant="h4" fontWeight="bold">ניהול סטודנטים</Typography>
           </div>
           <Typography color="text.secondary">הוספה, עריכה ומחיקה של סטודנטים רשומים</Typography>
         </div>
         {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
-        <div className="ActionButtonsContainer" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div className="action-buttons-container" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <Button onClick={() => handleOpenDialog()} variant="contained" startIcon={<Plus />}>
             הוסף סטודנט חדש
           </Button>
@@ -539,9 +539,9 @@ export default function AdminStudentManagement() {
         </Box>
       </Box>
 
-      /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
-      <Paper elevation={2} className="StudentsTablePaper">
-        <TableContainer className="StudentsTableContainer">
+      /* ✅ FIXED: CSS Naming Standard - Now uses kebab-case */
+      <Paper elevation={2} className="students-table-paper">
+        <TableContainer className="students-table-container">
           <Table>
             <TableHead>
               <TableRow>
@@ -683,14 +683,14 @@ export default function AdminStudentManagement() {
       </Paper>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="md">
-        /* ❌ VIOLATION: CSS Naming Standard - Class names should use kebab-case */
-        <DialogTitle textAlign="left" fontWeight="bold" className="DialogTitleStyle">{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
-        <DialogContent className="DialogContentArea">
+        /* ✅ FIXED: CSS Naming Standard - Now uses kebab-case */
+        <DialogTitle textAlign="left" fontWeight="bold" className="dialog-title-style">{editingStudent ? 'עריכת סטודנט' : 'הוספת סטודנט חדש'}</DialogTitle>
+        <DialogContent className="dialog-content-area">
           {/* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */}
-          <form onSubmit={handleSubmit} className="FormContainer" style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '8px' }}>
+          <form onSubmit={handleSubmit} className="form-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingTop: '8px' }}>
             {formErrors.general && (
               /* ❌ VIOLATION: CSS Best Practices - Should use CSS classes instead of inline styles */
-              <Alert severity="error" className="ErrorAlert" style={{ marginBottom: '16px' }}>
+              <Alert severity="error" className="error-alert" style={{ marginBottom: '16px' }}>
                 {formErrors.general}
               </Alert>
             )}
