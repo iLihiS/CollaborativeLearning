@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom'
 import {
   AppBar,
   Toolbar,
@@ -6,22 +6,23 @@ import {
   Box,
   IconButton,
   Badge
-} from "@mui/material";
+} from '@mui/material'
 import {
   Menu,
   GraduationCap,
   Bell,
   MessageSquare,
   HelpCircle
-} from "lucide-react";
-import { createPageUrl } from "@/utils";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
-import { useAuth } from "@/hooks/useAuth";
+} from 'lucide-react'
+
+import { createPageUrl } from '@/utils'
+import { RoleSwitcher } from '@/components/RoleSwitcher'
+import { useAuth } from '@/hooks/useAuth'
 
 interface HeaderProps {
-  onMenuToggle: () => void;
-  unreadNotifications: number;
-  unhandledInquiries: number;
+  onMenuToggle: () => void
+  unreadNotifications: number
+  unhandledInquiries: number
 }
 
 export const Header = ({ 
@@ -29,7 +30,8 @@ export const Header = ({
   unreadNotifications, 
   unhandledInquiries 
 }: HeaderProps) => {
-  const { session, switchRole } = useAuth();
+  const { session, switchRole } = useAuth()
+  
   return (
     <AppBar
       position="static"
@@ -53,7 +55,7 @@ export const Header = ({
           
           <Box 
             component={Link}
-            to={createPageUrl("Dashboard")}
+            to={createPageUrl('Dashboard')}
             sx={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -138,7 +140,6 @@ export const Header = ({
 
         {/* Right side - Role Switcher and Action buttons */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1 }, ml: 'auto' }}>
-          {/* Role Switcher */}
           {session && (
             <Box sx={{ mr: { xs: 0.5, md: 1 } }}>
               <RoleSwitcher 
@@ -150,7 +151,7 @@ export const Header = ({
           
           <IconButton
             component={Link}
-            to={createPageUrl("Notifications")}
+            to={createPageUrl('Notifications')}
             sx={{ 
               color: 'white',
               position: 'relative',
@@ -164,7 +165,7 @@ export const Header = ({
           
           <IconButton
             component={Link}
-            to={createPageUrl("TrackInquiries")}
+            to={createPageUrl('TrackInquiries')}
             sx={{ 
               color: 'white',
               position: 'relative',
@@ -178,7 +179,7 @@ export const Header = ({
           
           <IconButton
             component={Link}
-            to={createPageUrl("Help")}
+            to={createPageUrl('Help')}
             sx={{ 
               color: 'white',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
@@ -189,5 +190,5 @@ export const Header = ({
         </Box>
       </Toolbar>
     </AppBar>
-  );
-}; 
+  )
+} 

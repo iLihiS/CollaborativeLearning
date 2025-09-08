@@ -1,13 +1,13 @@
-import React from 'react';
-import { NotificationEntity, Message, FileEntity } from '@/services/localStorage';
+import React from 'react'
+import { NotificationEntity, Message, FileEntity } from '@/services/localStorage'
 
 interface DashboardCardsProps {
-  userRole: string;
-  recentNotifications?: NotificationEntity[];
-  recentMessages?: Message[];
-  recentFiles?: FileEntity[];
-  myRecentMessages?: Message[];
-  myRecentFiles?: FileEntity[];
+  userRole: string
+  recentNotifications?: NotificationEntity[]
+  recentMessages?: Message[]
+  recentFiles?: FileEntity[]
+  myRecentMessages?: Message[]
+  myRecentFiles?: FileEntity[]
 }
 
 export const DashboardCards: React.FC<DashboardCardsProps> = ({
@@ -20,57 +20,57 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
 }) => {
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
     if (diffMins < 60) {
-      return `לפני ${diffMins} דקות`;
+      return `לפני ${diffMins} דקות`
     } else if (diffHours < 24) {
-      return `לפני ${diffHours} שעות`;
+      return `לפני ${diffHours} שעות`
     } else {
-      return `לפני ${diffDays} ימים`;
+      return `לפני ${diffDays} ימים`
     }
-  };
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return '#FFA500';
-      case 'approved': return '#4CAF50';
-      case 'rejected': return '#F44336';
-      default: return '#9E9E9E';
+      case 'pending': return '#FFA500'
+      case 'approved': return '#4CAF50'
+      case 'rejected': return '#F44336'
+      default: return '#9E9E9E'
     }
-  };
+  }
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending': return 'ממתין';
-      case 'approved': return 'אושר';
-      case 'rejected': return 'נדחה';
-      default: return status;
+      case 'pending': return 'ממתין'
+      case 'approved': return 'אושר'
+      case 'rejected': return 'נדחה'
+      default: return status
     }
-  };
+  }
 
   const getMessageStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return '#2196F3';
-      case 'in_progress': return '#FF9800';
-      case 'closed': return '#4CAF50';
-      default: return '#9E9E9E';
+      case 'open': return '#2196F3'
+      case 'in_progress': return '#FF9800'
+      case 'closed': return '#4CAF50'
+      default: return '#9E9E9E'
     }
-  };
+  }
 
   const getMessageStatusText = (status: string) => {
     switch (status) {
-      case 'open': return 'פתוח';
-      case 'in_progress': return 'בטיפול';
-      case 'closed': return 'סגור';
-      default: return status;
+      case 'open': return 'פתוח'
+      case 'in_progress': return 'בטיפול'
+      case 'closed': return 'סגור'
+      default: return status
     }
-  };
+  }
 
   const cardStyle = {
     backgroundColor: 'white',
@@ -81,7 +81,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     height: '320px',
     overflowY: 'auto' as const
-  };
+  }
 
   const headerStyle = {
     fontSize: '18px',
@@ -90,7 +90,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     color: '#333',
     borderBottom: '2px solid #f0f0f0',
     paddingBottom: '8px'
-  };
+  }
 
   const itemStyle = {
     padding: '8px',
@@ -98,9 +98,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     borderRadius: '4px',
     backgroundColor: '#f9f9f9',
     borderLeft: '3px solid #ddd'
-  };
+  }
 
-  // רכיב להתראות אחרונות
+  // Recent notifications card
   const RecentNotificationsCard = () => (
     <div style={cardStyle}>
       <h3 style={headerStyle}>🔔 התראות אחרונות</h3>
@@ -129,9 +129,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
         ))
       )}
     </div>
-  );
+  )
 
-  // רכיב לפניות אחרונות (למנהלים ומרצים)
+  // Recent messages card (for admins and lecturers)
   const RecentMessagesCard = () => (
     <div style={cardStyle}>
       <h3 style={headerStyle}>
@@ -180,13 +180,13 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
         ))
       )}
     </div>
-  );
+  )
 
-  // רכיב לקבצים אחרונים
+  // Recent files card
   const RecentFilesCard = () => {
-    const filesToShow = userRole === 'student' ? myRecentFiles : recentFiles;
+    const filesToShow = userRole === 'student' ? myRecentFiles : recentFiles
     const title = userRole === 'student' ? 'הקבצים שלי' : 
-                 userRole === 'lecturer' ? 'קבצים לאישור' : 'קבצים אחרונים';
+                 userRole === 'lecturer' ? 'קבצים לאישור' : 'קבצים אחרונים'
 
     return (
       <div style={cardStyle}>
@@ -239,10 +239,10 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           ))
         )}
       </div>
-    );
-  };
+    )
+  }
 
-  // רכיב לסטטיסטיקות מהירות (למנהלים)
+  // Quick stats card (for admins)
   const QuickStatsCard = () => (
     <div style={cardStyle}>
       <h3 style={headerStyle}>📊 סטטיסטיקות מהירות</h3>
@@ -293,7 +293,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
         </div>
       </div>
     </div>
-  );
+  )
 
   return (
     <div style={{ 
@@ -307,7 +307,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       <RecentFilesCard />
       {userRole === 'admin' && <QuickStatsCard />}
     </div>
-  );
-};
+  )
+}
 
-export default DashboardCards; 
+export default DashboardCards 

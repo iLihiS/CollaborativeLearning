@@ -1,140 +1,178 @@
 
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { User, Student, Lecturer } from '@/api/entities';
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+
 import {
-    Typography,
-    Grid,
-    Box,
-    Button,
-    Menu,
-    MenuItem,
-    Avatar,
-    Paper,
-    Snackbar,
-    Alert
-} from '@mui/material';
+  Typography,
+  Grid,
+  Box,
+  Button,
+  Menu,
+  MenuItem,
+  Avatar,
+  Paper,
+  Snackbar,
+  Alert
+} from '@mui/material'
 import {
-    Users,
-    Book,
-    FileText,
-    GraduationCap,
-    Settings,
-    ChevronDown
-} from 'lucide-react';
+  Users,
+  Book,
+  FileText,
+  GraduationCap,
+  Settings,
+  ChevronDown
+} from 'lucide-react'
+
+import { createPageUrl } from '@/utils'
+import { User, Student, Lecturer } from '@/api/entities'
 
 export default function AdminPanel() {
-    const navigate = useNavigate();
-    const [user, setUser] = useState<User | null>(null);
-    const [userRoles, setUserRoles] = useState<string[]>([]);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const [toast, setToast] = useState({ open: false, message: '' });
+  const navigate = useNavigate()
+  const [user, setUser] = useState<User | null>(null)
+  const [userRoles, setUserRoles] = useState<string[]>([])
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [toast, setToast] = useState({ open: false, message: '' })
 
-    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
+  const open = Boolean(anchorEl)
 
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
 
-    const handleCloseToast = () => {
-        setToast({ open: false, message: '' });
-    };
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
 
-    useEffect(() => {
-        loadUserData();
-    }, []);
+  const handleCloseToast = () => {
+    setToast({ open: false, message: '' })
+  }
 
-    const loadUserData = async () => {
-        try {
-            const currentUser = await User.me();
-            setUser(currentUser);
+  useEffect(() => {
+    loadUserData()
+  }, [])
 
-            let roles: string[] = [];
-            const [studentRecords, lecturerRecords] = await Promise.all([
-                Student.filter({ email: currentUser.email }),
-                Lecturer.filter({ email: currentUser.email }),
-            ]);
+  const loadUserData = async () => {
+    try {
+      const currentUser = await User.me()
+      setUser(currentUser)
 
-            if (studentRecords.length > 0) roles.push('student');
-            if (lecturerRecords.length > 0) roles.push('lecturer');
-            if (currentUser.role === 'admin') roles.push('admin');
-            setUserRoles(roles.sort());
+      let roles: string[] = []
+      const [studentRecords, lecturerRecords] = await Promise.all([
+        Student.filter({ email: currentUser.email }),
+        Lecturer.filter({ email: currentUser.email }),
+      ])
 
-        } catch (error) {
-            console.error("Error loading user data:", error);
-        }
-    };
+      if (studentRecords.length > 0) roles.push('student')
+      if (lecturerRecords.length > 0) roles.push('lecturer')
+      if (currentUser.role === 'admin') roles.push('admin')
+      setUserRoles(roles.sort())
 
-    const switchRole = async (newRole: string) => {
-        handleClose();
-        try {
-            await User.updateMyUserData({ current_role: newRole });
-            // Save toast message to sessionStorage to show after reload
-            const roleHebrew = newRole === 'student' ? 'סטודנט' : newRole === 'lecturer' ? 'מרצה' : 'מנהל';
-            sessionStorage.setItem('roleChangeMessage', `עברת בהצלחה לתצוגת ${roleHebrew}`);
-            // Navigate to Dashboard and reload immediately
-            window.location.href = createPageUrl("Dashboard");
-        } catch (error) {
-            console.error("Error switching role:", error);
-            setToast({ open: true, message: 'שגיאה במעבר בין תפקידים' });
-        }
-    };
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    }
+  }
+
+  const switchRole = async (newRole: string) => {
+    handleClose()
+    try {
+      await User.updateMyUserData({ current_role: newRole })
+      // Save toast message to sessionStorage to show after reload
+      const roleHebrew = newRole === 'student' ? 'סטודנט' : newRole === 'lecturer' ? 'מרצה' : 'מנהל'
+      sessionStorage.setItem('roleChangeMessage', `עברת בהצלחה לתצוגת ${roleHebrew}`)
+      // Navigate to Dashboard and reload immediately
+      window.location.href = createPageUrl('Dashboard')
+    } catch (error) {
+      console.error('Error switching role:', error)
+      setToast({ open: true, message: 'שגיאה במעבר בין תפקידים' })
+    }
+  }
 
   const adminLinks = [
-    { title: "ניהול סטודנטים", icon: Users, url: "AdminStudentManagement", description: "הוספה, עריכה ומחיקה של סטודנטים", bgcolor: "#faf5ff", iconColor: "#8b5cf6" },
-    { title: "ניהול קורסים", icon: Book, url: "AdminCourseManagement", description: "ניהול קורסים וסמסטרים", bgcolor: "#f0f9ff", iconColor: "#0ea5e9" },
-    { title: "ניהול קבצים", icon: FileText, url: "AdminFileManagement", description: "צפייה וניהול של כל הקבצים במערכת", bgcolor: "#fefce8", iconColor: "#eab308" },
-    { title: "ניהול מרצים", icon: GraduationCap, url: "AdminLecturerManagement", description: "הוספה וניהול של סגל המרצים", bgcolor: "#fdf2f8", iconColor: "#ec4899" },
-    { title: "ניהול מנהלים", icon: Settings, url: "AdminManagement", description: "ניהול מנהלי המערכת והרשאותיהם", bgcolor: "#f0fdf4", iconColor: "#22c55e" },
-  ];
+    { 
+      title: 'ניהול סטודנטים', 
+      icon: Users, 
+      url: 'AdminStudentManagement', 
+      description: 'הוספה, עריכה ומחיקה של סטודנטים', 
+      bgcolor: '#faf5ff', 
+      iconColor: '#8b5cf6' 
+    },
+    { 
+      title: 'ניהול קורסים', 
+      icon: Book, 
+      url: 'AdminCourseManagement', 
+      description: 'ניהול קורסים וסמסטרים', 
+      bgcolor: '#f0f9ff', 
+      iconColor: '#0ea5e9' 
+    },
+    { 
+      title: 'ניהול קבצים', 
+      icon: FileText, 
+      url: 'AdminFileManagement', 
+      description: 'צפייה וניהול של כל הקבצים במערכת', 
+      bgcolor: '#fefce8', 
+      iconColor: '#eab308' 
+    },
+    { 
+      title: 'ניהול מרצים', 
+      icon: GraduationCap, 
+      url: 'AdminLecturerManagement', 
+      description: 'הוספה וניהול של סגל המרצים', 
+      bgcolor: '#fdf2f8', 
+      iconColor: '#ec4899' 
+    },
+    { 
+      title: 'ניהול מנהלים', 
+      icon: Settings, 
+      url: 'AdminManagement', 
+      description: 'ניהול מנהלי המערכת והרשאותיהם', 
+      bgcolor: '#f0fdf4', 
+      iconColor: '#22c55e' 
+    },
+  ]
 
   return (
     <>
-    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '80vh' }}>
+      <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '80vh' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 48, height: 48 }}>
-                    <Settings />
-                </Avatar>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold" textAlign="left">פאנל ניהול</Typography>
-                    <Typography color="text.secondary" textAlign="left">ניהול מרכזי של כל רכיבי המערכת</Typography>
-                </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', color: 'white', width: 48, height: 48 }}>
+              <Settings />
+            </Avatar>
+            <Box>
+              <Typography variant="h4" fontWeight="bold" textAlign="left">פאנל ניהול</Typography>
+              <Typography color="text.secondary" textAlign="left">ניהול מרכזי של כל רכיבי המערכת</Typography>
             </Box>
-            
-            {userRoles.length > 1 && (
-                <>
-                    <Button
-                        id="role-button"
-                        aria-controls={open ? 'role-menu' : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open ? 'true' : undefined}
-                        onClick={handleClick}
-                        variant="outlined"
-                        startIcon={<Settings />}
-                        endIcon={<ChevronDown />}
-                    >
-                        מנהל
-                    </Button>
-                    <Menu
-                        id="role-menu"
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleClose}
-                        MenuListProps={{ 'aria-labelledby': 'role-button' }}
-                    >
-                        {userRoles.filter(r => r !== 'admin').map(role => {
-                            if (role === 'student') return <MenuItem key="student" onClick={() => switchRole('student')}>מעבר לתצוגת סטודנט</MenuItem>
-                            if (role === 'lecturer') return <MenuItem key="lecturer" onClick={() => switchRole('lecturer')}>מעבר לתצוגת מרצה</MenuItem>
-                            return null;
-                        })}
-                    </Menu>
-                </>
-            )}
+          </Box>
+          
+          {userRoles.length > 1 && (
+            <>
+              <Button
+                id="role-button"
+                aria-controls={open ? 'role-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                onClick={handleClick}
+                variant="outlined"
+                startIcon={<Settings />}
+                endIcon={<ChevronDown />}
+              >
+                מנהל
+              </Button>
+              <Menu
+                id="role-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{ 'aria-labelledby': 'role-button' }}
+              >
+                {userRoles.filter(r => r !== 'admin').map(role => {
+                  if (role === 'student') return <MenuItem key="student" onClick={() => switchRole('student')}>מעבר לתצוגת סטודנט</MenuItem>
+                  if (role === 'lecturer') return <MenuItem key="lecturer" onClick={() => switchRole('lecturer')}>מעבר לתצוגת מרצה</MenuItem>
+                  return null
+                })}
+              </Menu>
+            </>
+          )}
         </Box>
 
         <Grid container spacing={3}>
@@ -170,23 +208,23 @@ export default function AdminPanel() {
             </Grid>
           ))}
         </Grid>
-    </Box>
-    
-    <Snackbar
+      </Box>
+      
+      <Snackbar
         open={toast.open}
         autoHideDuration={3000}
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         sx={{ mt: 8 }}
-    >
+      >
         <Alert 
-            onClose={handleCloseToast} 
-            severity="success" 
-            sx={{ width: '100%' }}
+          onClose={handleCloseToast} 
+          severity="success" 
+          sx={{ width: '100%' }}
         >
-            {toast.message}
+          {toast.message}
         </Alert>
-    </Snackbar>
+      </Snackbar>
     </>
-  );
+  )
 }

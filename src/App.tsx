@@ -1,12 +1,8 @@
 import './App.css'
-import Pages from "@/pages/index.tsx"
+import Pages from '@/pages/index.tsx'
 
 function App() {
-  return (
-    <>
-      <Pages />
-    </>
-  )
+  return <Pages />
 }
 
 export default App 

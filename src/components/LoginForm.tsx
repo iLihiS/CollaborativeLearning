@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-import { useState } from 'react';
+import { useState } from 'react'
 import {
   Button,
   TextField,
@@ -13,71 +12,74 @@ import {
   Box,
   Divider,
   Grid,
-} from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { User } from '@/api/entities';
-import { FormValidator } from '@/utils/validation';
+} from '@mui/material'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { User } from '@/api/entities'
+import { FormValidator } from '@/utils/validation'
 
-export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (user: User) => void, onLoginError: (error: string) => void }) {
+export function LoginForm({ onLoginSuccess, onLoginError }: { 
+  onLoginSuccess: (user: User) => void
+  onLoginError: (error: string) => void 
+}) {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     
     setFormData({
       ...formData,
       [name]: value
-    });
+    })
 
     // Real-time validation
     if (value.trim() !== '') {
-      const validation = FormValidator.validateField(name, value);
+      const validation = FormValidator.validateField(name, value)
       setErrors(prev => ({
         ...prev,
         [name]: validation.isValid ? '' : validation.error || ''
-      }));
+      }))
     } else {
       setErrors(prev => ({
         ...prev,
         [name]: ''
-      }));
+      }))
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault()
     
     // Validate form before submission
-    const validation = FormValidator.validateLogin(formData);
+    const validation = FormValidator.validateLogin(formData)
     if (!validation.isValid) {
-      setErrors(validation.errors);
-      return;
+      setErrors(validation.errors)
+      return
     }
 
-    setLoading(true);
-    setErrors({});
+    setLoading(true)
+    setErrors({})
 
     try {
-      const response = await User.login(formData.email, formData.password);
-      onLoginSuccess(response);
+      const response = await User.login(formData.email, formData.password)
+      onLoginSuccess(response)
     } catch (error: any) {
-      console.error('Login failed:', error);
-      onLoginError(error.message || 'שגיאה בהתחברות. אנא בדוק את הפרטים וחזור שוב.');
+      console.error('Login failed:', error)
+      onLoginError(error.message || 'שגיאה בהתחברות. אנא בדוק את הפרטים וחזור שוב.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleClickShowPassword = () => setShowPassword((show) => !show)
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-  };
+    event.preventDefault()
+  }
 
   // Demo users for easy access
   const demoUsers = [
@@ -87,11 +89,11 @@ export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (u
     { email: 'student.lecturer@ono.ac.il', label: 'סטודנט + מרצה' },
     { email: 'lecturer.admin@ono.ac.il', label: 'מרצה + מנהל' },
     { email: 'all.roles@ono.ac.il', label: 'כל התפקידים' }
-  ];
+  ]
 
   const fillDemoUser = (email: string) => {
-    setFormData({ email, password: '123456' });
-  };
+    setFormData({ email, password: '123456' })
+  }
 
   return (
     <Card sx={{ maxWidth: 450, margin: 'auto' }}>
@@ -181,5 +183,5 @@ export function LoginForm({ onLoginSuccess, onLoginError }: { onLoginSuccess: (u
         </Typography>
       </CardContent>
     </Card>
-  );
+  )
 } 

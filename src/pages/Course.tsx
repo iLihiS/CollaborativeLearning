@@ -1,124 +1,135 @@
 
-import { useState, useEffect } from "react";
-import { Course as CourseEntity, File as FileEntity, Lecturer } from "@/api/entities";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { format } from 'date-fns'
+import { he } from 'date-fns/locale'
+
 import {
-    Card, CardContent, Button, Typography, Box, Grid,
-    Chip, Paper, CircularProgress, Alert, Avatar
-} from "@mui/material";
-import { User, Calendar, Upload, Download, FileText as FileTextIcon, ArrowRight } from "lucide-react";
-import { format } from "date-fns";
-import { he } from "date-fns/locale";
+  Card, 
+  CardContent, 
+  Button, 
+  Typography, 
+  Box, 
+  Grid,
+  Chip, 
+  Paper, 
+  CircularProgress, 
+  Alert, 
+  Avatar
+} from '@mui/material'
+import { User, Calendar, Upload, Download, FileText as FileTextIcon, ArrowRight } from 'lucide-react'
+
+import { Course as CourseEntity, File as FileEntity, Lecturer } from '@/api/entities'
+import { createPageUrl } from '@/utils'
 
 type Course = {
-    id: string;
-    course_name: string;
-    course_code: string;
-    lecturer_id: string;
-    semester: string;
-    description: string;
-};
+  id: string
+  course_name: string
+  course_code: string
+  lecturer_id: string
+  semester: string
+  description: string
+}
 
 type Lecturer = {
-    id: string;
-    full_name: string;
-    email: string;
-};
+  id: string
+  full_name: string
+  email: string
+}
 
 type File = {
-    id: string;
-    title: string;
-    description: string;
-    file_type: string;
-    created_date: string;
-    download_count: number;
-    file_url: string;
-};
+  id: string
+  title: string
+  description: string
+  file_type: string
+  created_date: string
+  download_count: number
+  file_url: string
+}
 
 const fileTypeToHebrew: { [key: string]: string } = {
-  note: "הרצאות וסיכומים",
-  exam: "מבחני תרגול",
-  formulas: "דף נוסחאות",
-  assignment: "מטלות",
-  other: "אחר"
-};
+  note: 'הרצאות וסיכומים',
+  exam: 'מבחני תרגול',
+  formulas: 'דף נוסחאות',
+  assignment: 'מטלות',
+  other: 'אחר'
+}
 
 export default function CoursePage() {
-  const [course, setCourse] = useState<Course | null>(null);
-  const [lecturer, setLecturer] = useState<Lecturer | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const courseId = searchParams.get('id');
-  const fromTrack = searchParams.get('track');
-  const fromSearch = searchParams.get('search');
-
+  const [course, setCourse] = useState<Course | null>(null)
+  const [lecturer, setLecturer] = useState<Lecturer | null>(null)
+  const [files, setFiles] = useState<File[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  const navigate = useNavigate()
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const courseId = searchParams.get('id')
+  const fromTrack = searchParams.get('track')
+  const fromSearch = searchParams.get('search')
 
   useEffect(() => {
     if (courseId) {
-      loadCourseData(courseId);
+      loadCourseData(courseId)
     } else {
-      navigate(createPageUrl("Courses"));
+      navigate(createPageUrl('Courses'))
     }
-  }, [courseId, navigate]);
+  }, [courseId, navigate])
 
   const loadCourseData = async (id: string) => {
     try {
-      setError(null);
-      const courseData = await CourseEntity.get(id);
-      setCourse(courseData);
+      setError(null)
+      const courseData = await CourseEntity.get(id)
+      setCourse(courseData)
 
       if (courseData.lecturer_id) {
         try {
-          const lecturerData = await Lecturer.get(courseData.lecturer_id);
-          setLecturer(lecturerData);
+          const lecturerData = await Lecturer.get(courseData.lecturer_id)
+          setLecturer(lecturerData)
         } catch (lecturerError) {
-          console.warn(`Lecturer with ID ${courseData.lecturer_id} not found:`, lecturerError);
-          setLecturer({ id: courseData.lecturer_id, full_name: 'מרצה לא זמין', email: 'לא זמין' });
+          console.warn(`Lecturer with ID ${courseData.lecturer_id} not found:`, lecturerError)
+          setLecturer({ id: courseData.lecturer_id, full_name: 'מרצה לא זמין', email: 'לא זמין' })
         }
       } else {
-        setLecturer({ id: 'unknown', full_name: 'לא שויך מרצה', email: 'לא זמין' });
+        setLecturer({ id: 'unknown', full_name: 'לא שויך מרצה', email: 'לא זמין' })
       }
 
-      const approvedFiles = await FileEntity.filter({ course_id: id, status: 'approved' });
-      setFiles(approvedFiles);
+      const approvedFiles = await FileEntity.filter({ course_id: id, status: 'approved' })
+      setFiles(approvedFiles)
 
     } catch (err) {
-      console.error("Error loading course data:", err);
-      setError("שגיאה בטעינת נתוני הקורס. אנא נסו שוב מאוחר יותר.");
+      console.error('Error loading course data:', err)
+      setError('שגיאה בטעינת נתוני הקורס. אנא נסו שוב מאוחר יותר.')
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const handleDownload = async (file: File) => {
-    await FileEntity.update(file.id, { download_count: (file.download_count || 0) + 1 });
-    window.open(file.file_url, '_blank');
-  };
+    await FileEntity.update(file.id, { download_count: (file.download_count || 0) + 1 })
+    window.open(file.file_url, '_blank')
+  }
 
   if (loading) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>;
+    return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>
   }
 
   if (error) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Alert severity="error">{error}</Alert>
-        <Button component={Link} to={createPageUrl("Courses")} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
+        <Button component={Link} to={createPageUrl('Courses')} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
       </Box>
-    );
+    )
   }
 
   if (!course) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography variant="h5">קורס לא נמצא</Typography>
-        <Button component={Link} to={createPageUrl("Courses")} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
+        <Button component={Link} to={createPageUrl('Courses')} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
       </Box>
-    );
+    )
   }
 
   return (
@@ -134,14 +145,21 @@ export default function CoursePage() {
       </Button>
 
       <Paper elevation={0} sx={{
-        borderRadius: '16px', p: { xs: 2, sm: 4 }, mb: 4, color: 'white',
+        borderRadius: '16px', 
+        p: { xs: 2, sm: 4 }, 
+        mb: 4, 
+        color: 'white',
         background: 'linear-gradient(to right, #84cc16, #65a30d)',
       }}>
         <Typography variant="h3" component="h1" fontWeight="bold">{course.course_name}</Typography>
         <Typography variant="h6" sx={{ opacity: 0.8, mt: 1 }}>{course.course_code}</Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mt: 2 }}>
-          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><User /> {lecturer?.full_name || 'מרצה לא ידוע'}</Typography>
-          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><Calendar /> {course.semester}</Typography>
+          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <User /> {lecturer?.full_name || 'מרצה לא ידוע'}
+          </Typography>
+          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Calendar /> {course.semester}
+          </Typography>
         </Box>
         <Typography sx={{ mt: 2, maxWidth: '80ch' }}>{course.description}</Typography>
       </Paper>
@@ -161,7 +179,9 @@ export default function CoursePage() {
                 <Grid size={12} key={file.id}>
                   <Paper variant="outlined" sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 56, height: 56 }}><FileTextIcon /></Avatar>
+                      <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', width: 56, height: 56 }}>
+                        <FileTextIcon />
+                      </Avatar>
                       <Box>
                         <Typography variant="h6">{file.title}</Typography>
                         <Typography variant="body2" color="text.secondary">{file.description}</Typography>
@@ -204,5 +224,5 @@ export default function CoursePage() {
         </CardContent>
       </Card>
     </Box>
-  );
+  )
 }

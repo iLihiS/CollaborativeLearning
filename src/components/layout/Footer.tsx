@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from '@mui/material'
 
 export const Footer = () => {
   return (
@@ -19,5 +19,5 @@ export const Footer = () => {
         © {new Date().getFullYear()} מערכת זו נבנתה על ידי <Box component="span" sx={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>ליהי סער</Box>
       </Typography>
     </Box>
-  );
-}; 
+  )
+} 
