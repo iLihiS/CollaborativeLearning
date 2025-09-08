@@ -51,7 +51,8 @@ type form_errors = {
   general?: string;
 };
 
-export default function AdminStudentManagement() {
+/* ❌ VIOLATION: Component Naming Standard - Components should use PascalCase */
+export default function admin_student_management() {
   const [students, setStudents] = useState<student_data[]>([]);
   /* ❌ VIOLATION: Variable Naming Standard - Variables should use camelCase */
   const [Filtered_Students, setFiltered_Students] = useState<student_data[]>([]);
