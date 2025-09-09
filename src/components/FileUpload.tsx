@@ -34,7 +34,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // בדיקת תקינות הקובץ
+    // Validate file
     const validation = FileStorageService.validateFile(file);
     if (!validation.valid) {
       setUploadState(prev => ({
@@ -71,7 +71,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         success: null
       }));
 
-      // סימולציה של התקדמות (Firebase לא נותן התקדמות אמיתית)
+      // Simulate progress (Firebase doesn't provide real progress)
       const progressInterval = setInterval(() => {
         setUploadState(prev => ({
           ...prev,
@@ -79,7 +79,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         }));
       }, 200);
 
-      // העלאת הקובץ
+      // Upload file
       const result = await FileStorageService.uploadFile(
         selectedFile,
         courseId,
@@ -96,13 +96,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         success: `קובץ "${selectedFile.name}" הועלה בהצלחה!`
       });
 
-      // איפוס בחירת הקובץ
+      // Reset file selection
       setSelectedFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
 
-      // קריאה לcallback
+      // Call callback
       onUploadComplete?.(result.id);
 
     } catch (error) {

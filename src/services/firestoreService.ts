@@ -591,22 +591,22 @@ export class FirestoreService {
     return await this.deleteDocument(COLLECTIONS.NOTIFICATIONS, id);
   }
 
-  // קבלת נתונים אחרונים לדשבורד
+  // Get recent data for dashboard
   static async getRecentNotifications(userId?: string, limit: number = 5): Promise<NotificationEntity[]> {
     try {
       const allNotifications = await this.getNotifications();
       
       let filteredNotifications = allNotifications;
       
-      // סינון לפי משתמש אם צוין
+      // Filter by user if specified
       if (userId) {
         filteredNotifications = allNotifications.filter(n => n.user_id === userId);
-      }
-      
-      // מיון לפי תאריך יצירה ולקיחת הכמות המבוקשת
-      return filteredNotifications
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, limit);
+              }
+        
+        // Sort by creation date and take requested amount
+        return filteredNotifications
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, limit);
     } catch (error) {
       console.error('Error getting recent notifications:', error);
       return [];
@@ -619,7 +619,7 @@ export class FirestoreService {
       
       let filteredMessages = allMessages;
       
-      // סינון לפי משתמש ותפקיד
+      // Filter by user and role
       if (userFilter) {
         if (userFilter.userId) {
           filteredMessages = allMessages.filter(m => 
@@ -631,12 +631,12 @@ export class FirestoreService {
             m.sender_type === userFilter.userType
           );
         }
-      }
-      
-      // מיון לפי תאריך יצירה ולקיחת הכמות המבוקשת
-      return filteredMessages
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, limit);
+              }
+        
+        // Sort by creation date and take requested amount
+        return filteredMessages
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, limit);
     } catch (error) {
       console.error('Error getting recent messages:', error);
       return [];
@@ -649,7 +649,7 @@ export class FirestoreService {
       
       let filteredFiles = allFiles;
       
-      // סינון לפי פרמטרים
+      // Filter by parameters
       if (filter) {
         if (filter.status) {
           filteredFiles = filteredFiles.filter(f => f.status === filter.status);
@@ -660,19 +660,19 @@ export class FirestoreService {
         if (filter.uploaderType) {
           filteredFiles = filteredFiles.filter(f => f.uploader_type === filter.uploaderType);
         }
-      }
-      
-      // מיון לפי תאריך יצירה ולקיחת הכמות המבוקשת
-      return filteredFiles
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, limit);
+              }
+        
+        // Sort by creation date and take requested amount
+        return filteredFiles
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, limit);
     } catch (error) {
       console.error('Error getting recent files:', error);
       return [];
     }
   }
 
-  // פונקציות מיוחדות לדשבורד לפי תפקיד
+  // Special dashboard functions by role
   static async getDashboardData(userId: string, userRole: string) {
     try {
       console.log(`📊 Getting dashboard data for ${userRole}: ${userId}`);
@@ -688,9 +688,9 @@ export class FirestoreService {
         case 'admin':
           return {
             ...commonData,
-            recentNotifications: await this.getRecentNotifications(undefined, 8), // כל ההתראות
-            recentMessages: await this.getRecentMessages(undefined, 8), // כל הפניות
-            recentFiles: await this.getRecentFiles({ status: 'pending' }, 10), // קבצים ממתינים
+            recentNotifications: await this.getRecentNotifications(undefined, 8), // All notifications
+            recentMessages: await this.getRecentMessages(undefined, 8), // All inquiries
+            recentFiles: await this.getRecentFiles({ status: 'pending' }, 10), // Pending files
             pendingFiles: (await this.getFiles()).filter(f => f.status === 'pending').length,
             approvedFiles: (await this.getFiles()).filter(f => f.status === 'approved').length,
             rejectedFiles: (await this.getFiles()).filter(f => f.status === 'rejected').length
@@ -700,8 +700,8 @@ export class FirestoreService {
           return {
             ...commonData,
             recentNotifications: await this.getRecentNotifications(userId, 5),
-            recentMessages: await this.getRecentMessages({ userType: 'student' }, 5), // פניות מסטודנטים
-            recentFiles: await this.getRecentFiles({ status: 'pending' }, 8), // קבצים לאישור
+            recentMessages: await this.getRecentMessages({ userType: 'student' }, 5), // Student inquiries
+            recentFiles: await this.getRecentFiles({ status: 'pending' }, 8), // Files for approval
             pendingFiles: (await this.getFiles()).filter(f => f.status === 'pending').length,
             myApprovedFiles: (await this.getFiles()).filter(f => f.status === 'approved' && f.approved_by === userId).length
           };
@@ -710,8 +710,8 @@ export class FirestoreService {
           return {
             ...commonData,
             recentNotifications: await this.getRecentNotifications(userId, 5),
-            myRecentMessages: await this.getRecentMessages({ userId }, 5), // הפניות שלי
-            myRecentFiles: await this.getRecentFiles({ uploaderId: userId }, 5), // הקבצים שלי
+            myRecentMessages: await this.getRecentMessages({ userId }, 5), // My inquiries
+            myRecentFiles: await this.getRecentFiles({ uploaderId: userId }, 5), // My files
             myPendingFiles: (await this.getFiles()).filter(f => f.uploader_id === userId && f.status === 'pending').length,
             myApprovedFiles: (await this.getFiles()).filter(f => f.uploader_id === userId && f.status === 'approved').length,
             myRejectedFiles: (await this.getFiles()).filter(f => f.uploader_id === userId && f.status === 'rejected').length

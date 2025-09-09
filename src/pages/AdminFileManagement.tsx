@@ -21,7 +21,7 @@ type FileInfo = {
   original_name: string;
   file_type: string;
   file_size: number;
-  file_code?: string; // מספר ייחודי לקובץ
+  file_code?: string; // Unique file identifier
   course_id: string;
   uploader_id: string;
   uploader_type: 'student' | 'lecturer' | 'admin';

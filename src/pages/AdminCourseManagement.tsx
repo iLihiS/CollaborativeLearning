@@ -475,7 +475,7 @@ export default function AdminCourseManagement() {
   };
 
   const getShortTrackName = (trackName: string) => {
-    // החזרת השמות המלאים במקום קיצורים
+    // Return full names instead of abbreviations
     return trackName;
   };
 

@@ -37,25 +37,25 @@ export class FileStorageService {
     try {
       console.log(`📤 מעלה קובץ: ${file.name} (${file.size} bytes)`);
       
-      // יצירת שם ייחודי לקובץ
+      // Create unique filename
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substr(2, 9);
       const fileExtension = file.name.split('.').pop();
       const filename = `${timestamp}_${randomId}.${fileExtension}`;
       
-      // יצירת נתיב בStorage
+      // Create storage path
       const storagePath = `courses/${courseId}/files/${filename}`;
       const storageRef = ref(storage, storagePath);
       
-      // העלאת הקובץ
+      // Upload file
       console.log(`☁️ מעלה ל-Storage: ${storagePath}`);
       const uploadResult = await uploadBytes(storageRef, file);
       
-      // קבלת URL להורדה
+      // Get download URL
       const downloadURL = await getDownloadURL(uploadResult.ref);
       console.log(`✅ קובץ הועלה בהצלחה: ${downloadURL}`);
       
-      // יצירת מידע הקובץ לFirestore
+      // Create file info for Firestore
       const fileData = {
         filename: filename,
         original_name: file.name,
@@ -66,12 +66,12 @@ export class FileStorageService {
         course_id: courseId,
         uploader_id: uploaderId,
         uploader_type: uploaderType,
-        status: 'pending' as const, // כל קובץ חדש מתחיל במצב pending
+        status: 'pending' as const, // All new files start in pending status
         download_count: 0,
         tags: [] as string[]
       };
       
-      // שמירה ב-Firestore
+      // Save to Firestore
       console.log(`💾 שומר מידע ב-Firestore...`);
       const savedFile = await FirestoreService.addFile(fileData);
       
@@ -105,7 +105,7 @@ export class FileStorageService {
     try {
       console.log(`🗑️ מוחק קובץ: ${fileId}`);
       
-      // קבלת מידע הקובץ מFirestore
+      // Get file info from Firestore
       const files = await FirestoreService.getFiles();
       const fileInfo = files.find(f => f.id === fileId);
       
@@ -114,7 +114,7 @@ export class FileStorageService {
         return false;
       }
       
-      // מחיקה מStorage (אם יש storage_path)
+      // Delete from Storage (if storage_path exists)
       if (fileInfo.storage_path) {
         try {
           const storageRef = ref(storage, fileInfo.storage_path);
@@ -125,7 +125,7 @@ export class FileStorageService {
         }
       }
       
-      // מחיקה מFirestore
+      // Delete from Firestore
       const deleted = await FirestoreService.deleteFile(fileId);
       
       if (deleted) {
@@ -201,7 +201,7 @@ export class FileStorageService {
    * ולידציה של קובץ לפני העלאה
    */
   static validateFile(file: File): { valid: boolean; error?: string } {
-    // בדיקת גודל (מקסימום 50MB)
+    // Check file size (maximum 50MB)
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       return {
@@ -210,7 +210,7 @@ export class FileStorageService {
       };
     }
     
-    // בדיקת סוג קובץ מותר
+    // Check allowed file types
     const allowedTypes = [
       'application/pdf',
       'application/msword',
@@ -258,7 +258,7 @@ export class FileStorageService {
   }
 }
 
-// חשיפה לקונסול לצורכי debug
+// Expose to console for debugging
 if (typeof window !== 'undefined') {
   (window as any).FileStorageService = FileStorageService;
   

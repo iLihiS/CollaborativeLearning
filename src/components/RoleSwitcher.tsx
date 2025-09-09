@@ -95,8 +95,8 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({ session, onRoleChang
           },
           textTransform: 'none',
           fontWeight: 500,
-          px: { xs: 1, sm: 2 }, // צר יותר במובייל
-          minWidth: { xs: 'auto', sm: 'auto' }, // רוחב מינימלי אוטומטי
+          px: { xs: 1, sm: 2 }, // Narrower on mobile
+          minWidth: { xs: 'auto', sm: 'auto' }, // Auto minimum width
           cursor: 'default', 
           '& .button-text': {
             display: { xs: 'none', sm: 'inline' }
@@ -134,13 +134,13 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({ session, onRoleChang
           },
           textTransform: 'none',
           fontWeight: 500,
-          px: { xs: 1, sm: 2 }, // צר יותר במובייל
-          minWidth: { xs: 'auto', sm: 'auto' }, // רוחב מינימלי אוטומטי
+          px: { xs: 1, sm: 2 }, // Narrower on mobile
+          minWidth: { xs: 'auto', sm: 'auto' }, // Auto minimum width
           '& .MuiButton-startIcon': {
             mr: { xs: 0, sm: 1 }
           },
           '& .MuiButton-endIcon': {
-            ml: { xs: 0, sm: 0.5 } // מרווח קטן יותר במובייל
+            ml: { xs: 0, sm: 0.5 } // Smaller margin on mobile
           },
           '& .button-text': {
             display: { xs: 'none', sm: 'inline' }

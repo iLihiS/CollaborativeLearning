@@ -320,7 +320,7 @@ export default function AdminStudentManagement() {
   };
 
   const getShortTrackName = (trackName: string) => {
-    // החזרת השמות המלאים במקום קיצורים
+    // Return full names instead of abbreviations
     return trackName;
   };
 
