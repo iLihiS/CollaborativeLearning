@@ -5,11 +5,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Box, Button, TextField, Select, MenuItem, FormControl, InputLabel,
     Typography, Paper, CircularProgress, Avatar, Autocomplete, Dialog,
-    DialogTitle, DialogContent, DialogActions
+    DialogTitle, DialogContent, DialogActions, ToggleButton, ToggleButtonGroup
 } from '@mui/material';
 import {
     CloudUpload as CloudUploadIcon,
-    CloudUpload
+    CloudUpload,
+    Link as LinkIcon,
+    AttachFile as AttachFileIcon
 } from '@mui/icons-material';
 import { Lock, Unlock, Plus, X, RefreshCw } from 'lucide-react';
 
@@ -27,7 +29,10 @@ type FormData = {
     course_id: string;
     file_type: string;
     file_code: string;
+    file_url?: string;
 };
+
+type UploadMode = 'file' | 'url';
 
 type FormErrors = {
     title?: string;
@@ -36,6 +41,7 @@ type FormErrors = {
     file_type?: string;
     file_code?: string;
     file?: string;
+    file_url?: string;
 };
 
 export default function UploadFile() {
@@ -45,7 +51,8 @@ export default function UploadFile() {
         description: '',
         course_id: '',
         file_type: '',
-        file_code: ''
+        file_code: '',
+        file_url: ''
     });
     const [formErrors, setFormErrors] = useState<FormErrors>({});
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -54,6 +61,7 @@ export default function UploadFile() {
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
     const [isFileCodeEditable, setIsFileCodeEditable] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [uploadMode, setUploadMode] = useState<UploadMode>('file');
     const [user, setUser] = useState<any>(null);
     const [files, setFiles] = useState<any[]>([]);
     const navigate = useNavigate();
@@ -65,7 +73,7 @@ export default function UploadFile() {
 
     useEffect(() => {
         validateForm();
-    }, [formData, selectedFile]);
+    }, [formData, selectedFile, uploadMode]);
 
     // Auto-generate file code when course and file type are selected
     useEffect(() => {
@@ -151,8 +159,17 @@ export default function UploadFile() {
             newErrors.file_code = 'קוד קובץ זה כבר קיים במערכת';
         }
         
-        if (!selectedFile) {
-            newErrors.file = 'יש לבחור קובץ להעלאה';
+        // Validate based on upload mode
+        if (uploadMode === 'file') {
+            if (!selectedFile) {
+                newErrors.file = 'יש לבחור קובץ להעלאה';
+            }
+        } else if (uploadMode === 'url') {
+            if (!formData.file_url?.trim()) {
+                newErrors.file_url = 'יש להכניס קישור לקובץ';
+            } else if (!isValidUrl(formData.file_url)) {
+                newErrors.file_url = 'הקישור שהוכנס אינו תקין';
+            }
         }
         
         setFormErrors(newErrors);
@@ -163,9 +180,19 @@ export default function UploadFile() {
             formData.course_id !== '' &&
             formData.file_type !== '' &&
             formData.file_code.trim() !== '' &&
-            selectedFile !== null;
+            ((uploadMode === 'file' && selectedFile !== null) || 
+             (uploadMode === 'url' && formData.file_url?.trim() && isValidUrl(formData.file_url)));
         
         setIsFormValid(isValid);
+    };
+
+    const isValidUrl = (url: string): boolean => {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
     };
 
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -204,6 +231,23 @@ export default function UploadFile() {
         }
     };
 
+    const handleUploadModeChange = (mode: UploadMode) => {
+        setUploadMode(mode);
+        // Clear relevant errors when switching modes
+        if (mode === 'file') {
+            setFormErrors(prev => ({ ...prev, file_url: undefined }));
+            setFormData(prev => ({ ...prev, file_url: '' }));
+        } else {
+            setFormErrors(prev => ({ ...prev, file: undefined }));
+            setSelectedFile(null);
+        }
+        
+        // Reset attempt flag when user changes mode
+        if (hasAttemptedSubmit) {
+            setHasAttemptedSubmit(false);
+        }
+    };
+
     const handleSubmit = async () => {
         setHasAttemptedSubmit(true);
         
@@ -229,7 +273,7 @@ export default function UploadFile() {
             
             // Create file entity
             const fileData = {
-                filename: selectedFile?.name || formData.title,
+                filename: uploadMode === 'file' ? (selectedFile?.name || formData.title) : formData.title,
                 original_name: formData.title,
                 file_type: formData.file_type,
                 file_code: formData.file_code,
@@ -237,7 +281,8 @@ export default function UploadFile() {
                 uploader_id: uploaderId,
                 uploader_type: uploaderType,
                 status: uploaderType === 'student' ? 'pending' : 'approved', // Auto-approve for lecturers/admins
-                file_size: selectedFile?.size || 0,
+                file_size: uploadMode === 'file' ? (selectedFile?.size || 0) : 0,
+                file_url: uploadMode === 'url' ? formData.file_url : undefined,
                 download_count: 0,
                 tags: [],
                 created_at: new Date().toISOString(),
@@ -250,7 +295,9 @@ export default function UploadFile() {
             
             // Navigate to my files after a short delay
             setTimeout(() => {
-                navigate('/my-files');
+                navigate('/my-files', { replace: true });
+                // Trigger a page refresh to ensure updated data
+                window.location.reload();
             }, 1500);
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -424,18 +471,64 @@ export default function UploadFile() {
                         placeholder="יתמלא אוטומטית..."
                     />
                     
+                    {/* Upload Mode Selection */}
                     <Box>
-                        <Button variant="outlined" component="label" fullWidth sx={{ py: 2 }}>
-                            {selectedFile ? selectedFile.name : 'בחר קובץ להעלאה'}
-                            <input 
-                                type="file" 
-                                hidden 
-                                accept=".pdf,.docx,.png,.jpg,.jpeg,.txt,.pptx,.xlsx"
-                                onChange={handleFileChange}
-                            />
-                        </Button>
-                        {hasAttemptedSubmit && formErrors.file && <Typography color="error" textAlign="left" variant="caption" sx={{ mt: 1, display: 'block' }}>{formErrors.file}</Typography>}
+                        <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                            בחר אופן הוספת קובץ
+                        </Typography>
+                        <ToggleButtonGroup
+                            value={uploadMode}
+                            exclusive
+                            onChange={(_, newMode) => newMode && handleUploadModeChange(newMode)}
+                            fullWidth
+                            sx={{ mb: 3 }}
+                        >
+                            <ToggleButton value="file" sx={{ py: 2 }}>
+                                <AttachFileIcon sx={{ mr: 1 }} />
+                                העלאה מהמחשב
+                            </ToggleButton>
+                            <ToggleButton value="url" sx={{ py: 2 }}>
+                                <LinkIcon sx={{ mr: 1 }} />
+                                קישור לקובץ
+                            </ToggleButton>
+                        </ToggleButtonGroup>
                     </Box>
+
+                    {/* File Upload Section */}
+                    {uploadMode === 'file' && (
+                        <Box>
+                            <Button variant="outlined" component="label" fullWidth sx={{ py: 2 }}>
+                                {selectedFile ? selectedFile.name : 'בחר קובץ להעלאה'}
+                                <input 
+                                    type="file" 
+                                    hidden 
+                                    accept=".pdf,.docx,.png,.jpg,.jpeg,.txt,.pptx,.xlsx"
+                                    onChange={handleFileChange}
+                                />
+                            </Button>
+                            {hasAttemptedSubmit && formErrors.file && <Typography color="error" textAlign="left" variant="caption" sx={{ mt: 1, display: 'block' }}>{formErrors.file}</Typography>}
+                        </Box>
+                    )}
+
+                    {/* URL Input Section */}
+                    {uploadMode === 'url' && (
+                        <Box>
+                            <TextField
+                                name="file_url"
+                                label="קישור לקובץ"
+                                value={formData.file_url || ''}
+                                onChange={handleFormChange}
+                                error={hasAttemptedSubmit && !!formErrors.file_url}
+                                helperText={hasAttemptedSubmit ? formErrors.file_url : 'הכנס קישור לקובץ (URL)'}
+                                required
+                                fullWidth
+                                placeholder="https://example.com/file.pdf"
+                                InputProps={{
+                                    startAdornment: <LinkIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                                }}
+                            />
+                        </Box>
+                    )}
                 </Box>
 
                 {/* Actions - Same as Dialog Actions */}

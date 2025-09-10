@@ -8,7 +8,7 @@ import {
     DialogContent, DialogActions, FormControl, InputLabel, Select, 
     MenuItem, Autocomplete
 } from '@mui/material';
-import { FileText, Trash2, Check, X, Download, Clock, ArrowRight, Plus, CloudUpload, User as UserIcon, GraduationCap, Shield, ChevronUp, ChevronDown, Filter, Lock, Unlock, RefreshCw } from 'lucide-react';
+import { FileText, Trash2, Check, X, Download, Clock, ArrowRight, Plus, CloudUpload, User as UserIcon, GraduationCap, Shield, ChevronUp, ChevronDown, Filter, Lock, Unlock, RefreshCw, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 
@@ -30,6 +30,7 @@ type FileInfo = {
   tags: string[];
   created_at: string;
   updated_at: string;
+  file_url?: string;  // URL for externally linked files
 };
 
 type CourseInfo = {
@@ -273,6 +274,18 @@ export default function MyFiles() {
         console.error("Failed to delete file:", error);
         alert('שגיאה במחיקת הקובץ.');
       }
+    }
+  };
+
+  const handleFileAction = (file: FileInfo) => {
+    if (file.file_url) {
+      // If it's an external link, open it in a new tab
+      window.open(file.file_url, '_blank');
+    } else {
+      // If it's an uploaded file, attempt to download it
+      // For now, we'll just open a placeholder link
+      // In a real implementation, this would be the actual download URL
+      window.open('#', '_blank');
     }
   };
 
@@ -843,7 +856,12 @@ export default function MyFiles() {
                   <TableCell align="left">{file.download_count || 0}</TableCell>
                   <TableCell align="left">{getStatusComponent(file.status)}</TableCell>
                   <TableCell align="left">
-                    <IconButton onClick={() => window.open('#', '_blank')}><Download /></IconButton>
+                    <IconButton 
+                      onClick={() => handleFileAction(file)}
+                      title={file.file_url ? 'פתח קישור' : 'הורד קובץ'}
+                    >
+                      {file.file_url ? <ExternalLink /> : <Download />}
+                    </IconButton>
                     <IconButton onClick={() => handleDelete(file.id)} color="error"><Trash2 /></IconButton>
                   </TableCell>
                 </TableRow>

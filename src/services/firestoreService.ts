@@ -81,6 +81,7 @@ export interface FileEntity extends BaseEntity {
   tags: string[];
   download_url?: string;
   storage_path?: string;
+  file_url?: string;  // URL for externally linked files
 }
 
 export interface Message extends BaseEntity {
