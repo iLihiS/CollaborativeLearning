@@ -71,6 +71,19 @@ export default function UploadFile() {
         loadData();
     }, []);
 
+    // Check for course_id in URL parameters and set it
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const courseIdFromUrl = searchParams.get('course_id');
+        
+        if (courseIdFromUrl && courses.length > 0) {
+            const courseExists = courses.find(course => course.id === courseIdFromUrl);
+            if (courseExists) {
+                setFormData(prev => ({ ...prev, course_id: courseIdFromUrl }));
+            }
+        }
+    }, [location.search, courses]);
+
     useEffect(() => {
         validateForm();
     }, [formData, selectedFile, uploadMode]);
@@ -183,7 +196,7 @@ export default function UploadFile() {
             ((uploadMode === 'file' && selectedFile !== null) || 
              (uploadMode === 'url' && formData.file_url?.trim() && isValidUrl(formData.file_url)));
         
-        setIsFormValid(isValid);
+        setIsFormValid(!!isValid);
     };
 
     const isValidUrl = (url: string): boolean => {

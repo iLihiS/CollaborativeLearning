@@ -140,11 +140,96 @@ export class FirestoreService {
     }
   }
 
+  // Clean invalid records from all collections
+  static async cleanInvalidRecords(): Promise<void> {
+    try {
+      console.log('🧹 Starting cleanup of invalid records...');
+
+      // Clean invalid files
+      const allFiles = await this.getFiles();
+      const invalidFiles = allFiles.filter(file => 
+        !file.original_name || 
+        !file.file_type || 
+        !file.created_at || 
+        typeof file.download_count !== 'number' ||
+        !file.status ||
+        !file.uploader_type ||
+        !file.uploader_id ||
+        !file.file_size ||
+        !file.tags ||
+        !Array.isArray(file.tags)
+        // Note: file_url is optional so we don't require it
+      );
+
+      console.log(`🧹 Found ${invalidFiles.length} invalid files to delete`);
+      for (const file of invalidFiles) {
+        console.log(`🗑️ Deleting invalid file: ${file.id}`, file);
+        await deleteDoc(doc(db, COLLECTIONS.FILES, file.id));
+      }
+
+      // Clean invalid courses
+      const allCourses = await this.getCourses();
+      const invalidCourses = allCourses.filter(course => 
+        !course.name || 
+        !course.code || 
+        !course.lecturer_id || 
+        !course.semester ||
+        !course.description ||
+        typeof course.max_students !== 'number' ||
+        typeof course.enrolled_students !== 'number'
+      );
+
+      console.log(`🧹 Found ${invalidCourses.length} invalid courses to delete`);
+      for (const course of invalidCourses) {
+        console.log(`🗑️ Deleting invalid course: ${course.id}`, course);
+        await deleteDoc(doc(db, COLLECTIONS.COURSES, course.id));
+      }
+
+      // Clean invalid students
+      const allStudents = await this.getStudents();
+      const invalidStudents = allStudents.filter(student => 
+        !student.full_name || 
+        !student.email || 
+        !student.student_id ||
+        !student.academic_track_ids ||
+        !Array.isArray(student.academic_track_ids)
+      );
+
+      console.log(`🧹 Found ${invalidStudents.length} invalid students to delete`);
+      for (const student of invalidStudents) {
+        console.log(`🗑️ Deleting invalid student: ${student.id}`, student);
+        await deleteDoc(doc(db, COLLECTIONS.STUDENTS, student.id));
+      }
+
+      // Clean invalid lecturers
+      const allLecturers = await this.getLecturers();
+      const invalidLecturers = allLecturers.filter(lecturer => 
+        !lecturer.full_name || 
+        !lecturer.email ||
+        !lecturer.department
+      );
+
+      console.log(`🧹 Found ${invalidLecturers.length} invalid lecturers to delete`);
+      for (const lecturer of invalidLecturers) {
+        console.log(`🗑️ Deleting invalid lecturer: ${lecturer.id}`, lecturer);
+        await deleteDoc(doc(db, COLLECTIONS.LECTURERS, lecturer.id));
+      }
+
+      console.log('✅ Cleanup completed successfully');
+    } catch (error) {
+      console.error('❌ Error during cleanup:', error);
+      throw error;
+    }
+  }
+
   // Create demo data for development/testing
   static async createDemoData(): Promise<void> {
     console.log('🔄 Creating demo data for Firestore...');
     
     try {
+      // First clean invalid records
+      await this.cleanInvalidRecords();
+      
       const batch = writeBatch(db);
 
       // Create demo students
@@ -285,13 +370,14 @@ export class FirestoreService {
 
       // Create demo files
       const demoFiles: FileEntity[] = [
+        // Pending files
         {
           id: 'file-001',
           filename: 'lecture1.pdf',
           original_name: 'הרצאה 1 - מבוא.pdf',
-          file_type: 'pdf',
+          file_type: 'note',
           file_size: 1024000,
-          file_code: 'CS101-L001',
+          file_code: 'CS101-N001',
           course_id: 'course-001',
           uploader_id: 'student-001',
           uploader_type: 'student',
@@ -303,9 +389,42 @@ export class FirestoreService {
         },
         {
           id: 'file-002',
-          filename: 'assignment1.pdf',
-          original_name: 'תרגיל 1.pdf',
-          file_type: 'pdf',
+          filename: 'assignment2.pdf',
+          original_name: 'תרגיל 2 - מבני נתונים.pdf',
+          file_type: 'assignment',
+          file_size: 756000,
+          file_code: 'CS201-A002',
+          course_id: 'course-002',
+          uploader_id: 'student-001',
+          uploader_type: 'student',
+          status: 'pending',
+          download_count: 0,
+          tags: ['תרגיל', 'מבני נתונים'],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'file-003',
+          filename: 'math_formulas.pdf',
+          original_name: 'נוסחאות מתמטיקה דיסקרטית.pdf',
+          file_type: 'formulas',
+          file_size: 320000,
+          file_code: 'MATH101-F001',
+          course_id: 'course-003',
+          uploader_id: 'student-002',
+          uploader_type: 'student',
+          status: 'pending',
+          download_count: 0,
+          tags: ['נוסחאות', 'מתמטיקה'],
+          created_at: new Date(Date.now() - 86400000).toISOString(), // יום אחד אחורה
+          updated_at: new Date(Date.now() - 86400000).toISOString()
+        },
+        // Approved files
+        {
+          id: 'file-004',
+          filename: 'intro_to_cs.pdf',
+          original_name: 'תרגיל 1 - מבוא למדעי המחשב.pdf',
+          file_type: 'assignment',
           file_size: 512000,
           file_code: 'CS101-A001',
           course_id: 'course-001',
@@ -314,10 +433,342 @@ export class FirestoreService {
           status: 'approved',
           approval_date: new Date().toISOString(),
           approved_by: 'lecturer-001',
-          download_count: 5,
-          tags: ['תרגיל'],
-          created_at: new Date().toISOString(),
+          download_count: 15,
+          tags: ['תרגיל', 'מבוא'],
+          file_url: 'https://example.com/files/intro_to_cs.pdf',
+          created_at: new Date(Date.now() - 172800000).toISOString(), // יומיים אחורה
           updated_at: new Date().toISOString()
+        },
+        {
+          id: 'file-005',
+          filename: 'data_structures_notes.pdf',
+          original_name: 'סיכום הרצאות - מבני נתונים.pdf',
+          file_type: 'note',
+          file_size: 2048000,
+          file_code: 'CS201-N002',
+          course_id: 'course-002',
+          uploader_id: 'lecturer-001',
+          uploader_type: 'lecturer',
+          status: 'approved',
+          approval_date: new Date().toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 28,
+          tags: ['הרצאות', 'מבני נתונים'],
+          file_url: 'https://example.com/files/data_structures_notes.pdf',
+          created_at: new Date(Date.now() - 259200000).toISOString(), // 3 ימים אחורה
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'file-006',
+          filename: 'web_dev_exam.pdf',
+          original_name: 'מבחן תרגול - פיתוח ווב.pdf',
+          file_type: 'exam',
+          file_size: 890000,
+          file_code: 'CS301-E001',
+          course_id: 'course-004',
+          uploader_id: 'student-001',
+          uploader_type: 'student',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 86400000).toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 42,
+          tags: ['מבחן', 'פיתוח ווב'],
+          file_url: 'https://drive.google.com/file/d/1example/view',
+          created_at: new Date(Date.now() - 345600000).toISOString(), // 4 ימים אחורה
+          updated_at: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: 'file-007',
+          filename: 'database_summary.docx',
+          original_name: 'סיכום קורס בסיסי נתונים.docx',
+          file_type: 'note',
+          file_size: 1456000,
+          file_code: 'CS202-N003',
+          course_id: 'course-005',
+          uploader_id: 'student-002',
+          uploader_type: 'student',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 172800000).toISOString(),
+          approved_by: 'lecturer-002',
+          download_count: 23,
+          tags: ['סיכום', 'בסיסי נתונים'],
+          file_url: 'https://onedrive.live.com/example-file',
+          created_at: new Date(Date.now() - 432000000).toISOString(), // 5 ימים אחורה
+          updated_at: new Date(Date.now() - 172800000).toISOString()
+        },
+        // Rejected files
+        {
+          id: 'file-008',
+          filename: 'wrong_format.txt',
+          original_name: 'קובץ לא מתאים.txt',
+          file_type: 'other',
+          file_size: 15000,
+          file_code: 'CS101-O001',
+          course_id: 'course-001',
+          uploader_id: 'student-001',
+          uploader_type: 'student',
+          status: 'rejected',
+          rejection_reason: 'פורמט קובץ לא מתאים - יש להעלות רק PDF או DOCX',
+          download_count: 0,
+          tags: ['דחוי'],
+          created_at: new Date(Date.now() - 518400000).toISOString(), // 6 ימים אחורה
+          updated_at: new Date(Date.now() - 259200000).toISOString()
+        },
+        {
+          id: 'file-009',
+          filename: 'incomplete_assignment.pdf',
+          original_name: 'תרגיל חסר.pdf',
+          file_type: 'assignment',
+          file_size: 123000,
+          file_code: 'CS201-A003',
+          course_id: 'course-002',
+          uploader_id: 'student-002',
+          uploader_type: 'student',
+          status: 'rejected',
+          rejection_reason: 'התרגיל חסר - לא כולל את כל השאלות הנדרשות',
+          download_count: 0,
+          tags: ['תרגיל', 'דחוי'],
+          created_at: new Date(Date.now() - 604800000).toISOString(), // שבוע אחורה
+          updated_at: new Date(Date.now() - 345600000).toISOString()
+        },
+        {
+          id: 'file-010',
+          filename: 'copyrighted_material.pdf',
+          original_name: 'חומר מוגן זכויות יוצרים.pdf',
+          file_type: 'note',
+          file_size: 3456000,
+          file_code: 'MATH101-N002',
+          course_id: 'course-003',
+          uploader_id: 'student-001',
+          uploader_type: 'student',
+          status: 'rejected',
+          rejection_reason: 'החומר מכיל תוכן מוגן זכויות יוצרים ולא ניתן לפרסמו',
+          download_count: 0,
+          tags: ['הרצאות', 'דחוי'],
+          created_at: new Date(Date.now() - 691200000).toISOString(), // 8 ימים אחורה
+          updated_at: new Date(Date.now() - 432000000).toISOString()
+        },
+        // Additional files for course-003 (Math)
+        {
+          id: 'file-011',
+          filename: 'discrete_math_exercises.pdf',
+          original_name: 'תרגילים - מתמטיקה דיסקרטית.pdf',
+          file_type: 'assignment',
+          file_size: 892000,
+          file_code: 'MATH101-A001',
+          course_id: 'course-003',
+          uploader_id: 'lecturer-002',
+          uploader_type: 'lecturer',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 259200000).toISOString(),
+          approved_by: 'lecturer-002',
+          download_count: 31,
+          tags: ['תרגילים', 'מתמטיקה דיסקרטית'],
+          file_url: 'https://example.com/files/discrete_math_exercises.pdf',
+          created_at: new Date(Date.now() - 777600000).toISOString(), // 9 ימים אחורה
+          updated_at: new Date(Date.now() - 259200000).toISOString()
+        },
+        {
+          id: 'file-012',
+          filename: 'math_midterm.pdf',
+          original_name: 'מבחן אמצע - מתמטיקה דיסקרטית.pdf',
+          file_type: 'exam',
+          file_size: 456000,
+          file_code: 'MATH101-E001',
+          course_id: 'course-003',
+          uploader_id: 'student-003',
+          uploader_type: 'student',
+          status: 'pending',
+          download_count: 0,
+          tags: ['מבחן', 'אמצע סמסטר'],
+          created_at: new Date(Date.now() - 604800000).toISOString(), // 7 ימים אחורה
+          updated_at: new Date(Date.now() - 604800000).toISOString()
+        },
+        // Additional files for course-004 (Web Development)
+        {
+          id: 'file-013',
+          filename: 'html_css_tutorial.pdf',
+          original_name: 'מדריך HTML ו-CSS.pdf',
+          file_type: 'note',
+          file_size: 1234000,
+          file_code: 'CS301-N001',
+          course_id: 'course-004',
+          uploader_id: 'lecturer-001',
+          uploader_type: 'lecturer',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 172800000).toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 67,
+          tags: ['HTML', 'CSS', 'מדריך'],
+          file_url: 'https://github.com/example/html-css-tutorial',
+          created_at: new Date(Date.now() - 864000000).toISOString(), // 10 ימים אחורה
+          updated_at: new Date(Date.now() - 172800000).toISOString()
+        },
+        {
+          id: 'file-014',
+          filename: 'javascript_basics.docx',
+          original_name: 'יסודות JavaScript.docx',
+          file_type: 'note',
+          file_size: 678000,
+          file_code: 'CS301-N002',
+          course_id: 'course-004',
+          uploader_id: 'student-002',
+          uploader_type: 'student',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 86400000).toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 45,
+          tags: ['JavaScript', 'יסודות'],
+          file_url: 'https://docs.google.com/document/d/example',
+          created_at: new Date(Date.now() - 950400000).toISOString(), // 11 ימים אחורה
+          updated_at: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: 'file-015',
+          filename: 'react_project.zip',
+          original_name: 'פרויקט React - דוגמה.zip',
+          file_type: 'project',
+          file_size: 2345000,
+          file_code: 'CS301-P001',
+          course_id: 'course-004',
+          uploader_id: 'student-001',
+          uploader_type: 'student',
+          status: 'rejected',
+          rejection_reason: 'קבצי ZIP אינם מותרים. אנא העלה קבצים בפורמט PDF או DOCX',
+          download_count: 0,
+          tags: ['React', 'פרויקט'],
+          created_at: new Date(Date.now() - 1036800000).toISOString(), // 12 ימים אחורה
+          updated_at: new Date(Date.now() - 518400000).toISOString()
+        },
+        // Additional files for course-005 (Databases)
+        {
+          id: 'file-016',
+          filename: 'sql_queries.pdf',
+          original_name: 'שאילתות SQL מתקדמות.pdf',
+          file_type: 'note',
+          file_size: 987000,
+          file_code: 'CS202-N004',
+          course_id: 'course-005',
+          uploader_id: 'lecturer-002',
+          uploader_type: 'lecturer',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 345600000).toISOString(),
+          approved_by: 'lecturer-002',
+          download_count: 52,
+          tags: ['SQL', 'שאילתות', 'מתקדם'],
+          file_url: 'https://example.com/files/sql_queries.pdf',
+          created_at: new Date(Date.now() - 1123200000).toISOString(), // 13 ימים אחורה
+          updated_at: new Date(Date.now() - 345600000).toISOString()
+        },
+        {
+          id: 'file-017',
+          filename: 'database_design.pdf',
+          original_name: 'עיצוב מסדי נתונים.pdf',
+          file_type: 'note',
+          file_size: 1543000,
+          file_code: 'CS202-N005',
+          course_id: 'course-005',
+          uploader_id: 'student-003',
+          uploader_type: 'student',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 432000000).toISOString(),
+          approved_by: 'lecturer-002',
+          download_count: 38,
+          tags: ['עיצוב', 'מסדי נתונים'],
+          file_url: 'https://drive.google.com/file/d/database-design/view',
+          created_at: new Date(Date.now() - 1209600000).toISOString(), // 14 ימים אחורה
+          updated_at: new Date(Date.now() - 432000000).toISOString()
+        },
+        {
+          id: 'file-018',
+          filename: 'nosql_intro.docx',
+          original_name: 'מבוא ל-NoSQL.docx',
+          file_type: 'note',
+          file_size: 789000,
+          file_code: 'CS202-N006',
+          course_id: 'course-005',
+          uploader_id: 'student-001',
+          uploader_type: 'student',
+          status: 'pending',
+          download_count: 0,
+          tags: ['NoSQL', 'מבוא'],
+          created_at: new Date(Date.now() - 1296000000).toISOString(), // 15 ימים אחורה
+          updated_at: new Date(Date.now() - 1296000000).toISOString()
+        },
+        // Additional files for course-001 (Computer Science Introduction)
+        {
+          id: 'file-019',
+          filename: 'programming_fundamentals.pdf',
+          original_name: 'יסודות התכנות.pdf',
+          file_type: 'note',
+          file_size: 1876000,
+          file_code: 'CS101-N003',
+          course_id: 'course-001',
+          uploader_id: 'lecturer-001',
+          uploader_type: 'lecturer',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 518400000).toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 89,
+          tags: ['יסודות', 'התכנות'],
+          file_url: 'https://example.com/files/programming_fundamentals.pdf',
+          created_at: new Date(Date.now() - 1382400000).toISOString(), // 16 ימים אחורה
+          updated_at: new Date(Date.now() - 518400000).toISOString()
+        },
+        {
+          id: 'file-020',
+          filename: 'cs_history.pdf',
+          original_name: 'תולדות מדעי המחשב.pdf',
+          file_type: 'note',
+          file_size: 654000,
+          file_code: 'CS101-N004',
+          course_id: 'course-001',
+          uploader_id: 'student-002',
+          uploader_type: 'student',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 604800000).toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 23,
+          tags: ['תולדות', 'היסטוריה'],
+          file_url: 'https://en.wikipedia.org/wiki/History_of_computer_science',
+          created_at: new Date(Date.now() - 1468800000).toISOString(), // 17 ימים אחורה
+          updated_at: new Date(Date.now() - 604800000).toISOString()
+        },
+        // Additional files for course-002 (Data Structures)
+        {
+          id: 'file-021',
+          filename: 'algorithms_complexity.pdf',
+          original_name: 'מורכבות אלגוריתמים.pdf',
+          file_type: 'note',
+          file_size: 1345000,
+          file_code: 'CS201-N006',
+          course_id: 'course-002',
+          uploader_id: 'lecturer-001',
+          uploader_type: 'lecturer',
+          status: 'approved',
+          approval_date: new Date(Date.now() - 691200000).toISOString(),
+          approved_by: 'lecturer-001',
+          download_count: 76,
+          tags: ['אלגוריתמים', 'מורכבות'],
+          file_url: 'https://example.com/files/algorithms_complexity.pdf',
+          created_at: new Date(Date.now() - 1555200000).toISOString(), // 18 ימים אחורה
+          updated_at: new Date(Date.now() - 691200000).toISOString()
+        },
+        {
+          id: 'file-022',
+          filename: 'trees_graphs.docx',
+          original_name: 'עצים וגרפים.docx',
+          file_type: 'note',
+          file_size: 1123000,
+          file_code: 'CS201-N007',
+          course_id: 'course-002',
+          uploader_id: 'student-003',
+          uploader_type: 'student',
+          status: 'pending',
+          download_count: 0,
+          tags: ['עצים', 'גרפים'],
+          created_at: new Date(Date.now() - 1641600000).toISOString(), // 19 ימים אחורה
+          updated_at: new Date(Date.now() - 1641600000).toISOString()
         }
       ];
 
@@ -748,11 +1199,20 @@ export class FirestoreService {
     try {
       console.log(`📊 Getting dashboard data for ${userRole}: ${userId}`);
       
+      // Debug: Let's see all files in the system
+      const allFiles = await this.getFiles();
+      console.log('🔍 DEBUG DASHBOARD: All files in system:', allFiles);
+      console.log('🔍 DEBUG DASHBOARD: Total files count:', allFiles.length);
+      
+      // Debug: Let's see all courses too
+      const allCourses = await this.getCourses();
+      console.log('🔍 DEBUG DASHBOARD: All courses in system:', allCourses);
+      
       const commonData = {
         totalStudents: (await this.getStudents()).length,
         totalLecturers: (await this.getLecturers()).length,
         totalCourses: (await this.getCourses()).length,
-        totalFiles: (await this.getFiles()).length
+        totalFiles: allFiles.length
       };
 
       switch (userRole) {
@@ -778,14 +1238,20 @@ export class FirestoreService {
           };
 
         case 'student':
+          const myFiles = allFiles.filter(f => f.uploader_id === userId);
+          console.log('🔍 DEBUG DASHBOARD: Student files for userId', userId, ':', myFiles);
+          
+          const myRecentFiles = await this.getRecentFiles({ uploaderId: userId }, 5);
+          console.log('🔍 DEBUG DASHBOARD: Student recent files:', myRecentFiles);
+          
           return {
             ...commonData,
             recentNotifications: await this.getRecentNotifications(userId, 5),
             myRecentMessages: await this.getRecentMessages({ userId }, 5), // My inquiries
-            myRecentFiles: await this.getRecentFiles({ uploaderId: userId }, 5), // My files
-            myPendingFiles: (await this.getFiles()).filter(f => f.uploader_id === userId && f.status === 'pending').length,
-            myApprovedFiles: (await this.getFiles()).filter(f => f.uploader_id === userId && f.status === 'approved').length,
-            myRejectedFiles: (await this.getFiles()).filter(f => f.uploader_id === userId && f.status === 'rejected').length
+            myRecentFiles: myRecentFiles, // My files
+            myPendingFiles: myFiles.filter(f => f.status === 'pending').length,
+            myApprovedFiles: myFiles.filter(f => f.status === 'approved').length,
+            myRejectedFiles: myFiles.filter(f => f.status === 'rejected').length
           };
 
         default:
@@ -893,6 +1359,7 @@ if (typeof window !== 'undefined') {
   (window as any).FirestoreUtils = {
     clearAllData: () => FirestoreService.clearAllData(),
     createDemoData: () => FirestoreService.createDemoData(),
+    cleanInvalidRecords: () => FirestoreService.cleanInvalidRecords(),
     getStudents: () => FirestoreService.getStudents(),
     getFiles: () => FirestoreService.getFiles(),
     getCourses: () => FirestoreService.getCourses(),
@@ -919,6 +1386,7 @@ if (typeof window !== 'undefined') {
   console.log('%c🔥 FirestoreUtils available in console:', 'color: #FF5722; font-weight: bold; font-size: 14px;');
   console.log('%c✨ Available commands:', 'color: #4CAF50; font-weight: bold;');
   console.log('- FirestoreUtils.createDemoData() - צור נתוני דמו');
+  console.log('- FirestoreUtils.cleanInvalidRecords() - נקה רשומות לא תקינות');
   console.log('- FirestoreUtils.resetWithDemoData() - אפס ויצור נתוני דמו חדשים');
   console.log('- FirestoreUtils.checkFileStatus() - בדוק חלוקת סטטוסי הקבצים');
   console.log('- FirestoreUtils.clearAllData() - מוחק את כל הנתונים');

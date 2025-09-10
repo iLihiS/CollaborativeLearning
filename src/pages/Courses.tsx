@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
     Card, CardContent, CardActionArea, Typography, Box,
-    TextField, Chip, Skeleton, InputAdornment, Avatar, ToggleButton, ToggleButtonGroup
+    TextField, Chip, Skeleton, InputAdornment, Avatar, ToggleButton, ToggleButtonGroup,
+    CircularProgress
 } from "@mui/material";
 import Grid from '@mui/material/Grid';
 import { BookOpen, User as UserIcon, Search } from "lucide-react";
@@ -45,13 +46,25 @@ export default function Courses() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || "");
 
   useEffect(() => {
-    loadData();
+    if (session) {
+      loadData();
+    }
+  }, [session]);
+
+  // Set loading to false after a reasonable timeout if session is null
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!session) {
+        setLoading(false);
+      }
+    }, 3000); // 3 seconds timeout
+
+    return () => clearTimeout(timeout);
   }, [session]);
 
   const loadData = async () => {
     if (!session) {
-      setLoading(false);
-      return;
+      return; // Don't set loading to false yet, wait for session
     }
 
     try {
@@ -198,18 +211,18 @@ export default function Courses() {
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={course.id}>
               <Card component={Link} to={`/Course/${course.id}`} sx={{ height: '100%', display: 'flex', flexDirection: 'column', textDecoration: 'none', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                 <CardActionArea sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <CardContent>
+                  <CardContent sx={{ width: '100%' }}>
                     <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', mb: 2 }}>
                       <BookOpen />
                     </Avatar>
-                    <Typography gutterBottom variant="h6" component="h2">{course.course_name || course.name}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{course.course_code || course.code}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{course.description}</Typography>
+                    <Typography textAlign="left" gutterBottom variant="h6" component="h2">{course.course_name || course.name}</Typography>
+                    <Typography textAlign="left" variant="body2" color="text.secondary" sx={{ mb: 1 }}>{course.course_code || course.code}</Typography>
+                    <Typography textAlign="left" variant="body2" color="text.secondary" sx={{ mb: 2 }}>{course.description}</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                       <UserIcon size={16} />
-                      <Typography variant="body2" color="text.secondary">{lecturers[course.lecturer_id] || "מרצה לא ידוע"}</Typography>
+                      <Typography textAlign="left" variant="body2" color="text.secondary">{lecturers[course.lecturer_id] || "מרצה לא ידוע"}</Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 0.5 }}>
                       {(course.academic_track_ids || []).map(trackId => (
                         <Chip key={trackId} label={lecturers[trackId] || trackId} size="small" variant="outlined" />
                       ))}
@@ -221,6 +234,15 @@ export default function Courses() {
           ))
         )}
       </Grid>
+
+      {loading && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <CircularProgress sx={{ mb: 2 }} />
+          <Typography variant="h6" textAlign="center">
+            טוען קורסים...
+          </Typography>
+        </Box>
+      )}
 
       {!loading && searchFilteredCourses.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>

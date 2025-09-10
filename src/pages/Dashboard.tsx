@@ -604,6 +604,7 @@ export default function Dashboard() {
             recentFiles={dashboardData.recentFiles || []}
             myRecentMessages={dashboardData.myRecentMessages || []}
             myRecentFiles={dashboardData.myRecentFiles || []}
+            loading={dashboardLoading}
           />
         </Box>
 

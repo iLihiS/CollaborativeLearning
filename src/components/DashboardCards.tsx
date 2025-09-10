@@ -1,5 +1,5 @@
 import React from 'react'
-import { NotificationEntity, Message, FileEntity } from '@/services/localStorage'
+import { NotificationEntity, Message, FileEntity } from '@/services/firestoreService'
 
 interface DashboardCardsProps {
   userRole: string
@@ -8,6 +8,7 @@ interface DashboardCardsProps {
   recentFiles?: FileEntity[]
   myRecentMessages?: Message[]
   myRecentFiles?: FileEntity[]
+  loading?: boolean
 }
 
 export const DashboardCards: React.FC<DashboardCardsProps> = ({
@@ -16,7 +17,8 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
   recentMessages = [],
   recentFiles = [],
   myRecentMessages = [],
-  myRecentFiles = []
+  myRecentFiles = [],
+  loading = false
 }) => {
 
   const formatDate = (dateString: string) => {
@@ -100,11 +102,44 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     borderLeft: '3px solid #ddd'
   }
 
+  // Loading component
+  const LoadingSpinner = () => (
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center', 
+      justifyContent: 'center',
+      marginTop: '40px',
+      color: '#666'
+    }}>
+      <div style={{
+        width: '24px',
+        height: '24px',
+        border: '3px solid #f3f3f3',
+        borderTop: '3px solid #84cc16',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        marginBottom: '12px'
+      }}></div>
+      <p style={{ margin: 0, fontSize: '14px' }}>טוען...</p>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+    </div>
+  )
+
   // Recent notifications card
   const RecentNotificationsCard = () => (
     <div style={cardStyle}>
       <h3 style={headerStyle}>🔔 התראות אחרונות</h3>
-      {recentNotifications.length === 0 ? (
+      {loading ? (
+        <LoadingSpinner />
+      ) : recentNotifications.length === 0 ? (
         <p style={{ color: '#666', textAlign: 'center', marginTop: '20px' }}>
           אין התראות חדשות
         </p>
@@ -137,7 +172,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       <h3 style={headerStyle}>
         💬 {userRole === 'student' ? 'הפניות שלי' : 'פניות אחרונות'}
       </h3>
-      {(userRole === 'student' ? myRecentMessages : recentMessages).length === 0 ? (
+      {loading ? (
+        <LoadingSpinner />
+      ) : (userRole === 'student' ? myRecentMessages : recentMessages).length === 0 ? (
         <p style={{ color: '#666', textAlign: 'center', marginTop: '20px' }}>
           {userRole === 'student' ? 'לא הגשת פניות' : 'אין פניות חדשות'}
         </p>
@@ -191,7 +228,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     return (
       <div style={cardStyle}>
         <h3 style={headerStyle}>📁 {title}</h3>
-        {filesToShow.length === 0 ? (
+        {loading ? (
+          <LoadingSpinner />
+        ) : filesToShow.length === 0 ? (
           <p style={{ color: '#666', textAlign: 'center', marginTop: '20px' }}>
             {userRole === 'student' ? 'לא העלית קבצים' : 'אין קבצים חדשים'}
           </p>

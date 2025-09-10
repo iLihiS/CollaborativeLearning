@@ -17,14 +17,14 @@ import {
   Alert, 
   Avatar
 } from '@mui/material'
-import { User, Calendar, Upload, Download, FileText as FileTextIcon, ArrowRight } from 'lucide-react'
+import { User, Calendar, Upload, Download, FileText as FileTextIcon, ArrowRight, ExternalLink } from 'lucide-react'
 
 import { Course as CourseEntity, File as FileEntity, Lecturer } from '@/api/entities'
 
 type Course = {
   id: string
-  course_name: string
-  course_code: string
+  name: string
+  code: string
   lecturer_id: string
   semester: string
   description: string
@@ -38,12 +38,16 @@ type Lecturer = {
 
 type File = {
   id: string
-  title: string
-  description: string
+  original_name: string
   file_type: string
-  created_date: string
+  created_at: string
   download_count: number
-  file_url: string
+  file_url?: string
+  file_size: number
+  tags: string[]
+  status: string
+  uploader_type: string
+  uploader_id: string
 }
 
 const fileTypeToHebrew: { [key: string]: string } = {
@@ -75,12 +79,17 @@ export default function CoursePage() {
   const loadCourseData = async (id: string) => {
     try {
       setError(null)
-      const courseData = await CourseEntity.get(id)
+      const courseData = await CourseEntity.get(id) as unknown as Course
+      
+      if (!courseData) {
+        throw new Error('Course not found')
+      }
+      
       setCourse(courseData)
 
       if (courseData.lecturer_id) {
         try {
-          const lecturerData = await Lecturer.get(courseData.lecturer_id)
+          const lecturerData = await Lecturer.get(courseData.lecturer_id) as unknown as Lecturer
           setLecturer(lecturerData)
         } catch (lecturerError) {
           console.warn(`Lecturer with ID ${courseData.lecturer_id} not found:`, lecturerError)
@@ -101,8 +110,15 @@ export default function CoursePage() {
   }
 
   const handleDownload = async (file: File) => {
-    await FileEntity.update(file.id, { download_count: (file.download_count || 0) + 1 })
-    window.open(file.file_url, '_blank')
+    // Update download count
+    await FileEntity.update(file.id, { download_count: file.download_count + 1 })
+    
+    // Open file URL or placeholder
+    if (file.file_url) {
+      window.open(file.file_url, '_blank')
+    } else {
+      window.open(`https://example.com/download/${file.id}`, '_blank')
+    }
   }
 
   if (loading) {
@@ -145,25 +161,25 @@ export default function CoursePage() {
         mb: 4, 
         color: 'white',
         background: 'linear-gradient(to right, #84cc16, #65a30d)',
-      }}>
-        <Typography variant="h3" component="h1" fontWeight="bold">{course.course_name}</Typography>
-        <Typography variant="h6" sx={{ opacity: 0.8, mt: 1 }}>{course.course_code}</Typography>
+        }}>
+        <Typography textAlign="left" variant="h3" component="h1" fontWeight="bold">{course.name}</Typography>
+        <Typography textAlign="left" variant="h6" sx={{ opacity: 0.8, mt: 1 }}>{course.code}</Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mt: 2 }}>
-          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography textAlign="left" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <User /> {lecturer?.full_name || 'מרצה לא ידוע'}
           </Typography>
-          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography textAlign="left" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Calendar /> {course.semester}
           </Typography>
         </Box>
-        <Typography sx={{ mt: 2, maxWidth: '80ch' }}>{course.description}</Typography>
+        <Typography textAlign="left" sx={{ mt: 2, maxWidth: '80ch' }}>{course.description}</Typography>
       </Paper>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>
           <FileTextIcon />
         </Avatar>
-        <Typography variant="h5" fontWeight="bold">חומרי לימוד זמינים</Typography>
+        <Typography textAlign="left" variant="h5" fontWeight="bold">חומרי לימוד זמינים</Typography>
       </Box>
 
       <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
@@ -178,34 +194,35 @@ export default function CoursePage() {
                         <FileTextIcon />
                       </Avatar>
                       <Box>
-                        <Typography variant="h6">{file.title}</Typography>
-                        <Typography variant="body2" color="text.secondary">{file.description}</Typography>
+                        <Typography textAlign="left" variant="h6">
+                          {file.original_name}
+                        </Typography>
+                        <Typography textAlign="left" variant="body2" color="text.secondary">
+                          גודל: {(file.file_size / 1024 / 1024).toFixed(2)} MB | סוג: {fileTypeToHebrew[file.file_type] || file.file_type}
+                        </Typography>
                         <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                           <Chip label={fileTypeToHebrew[file.file_type] || file.file_type} size="small" />
-                          <Chip label={
-                            file.created_date && !isNaN(new Date(file.created_date).getTime()) 
-                              ? format(new Date(file.created_date), 'd MMM yyyy', { locale: he })
-                              : 'תאריך לא תקין'
-                          } size="small" variant="outlined" />
+                          <Chip label={format(new Date(file.created_at), 'd MMM yyyy', { locale: he })} size="small" variant="outlined" />
                         </Box>
                       </Box>
                     </Box>
                     <Button
                       variant="contained"
-                      startIcon={<Download />}
+                      startIcon={file.file_url && file.file_url.startsWith('http') ? <ExternalLink /> : <Download />}
                       onClick={() => handleDownload(file)}
+                      title={file.file_url && file.file_url.startsWith('http') ? 'פתח קישור' : 'הורד קובץ'}
                     >
-                      הורדה
+                      {file.file_url && file.file_url.startsWith('http') ? 'פתח קישור' : 'הורדה'}
                     </Button>
                   </Paper>
                 </Grid>
               ))}
             </Grid>
           ) : (
-            <Box sx={{ textAlign: 'center', py: 6 }}>
-              <FileTextIcon size={60} color="grey" />
-              <Typography variant="h6">אין עדיין חומרי לימוד</Typography>
-              <Typography color="text.secondary" sx={{ mb: 2 }}>היה הראשון להעלות חומר לימוד לקורס זה!</Typography>
+            <Box sx={{ textAlign: 'center', alignContent: 'center', alignItems: 'center', justifyContent: 'center', py: 6 }}>
+              <FileTextIcon size={60} color="grey" style={{ alignContent: 'center' }} />
+              <Typography textAlign="center" variant="h6">אין עדיין חומרי לימוד</Typography>
+              <Typography textAlign="center" color="text.secondary" sx={{ mb: 2 }}>היה הראשון להעלות חומר לימוד לקורס זה!</Typography>
               <Button
                 component={Link}
                 to={`/UploadFile?course_id=${course.id}`}
