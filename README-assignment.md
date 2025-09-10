@@ -33,7 +33,7 @@ git branch -a
 ## הסטנדרטים שהופרו
 
 1. **Function Naming** - שמות פונקציות לא ב-camelCase
-2. **Variable Naming** - שמות משתנים לא ב-camelCase  
+2. **Resposivness** - גדלים קבוע ולא באופן יחסי למסך  
 3. **Type Naming** - שמות טיפוסים לא ב-PascalCase
 4. **Component Naming** - שם קומפוננטה לא ב-PascalCase
 5. **CSS Naming** - שמות מחלקות CSS לא ב-kebab-case
@@ -47,7 +47,7 @@ git branch -a
 ### Problematic Code Branch
 - Clean project structure
 - VIOLATION #1: Function Naming
-- VIOLATION #2: Variable Naming  
+- VIOLATION #2: Resposivness  
 - VIOLATION #3: Type Naming
 - VIOLATION #4: Component Naming
 - VIOLATION #5: CSS Naming
@@ -56,7 +56,7 @@ git branch -a
 
 ### Corrected Code Branch
 - FIX #1: Function Naming
-- FIX #2: Variable Naming
+- FIX #2: Responsivness
 - FIX #3: Type Naming  
 - FIX #4: Component Naming
 - FIX #5: CSS Naming
