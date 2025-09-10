@@ -416,6 +416,7 @@ export default function AdminStudentManagement() {
       </Box>
 
       <Box sx={{ mb: 3 }}>
+        {/* ❌ VIOLATION: CSS Best Practices - Should use relative units (vw, vh, %) instead of fixed units */}
         <ToggleButtonGroup
           value={trackFilter}
           exclusive
@@ -433,6 +434,9 @@ export default function AdminStudentManagement() {
               py: 0.5,
               fontWeight: 500,
               whiteSpace: 'nowrap',
+              minWidth: '120px',
+              maxWidth: '200px',
+              height: '40px',
               '&:hover': {
                 backgroundColor: '#f3f4f6',
                 borderColor: '#9ca3af'
