@@ -71,7 +71,7 @@ function PagesContent() {
         <Route path="/UploadFile" element={<UploadFile />} />
         <Route path="/MyFiles" element={<MyFiles />} />
         <Route path="/Courses" element={<Courses />} />
-        <Route path="/Course" element={<Course />} />
+        <Route path="/Course/:courseId" element={<Course />} />
         <Route path="/Insights" element={<Insights />} />
         <Route path="/Help" element={<Help />} />
         <Route path="/AdminPanel" element={<AdminPanel />} />

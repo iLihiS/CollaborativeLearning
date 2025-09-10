@@ -41,6 +41,7 @@ type FileInfo = {
     tags: string[];
     created_at: string;
     updated_at: string;
+    file_url?: string;  // URL for externally linked files
 };
 
 type CourseInfo = {

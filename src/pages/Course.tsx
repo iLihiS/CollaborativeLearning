@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { format } from 'date-fns'
 import { he } from 'date-fns/locale'
 
@@ -20,7 +20,6 @@ import {
 import { User, Calendar, Upload, Download, FileText as FileTextIcon, ArrowRight } from 'lucide-react'
 
 import { Course as CourseEntity, File as FileEntity, Lecturer } from '@/api/entities'
-import { createPageUrl } from '@/utils'
 
 type Course = {
   id: string
@@ -63,17 +62,13 @@ export default function CoursePage() {
   const [error, setError] = useState<string | null>(null)
   
   const navigate = useNavigate()
-  const location = useLocation()
-  const searchParams = new URLSearchParams(location.search)
-  const courseId = searchParams.get('id')
-  const fromTrack = searchParams.get('track')
-  const fromSearch = searchParams.get('search')
+  const { courseId } = useParams<{ courseId: string }>()
 
   useEffect(() => {
     if (courseId) {
       loadCourseData(courseId)
     } else {
-      navigate(createPageUrl('Courses'))
+      navigate('/Courses')
     }
   }, [courseId, navigate])
 
@@ -118,7 +113,7 @@ export default function CoursePage() {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Alert severity="error">{error}</Alert>
-        <Button component={Link} to={createPageUrl('Courses')} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
+        <Button component={Link} to={"/Courses"} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
       </Box>
     )
   }
@@ -127,7 +122,7 @@ export default function CoursePage() {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography variant="h5">קורס לא נמצא</Typography>
-        <Button component={Link} to={createPageUrl('Courses')} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
+        <Button component={Link} to={"/Courses"} variant="contained" sx={{ mt: 2 }}>חזרה לרשימת הקורסים</Button>
       </Box>
     )
   }
@@ -136,7 +131,7 @@ export default function CoursePage() {
     <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button
         component={Link}
-        to={createPageUrl(`Courses?track=${fromTrack || ''}&search=${fromSearch || ''}`)}
+        to="/Courses"
         variant="outlined"
         startIcon={<ArrowRight />}
         sx={{ mb: 3 }}
@@ -213,7 +208,7 @@ export default function CoursePage() {
               <Typography color="text.secondary" sx={{ mb: 2 }}>היה הראשון להעלות חומר לימוד לקורס זה!</Typography>
               <Button
                 component={Link}
-                to={createPageUrl(`UploadFile?course_id=${course.id}`)}
+                to={`/UploadFile?course_id=${course.id}`}
                 variant="contained"
                 startIcon={<Upload />}
               >

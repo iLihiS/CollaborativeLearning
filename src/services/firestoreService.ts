@@ -59,6 +59,7 @@ export interface Course extends BaseEntity {
   year: number;
   lecturer_id: string;
   academic_track: string;
+  academic_track_ids?: string[];  // Array of academic track IDs for multi-track support
   max_students: number;
   enrolled_students: number;
   status: 'active' | 'inactive';
@@ -205,8 +206,77 @@ export class FirestoreService {
           year: 2024,
           lecturer_id: 'lecturer-001',
           academic_track: 'cs-undergrad',
+          academic_track_ids: ['cs-undergrad'],
           max_students: 30,
           enrolled_students: 15,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'course-002',
+          name: 'מבני נתונים ואלגוריתמים',
+          code: 'CS201',
+          description: 'מבני נתונים בסיסיים ואלגוריתמים יעילים',
+          credits: 4,
+          semester: 'ב',
+          year: 2024,
+          lecturer_id: 'lecturer-001',
+          academic_track: 'cs-undergrad',
+          academic_track_ids: ['cs-undergrad'],
+          max_students: 25,
+          enrolled_students: 20,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'course-003',
+          name: 'מתמטיקה דיסקרטית',
+          code: 'MATH101',
+          description: 'מתמטיקה דיסקרטית למדעי המחשב',
+          credits: 3,
+          semester: 'א',
+          year: 2024,
+          lecturer_id: 'lecturer-002',
+          academic_track: 'math-undergrad',
+          academic_track_ids: ['math-undergrad'],
+          max_students: 40,
+          enrolled_students: 35,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'course-004',
+          name: 'פיתוח אפליקציות ווב',
+          code: 'CS301',
+          description: 'פיתוח אפליקציות ווב מודרניות',
+          credits: 4,
+          semester: 'ב',
+          year: 2024,
+          lecturer_id: 'lecturer-001',
+          academic_track: 'cs-undergrad',
+          academic_track_ids: ['cs-undergrad'],
+          max_students: 20,
+          enrolled_students: 18,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 'course-005',
+          name: 'בסיסי נתונים',
+          code: 'CS202',
+          description: 'מודלים ושפות לניהול בסיסי נתונים',
+          credits: 3,
+          semester: 'א',
+          year: 2024,
+          lecturer_id: 'lecturer-002',
+          academic_track: 'cs-undergrad',
+          academic_track_ids: ['cs-undergrad'],
+          max_students: 30,
+          enrolled_students: 22,
           status: 'active',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()

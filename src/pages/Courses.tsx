@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { Course, Lecturer, User, Student, AcademicTrack } from "@/api/entities";
+import { Course, Lecturer, Student, AcademicTrack } from "@/api/entities";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { useAuth } from "@/hooks/useAuth";
 import {
     Card, CardContent, CardActionArea, Typography, Box,
-    TextField, Button, Chip, Skeleton, InputAdornment, Avatar, ToggleButton, ToggleButtonGroup
+    TextField, Chip, Skeleton, InputAdornment, Avatar, ToggleButton, ToggleButtonGroup
 } from "@mui/material";
 import Grid from '@mui/material/Grid';
-import { BookOpen, User as UserIcon, Calendar, Search } from "lucide-react";
+import { BookOpen, User as UserIcon, Search } from "lucide-react";
 
 type CourseInfo = {
     id: string;
@@ -18,6 +18,8 @@ type CourseInfo = {
     lecturer_id: string;
     semester: string;
     academic_track_ids: string[];
+    name?: string;  // Alternative name field for compatibility
+    code?: string;  // Alternative code field for compatibility
 };
 
 type LecturerInfo = {
@@ -31,10 +33,10 @@ type AcademicTrackInfo = {
 };
 
 export default function Courses() {
+  const { session } = useAuth();
   const [courses, setCourses] = useState<CourseInfo[]>([]);
   const [lecturers, setLecturers] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [filterableTracks, setFilterableTracks] = useState<AcademicTrackInfo[]>([]);
   
   // Initialize state from URL params
@@ -44,13 +46,18 @@ export default function Courses() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [session]);
 
   const loadData = async () => {
+    if (!session) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const user = await User.me();
-      setCurrentUser(user);
+      const user = session.user;
+      const currentRole = session.current_role;
 
       const [allCourses, allLecturers, allAcademicTracks] = await Promise.all([
         Course.list(),
@@ -64,17 +71,19 @@ export default function Courses() {
       }, {});
       setLecturers(lecturersMap);
 
-      if (user.current_role === 'admin') {
+      if (currentRole === 'admin') {
+        console.log('🔧 Admin user detected, showing all courses:', allCourses.length, 'courses');
         setCourses(allCourses);
         setFilterableTracks(allAcademicTracks);
       } else {
+        console.log('👤 Non-admin user:', currentRole);
         let userTrackIds: string[] = [];
-        if (user.current_role === 'student') {
+        if (currentRole === 'student') {
           const studentRecords = await Student.filter({ email: user.email });
           if (studentRecords.length > 0 && studentRecords[0].academic_track_ids) {
             userTrackIds = studentRecords[0].academic_track_ids;
           }
-        } else if (user.current_role === 'lecturer') {
+        } else if (currentRole === 'lecturer') {
           const lecturerRecords = await Lecturer.filter({ email: user.email });
           if (lecturerRecords.length > 0 && lecturerRecords[0].academic_track_ids) {
             userTrackIds = lecturerRecords[0].academic_track_ids;
@@ -97,7 +106,9 @@ export default function Courses() {
   
   const searchFilteredCourses = courses.filter((course: CourseInfo) => {
     const trackMatch = !selectedTrack || (course.academic_track_ids && course.academic_track_ids.includes(selectedTrack));
-    const searchMatch = !searchTerm || course.course_name.toLowerCase().includes(searchTerm.toLowerCase()) || course.course_code.toLowerCase().includes(searchTerm.toLowerCase());
+    const courseName = course.course_name || course.name || '';
+    const courseCode = course.course_code || course.code || '';
+    const searchMatch = !searchTerm || courseName.toLowerCase().includes(searchTerm.toLowerCase()) || courseCode.toLowerCase().includes(searchTerm.toLowerCase());
     return trackMatch && searchMatch;
   });
 
@@ -185,14 +196,14 @@ export default function Courses() {
         ) : (
           searchFilteredCourses.map((course) => (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={course.id}>
-              <Card component={Link} to={createPageUrl(`Course?id=${course.id}&track=${selectedTrack || ''}&search=${searchTerm || ''}`)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', textDecoration: 'none', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
+              <Card component={Link} to={`/Course/${course.id}`} sx={{ height: '100%', display: 'flex', flexDirection: 'column', textDecoration: 'none', transition: 'transform 0.3s', '&:hover': { transform: 'translateY(-5px)' } }}>
                 <CardActionArea sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <CardContent>
                     <Avatar variant="rounded" sx={{ bgcolor: 'primary.light', color: 'primary.main', mb: 2 }}>
                       <BookOpen />
                     </Avatar>
-                    <Typography gutterBottom variant="h6" component="h2">{course.course_name}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{course.course_code}</Typography>
+                    <Typography gutterBottom variant="h6" component="h2">{course.course_name || course.name}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{course.course_code || course.code}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{course.description}</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                       <UserIcon size={16} />
@@ -222,7 +233,7 @@ export default function Courses() {
           <Typography color="text.secondary" textAlign="center">
             {searchTerm
               ? 'נסה מונח חיפוש אחר.'
-              : currentUser?.current_role === 'admin'
+              : session?.current_role === 'admin'
                 ? 'נראה שעדיין לא הוספו קורסים למערכת.'
                 : 'יתכן ואין קורסים המשויכים למסלולים האקדמיים שלך עבור תפקידך הנוכחי.'
             }

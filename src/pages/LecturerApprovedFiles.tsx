@@ -38,6 +38,7 @@ type FileInfo = {
     tags: string[];
     created_at: string;
     updated_at: string;
+    file_url?: string;  // URL for externally linked files
 };
 
 type CourseInfo = {
@@ -289,6 +290,36 @@ export default function LecturerApprovedFiles() {
         setRoleFilter('all');
         setSortField('created_at');
         setSortDirection('desc');
+    };
+
+    const handleFileDownload = async (file: FileInfo) => {
+        try {
+            // Update download count
+            await FileEntity.update(file.id, { 
+                download_count: (file.download_count || 0) + 1 
+            });
+            
+            // Refresh the files list to show updated count
+            loadData();
+            
+            if (file.file_url) {
+                // If it's an external link, open it in a new tab
+                window.open(file.file_url, '_blank');
+            } else {
+                // If it's an uploaded file, attempt to download it
+                // For now, we'll just open a placeholder link
+                // In a real implementation, this would be the actual download URL
+                window.open('#', '_blank');
+            }
+        } catch (error) {
+            console.error('Error updating download count:', error);
+            // Still open the file even if count update fails
+            if (file.file_url) {
+                window.open(file.file_url, '_blank');
+            } else {
+                window.open('#', '_blank');
+            }
+        }
     };
 
     const getSortIcon = (field: keyof FileInfo) => {
@@ -649,7 +680,10 @@ export default function LecturerApprovedFiles() {
                                     </TableCell>
                                     <TableCell align="left">{getRoleComponent(file.uploader_type)}</TableCell>
                                     <TableCell align="left">
-                                        <IconButton onClick={() => window.open('#', '_blank')}>
+                                        <IconButton 
+                                            onClick={() => handleFileDownload(file)}
+                                            title={file.file_url ? 'פתח קישור' : 'הורד קובץ'}
+                                        >
                                             <Download />
                                         </IconButton>
                                     </TableCell>

@@ -1,6 +1,7 @@
 
 import { useState, useEffect, ChangeEvent } from 'react';
 import { File as FileEntity, Course, Student, User, Lecturer } from '@/api/entities';
+import { useLocation } from 'react-router-dom';
 import {
     Button, Table, TableBody, TableCell, TableHead, TableRow, TableContainer,
     Box, Typography, Paper, IconButton, CircularProgress, Chip, Avatar,
@@ -70,6 +71,7 @@ type FormErrors = {
 };
 
 export default function MyFiles() {
+  const location = useLocation();
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [filteredFiles, setFilteredFiles] = useState<FileInfo[]>([]);
   const [courses, setCourses] = useState<CourseInfo[]>([]);
@@ -113,6 +115,15 @@ export default function MyFiles() {
     setSortField('created_at');
     setSortDirection('desc');
   }, []);
+
+  // Check if we need to refresh data after navigation from upload
+  useEffect(() => {
+    if (location.state?.refresh) {
+      loadData();
+      // Clear the state to prevent repeated refreshes
+      window.history.replaceState(null, '', location.pathname);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     let filtered = files;
@@ -277,15 +288,33 @@ export default function MyFiles() {
     }
   };
 
-  const handleFileAction = (file: FileInfo) => {
-    if (file.file_url) {
-      // If it's an external link, open it in a new tab
-      window.open(file.file_url, '_blank');
-    } else {
-      // If it's an uploaded file, attempt to download it
-      // For now, we'll just open a placeholder link
-      // In a real implementation, this would be the actual download URL
-      window.open('#', '_blank');
+  const handleFileAction = async (file: FileInfo) => {
+    try {
+      // Update download count first
+      await FileEntity.update(file.id, { 
+        download_count: (file.download_count || 0) + 1 
+      });
+      
+      // Refresh the files list to show updated count
+      loadData();
+      
+      if (file.file_url) {
+        // If it's an external link, open it in a new tab
+        window.open(file.file_url, '_blank');
+      } else {
+        // If it's an uploaded file, attempt to download it
+        // For now, we'll just open a placeholder link
+        // In a real implementation, this would be the actual download URL
+        window.open('#', '_blank');
+      }
+    } catch (error) {
+      console.error('Error updating download count:', error);
+      // Still open the file even if count update fails
+      if (file.file_url) {
+        window.open(file.file_url, '_blank');
+      } else {
+        window.open('#', '_blank');
+      }
     }
   };
 
@@ -506,6 +535,7 @@ export default function MyFiles() {
       }
       
       // Create file entity
+      const isAutoApproved = uploaderType === 'lecturer' || uploaderType === 'admin';
       const fileData = {
         filename: selectedFile?.name || formData.title,
         original_name: formData.title,
@@ -515,6 +545,8 @@ export default function MyFiles() {
         uploader_id: uploaderId,
         uploader_type: uploaderType,
         status: uploaderType === 'student' ? 'pending' : 'approved', // Auto-approve for lecturers/admins
+        approval_date: isAutoApproved ? new Date().toISOString() : undefined,
+        approved_by: isAutoApproved ? uploaderId : undefined,
         file_size: selectedFile?.size || 0,
         download_count: 0,
         tags: [],

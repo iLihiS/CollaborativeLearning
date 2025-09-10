@@ -272,6 +272,7 @@ export default function UploadFile() {
             }
             
             // Create file entity
+            const isAutoApproved = uploaderType === 'lecturer' || uploaderType === 'admin';
             const fileData = {
                 filename: uploadMode === 'file' ? (selectedFile?.name || formData.title) : formData.title,
                 original_name: formData.title,
@@ -281,6 +282,8 @@ export default function UploadFile() {
                 uploader_id: uploaderId,
                 uploader_type: uploaderType,
                 status: uploaderType === 'student' ? 'pending' : 'approved', // Auto-approve for lecturers/admins
+                approval_date: isAutoApproved ? new Date().toISOString() : undefined,
+                approved_by: isAutoApproved ? uploaderId : undefined,
                 file_size: uploadMode === 'file' ? (selectedFile?.size || 0) : 0,
                 file_url: uploadMode === 'url' ? formData.file_url : undefined,
                 download_count: 0,
@@ -295,9 +298,7 @@ export default function UploadFile() {
             
             // Navigate to my files after a short delay
             setTimeout(() => {
-                navigate('/my-files', { replace: true });
-                // Trigger a page refresh to ensure updated data
-                window.location.reload();
+                navigate('/myfiles', { replace: true, state: { refresh: true } });
             }, 1500);
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -473,7 +474,7 @@ export default function UploadFile() {
                     
                     {/* Upload Mode Selection */}
                     <Box>
-                        <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                        <Typography variant="body1" textAlign="left" gutterBottom sx={{ mb: 2 }}>
                             בחר אופן הוספת קובץ
                         </Typography>
                         <ToggleButtonGroup
