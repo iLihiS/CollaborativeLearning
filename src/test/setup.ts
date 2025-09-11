@@ -43,7 +43,14 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({}),
   useLocation: () => ({ search: '', pathname: '' }),
-  Link: ({ children, to }: any) => <a href={to}>{children}</a>
+  Link: ({ children, to }: any) => {
+    const React = require('react')
+    return React.createElement('a', { href: to }, children)
+  },
+  BrowserRouter: ({ children }: any) => {
+    const React = require('react')
+    return React.createElement('div', { 'data-testid': 'mock-router' }, children)
+  }
 }))
 
 // Global test setup
