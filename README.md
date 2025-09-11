@@ -20,6 +20,22 @@ CollaborativeLearning is an educational platform that enables:
 
 The platform streamlines the academic workflow by providing role-based access control, secure file management, and intuitive interfaces for all user types.
 
+## 📚 Documentation Menu
+
+This project includes comprehensive documentation across multiple files:
+
+| 📄 Document | 📝 Description | 🎯 Target Audience |
+|-------------|----------------|-------------------|
+| **[TESTING.md](./TESTING.md)** | Complete unit testing guide with setup instructions, test structure, and examples for running tests on Student entity, validation logic, and UI components | Developers, QA Engineers |
+| **[README-assignment.md](./README-assignment.md)** | Code review assignment documentation explaining coding standards violations and fixes across different branches | Students, Code Reviewers |
+| **[api-configuration.md](./api-configuration.md)** | API configuration and integration details for Firebase, Firestore, and external services | Backend Developers, DevOps |
+
+### Quick Navigation
+
+- 🧪 **Need to run tests?** → [TESTING.md](./TESTING.md)
+- 📋 **Working on code review assignment?** → [README-assignment.md](./README-assignment.md)  
+- 🔧 **Setting up API configurations?** → [api-configuration.md](./api-configuration.md)
+
 ## Project Structure
 
 ```

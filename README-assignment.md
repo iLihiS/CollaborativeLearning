@@ -1,48 +1,48 @@
-# מטלת סקר קוד - Coding Standards Assignment
+# Code Review Assignment - Coding Standards Assignment
 
-## תיאור המטלה
+## Assignment Description
 
-מטלה זו עוסקת ביצירה מכוונת של קוד שמפר סטנדרטי קידוד, ולאחר מכן ביצוע סקר קוד מקיף לזיהוי ותיקון ההפרות.
+This assignment involves deliberately creating code that violates coding standards, followed by conducting a comprehensive code review to identify and fix the violations.
 
-## מבנה הפרויקט
+## Project Structure
 
-### ענפים (Branches)
+### Branches
 
-1. **`problematic-code`** - מכיל את הקוד הבעייתי עם 7 הפרות מכוונות
-2. **`corrected-code`** - מכיל את הקוד המתוקן עם כל התיקונים
+1. **`problematic-code`** - Contains the problematic code with 7 intentional violations
+2. **`corrected-code`** - Contains the corrected code with all fixes applied
 
-### קבצים מרכזיים
+### Main Files
 
-- **`src/pages/AdminStudentManagement.tsx`** - הקובץ הראשי שנבחר למטלה
-- **`code-review-documentation.md`** - תיעוד מפורט של כל ההפרות והתיקונים
-- **`reflection.md`** - רפלקציה אישית על תהליך הלמידה
+- **`src/pages/AdminStudentManagement.tsx`** - The main file selected for this assignment
+- **`code-review-documentation.md`** - Detailed documentation of all violations and fixes
+- **`reflection.md`** - Personal reflection on the learning process
 
-## איך לנווט בין הענפים
+## How to Navigate Between Branches
 
 ```bash
-# לעבור לענף הקוד הבעייתי
+# Switch to the problematic code branch
 git checkout problematic-code
 
-# לעבור לענף הקוד המתוקן
+# Switch to the corrected code branch
 git checkout corrected-code
 
-# לראות רשימת כל הענפים
+# View list of all branches
 git branch -a
 ```
 
-## הסטנדרטים שהופרו
+## Standards That Were Violated
 
-1. **Function Naming** - שמות פונקציות לא ב-camelCase
-2. **Resposivness** - גדלים קבוע ולא באופן יחסי למסך  
-3. **Type Naming** - שמות טיפוסים לא ב-PascalCase
-4. **Component Naming** - שם קומפוננטה לא ב-PascalCase
-5. **CSS Naming** - שמות מחלקות CSS לא ב-kebab-case
-6. **CSS Best Practices** - שימוש ב-inline styles במקום מחלקות
-7. **HTML Best Practices** - שימוש ב-div גנרי במקום תגיות סמנטיות
+1. **Function Naming** - Function names not in camelCase
+2. **Responsiveness** - Fixed sizes instead of responsive design
+3. **Type Naming** - Type names not in PascalCase
+4. **Component Naming** - Component name not in PascalCase
+5. **CSS Naming** - CSS class names not in kebab-case
+6. **CSS Best Practices** - Using inline styles instead of classes
+7. **HTML Best Practices** - Using generic div instead of semantic tags
 
-## היסטוריית Commits
+## Commit History
 
-כל הפרה ותיקון נעשו בcommit נפרד לצורך מעקב מדויק:
+Each violation and fix was made in a separate commit for precise tracking:
 
 ### Problematic Code Branch
 - Clean project structure
@@ -63,14 +63,14 @@ git branch -a
 - FIX #6: CSS Best Practices
 - FIX #7: HTML Best Practices
 
-## הרצת הפרויקט
+## Running the Project
 
 ```bash
-# התקנת תלויות
+# Install dependencies
 npm install
 
-# הרצת הפרויקט
+# Run the project
 npm run dev
 ```
 
-הפרויקט יעבד בשני הענפים - הקוד הבעייתי והמתוקן כאחד פונקציונליים ויעבדו כראוי. 
+The project will work in both branches - both the problematic and corrected code are functional and will work properly. 
