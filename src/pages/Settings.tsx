@@ -278,8 +278,8 @@ export default function Settings() {
             <UserIcon />
           </Avatar>
           <Box>
-            <Typography variant="h4" fontWeight="bold">הגדרות חשבון</Typography>
-            <Typography color="text.secondary">נהל את פרטי הפרופיל, העדפות התצוגה והתפקידים שלך במערכת.</Typography>
+            <Typography variant="h4" fontWeight="bold" textAlign="left">הגדרות חשבון</Typography>
+            <Typography textAlign="left" sx={{ color: 'var(--text-primary)' }}>נהל את פרטי הפרופיל, העדפות התצוגה והתפקידים שלך במערכת.</Typography>
           </Box>
         </Box>
       </Box>
@@ -298,7 +298,18 @@ export default function Settings() {
               <CardHeader title={<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><UserIcon /> פרטים אישיים</Typography>} />
               <CardContent>
                 <Box component="form" noValidate autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <TextField label="כתובת מייל" value={user?.email} disabled fullWidth />
+                  <TextField 
+                    label="כתובת מייל" 
+                    value={user?.email} 
+                    disabled 
+                    fullWidth 
+                    sx={{
+                      '& .MuiInputBase-input.Mui-disabled': {
+                        WebkitTextFillColor: 'var(--text-primary)',
+                        color: 'var(--text-primary)'
+                      }
+                    }}
+                  />
                   <TextField label="שם מלא" value={fullName} onChange={(e) => setFullName(e.target.value)} fullWidth />
                   <Button onClick={handleProfileUpdate} variant="contained" startIcon={<Save />}>שמור שינויים</Button>
                 </Box>

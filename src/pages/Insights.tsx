@@ -506,10 +506,10 @@ export default function Insights() {
                    }}>
                                                               {topStudents[2] ? (
                        <Box>
-                         <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 0.5, color: '#c0c0c0', fontSize: { xs: '0.85rem', md: '1rem' } }}>
+                         <Typography variant="body1" textAlign="center" sx={{ fontWeight: 'bold', mb: 0.5, color: '#c0c0c0', fontSize: { xs: '0.85rem', md: '1rem' } }}>
                            {topStudents[2].name}
                          </Typography>
-                         <Typography variant="body2" sx={{ color: '#c0c0c0', fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
+                         <Typography variant="body2" textAlign="center" sx={{ color: '#c0c0c0', fontSize: { xs: '0.75rem', md: '0.875rem' } }}>
                            {topStudents[2].count} קבצים
                          </Typography>
                        </Box>

@@ -596,7 +596,7 @@ export default function Dashboard() {
         )}
 
         {/* Dashboard cards component */}
-        <Box sx={{ mt: 3 }}>
+        <Box>
           <DashboardCards
             userRole={session?.current_role || 'student'}
             recentNotifications={dashboardData.recentNotifications || []}
@@ -609,72 +609,75 @@ export default function Dashboard() {
         </Box>
 
         {/* Quick actions and performance cards */}
-        <Grid container spacing={3} sx={{ mt: 2 }}>
-          <Grid size={{ xs: 12, lg: 4 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, height: '100%', maxHeight: { lg: '400px' } }}>
-              <Card elevation={2} sx={{ flex: 1.35 }}>
-                <CardHeader 
-                  title="פעולות מהירות"
-                  sx={{ pb: 0 }}
-                  titleTypographyProps={{
-                    align: 'left',
-                    textAlign: 'left',
-                    variant: 'h6',
-                    fontWeight: 'bold'
-                  }}
-                />
-                <CardContent>
-                  <Grid container spacing={1.5}>
-                    <Grid size={12}>
-                      <Button component={Link} to={createPageUrl('UploadFile')} fullWidth variant="contained" startIcon={<Upload />}>העלאת קובץ חדש</Button>
-                    </Grid>
-                    <Grid size={12}>
-                      <Button component={Link} to={createPageUrl('Courses')} fullWidth variant="outlined" startIcon={<BookOpen />}>עיון בקורסים</Button>
-                    </Grid>
-                    <Grid size={12}>
-                      <Button component={Link} to={createPageUrl('MyFiles')} fullWidth variant="outlined" startIcon={<FileText />}>הקבצים שלי</Button>
-                    </Grid>
-                    <Grid size={12}>
-                      <Button 
-                        onClick={refreshDashboard}
-                        fullWidth 
-                        variant="outlined" 
-                        startIcon={dashboardLoading ? <CircularProgress size={16} /> : <Heart />}
-                        disabled={dashboardLoading}
-                      >
-                        {dashboardLoading ? 'מרענן...' : 'רענן דשבורד'}
-                      </Button>
-                    </Grid>
+        <Grid container spacing={2.5} sx={{ maxHeight: { lg: '400px' } }}>
+          {/* פעולות מהירות */}
+          <Grid size={{ xs: 12, md: 7 }}>
+            <Card elevation={2} sx={{ height: '100%' }}>
+              <CardHeader 
+                title="פעולות מהירות"
+                sx={{ pb: 0 }}
+                titleTypographyProps={{
+                  align: 'left',
+                  textAlign: 'left',
+                  variant: 'h6',
+                  fontWeight: 'bold'
+                }}
+              />
+              <CardContent>
+                <Grid container spacing={1.5}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Button component={Link} to={createPageUrl('UploadFile')} fullWidth variant="contained" startIcon={<Upload />}>העלאת קובץ חדש</Button>
                   </Grid>
-                </CardContent>
-              </Card>
-              <Card elevation={2} sx={{ flex: 1 }}>
-                <CardHeader 
-                  title="ביצועים"
-                  sx={{ pb: 0 }}
-                  titleTypographyProps={{
-                    align: 'left',
-                    textAlign: 'left',
-                    variant: 'h6',
-                    fontWeight: 'bold'
-                  }}
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Button component={Link} to={createPageUrl('Courses')} fullWidth variant="outlined" startIcon={<BookOpen />}>עיון בקורסים</Button>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Button component={Link} to={createPageUrl('MyFiles')} fullWidth variant="outlined" startIcon={<FileText />}>הקבצים שלי</Button>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Button 
+                      onClick={refreshDashboard}
+                      fullWidth 
+                      variant="outlined" 
+                      startIcon={dashboardLoading ? <CircularProgress size={16} /> : <Heart />}
+                      disabled={dashboardLoading}
+                    >
+                      {dashboardLoading ? 'מרענן...' : 'רענן דשבורד'}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          {/* ביצועים */}
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Card elevation={2} sx={{ height: '100%' }}>
+              <CardHeader 
+                title="ביצועים"
+                sx={{ pb: 0 }}
+                titleTypographyProps={{
+                  align: 'left',
+                  textAlign: 'left',
+                  variant: 'h6',
+                  fontWeight: 'bold'
+                }}
+              />
+              <CardContent sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">קבצים שאושרו</Typography>
+                  <Typography variant="body2" fontWeight="medium">{stats.approvedFiles}/{stats.totalFiles}</Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={stats.totalFiles > 0 ? (stats.approvedFiles / stats.totalFiles) * 100 : 0}
+                  sx={{ height: 8, borderRadius: 4 }}
                 />
-                <CardContent sx={{ p: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">קבצים שאושרו</Typography>
-                    <Typography variant="body2" fontWeight="medium">{stats.approvedFiles}/{stats.totalFiles}</Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={stats.totalFiles > 0 ? (stats.approvedFiles / stats.totalFiles) * 100 : 0}
-                    sx={{ height: 8, borderRadius: 4 }}
-                  />
-                  <Box sx={{ mt: 1, textAlign: 'left' }}>
-                    <Button component={Link} to={createPageUrl('Insights')} size="small">צפייה בתובנות</Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Box>
+                <Box sx={{ mt: 1, textAlign: 'left' }}>
+                  <Button component={Link} to={createPageUrl('Insights')} size="small">צפייה בתובנות</Button>
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
       </Box>

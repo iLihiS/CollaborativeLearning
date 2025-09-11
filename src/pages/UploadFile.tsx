@@ -322,7 +322,7 @@ export default function UploadFile() {
     };
 
     const handleCancel = () => {
-        navigate('/my-files');
+        navigate('/dashboard');
     };
 
     if (isSubmitted) {
@@ -463,13 +463,13 @@ export default function UploadFile() {
                             '& .MuiOutlinedInput-root': {
                                 '&.Mui-focused': {
                                     '& .MuiOutlinedInput-notchedOutline': {
-                                        borderColor: !isFileCodeEditable ? '#ff9800' : undefined,
+                                        borderColor: !isFileCodeEditable ? 'var(--color-warning)' : undefined,
                                     },
                                 },
                             },
                             '& .MuiInputLabel-root': {
                                 '&.Mui-focused': {
-                                    color: !isFileCodeEditable ? '#ff9800' : undefined,
+                                    color: !isFileCodeEditable ? 'var(--color-warning)' : undefined,
                                 },
                             },
                         }}
@@ -477,8 +477,8 @@ export default function UploadFile() {
                         helperText={
                             (hasAttemptedSubmit && formErrors.file_code) ? formErrors.file_code : (
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <Lock size={16} style={{ color: '#ff9800' }} />
-                                    <span>קוד הקובץ יתמלא אוטומטית לאחר בחירת קורס וסוג קובץ</span>
+                                    <Lock size={16} style={{ color: 'var(--text-primary)' }} />
+                                    <span style={{ color: 'var(--text-primary)' }}>קוד הקובץ יתמלא אוטומטית לאחר בחירת קורס וסוג קובץ</span>
                                 </Box>
                             )
                         }

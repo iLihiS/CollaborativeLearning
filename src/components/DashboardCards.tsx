@@ -75,22 +75,23 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
   }
 
   const cardStyle = {
-    backgroundColor: 'white',
-    border: '1px solid #e0e0e0',
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--border-color)',
     borderRadius: '8px',
     padding: '16px',
     margin: '8px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     height: '320px',
-    overflowY: 'auto' as const
+    overflowY: 'auto' as const,
+    color: 'var(--text-primary)'
   }
 
   const headerStyle = {
     fontSize: '18px',
     fontWeight: 'bold',
     marginBottom: '12px',
-    color: '#333',
-    borderBottom: '2px solid #f0f0f0',
+    color: 'var(--text-primary)',
+    borderBottom: '2px solid var(--border-color)',
     paddingBottom: '8px'
   }
 
@@ -98,8 +99,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     padding: '8px',
     marginBottom: '8px',
     borderRadius: '4px',
-    backgroundColor: '#f9f9f9',
-    borderLeft: '3px solid #ddd'
+    backgroundColor: 'var(--bg-tertiary)',
+    borderLeft: '3px solid var(--border-color)',
+    color: 'var(--text-primary)'
   }
 
   // Loading component
@@ -110,7 +112,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       alignItems: 'center', 
       justifyContent: 'center',
       marginTop: '40px',
-      color: '#666'
+      color: 'var(--text-secondary)'
     }}>
       <div style={{
         width: '24px',
@@ -157,7 +159,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
               {notification.message}
             </div>
-            <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
               {formatDate(notification.created_at)}
             </div>
           </div>
@@ -208,7 +210,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               display: 'flex', 
               justifyContent: 'space-between',
               fontSize: '11px', 
-              color: '#999'
+              color: 'var(--text-tertiary)'
             }}>
               <span>קטגוריה: {message.category}</span>
               <span>{formatDate(message.created_at)}</span>
@@ -269,7 +271,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 display: 'flex', 
                 justifyContent: 'space-between',
                 fontSize: '11px', 
-                color: '#999'
+                color: 'var(--text-tertiary)'
               }}>
                 <span>מעלה: {file.uploader_type}</span>
                 <span>{formatDate(file.created_at)}</span>
@@ -288,29 +290,29 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         <div style={{ 
           padding: '12px', 
-          backgroundColor: '#e3f2fd', 
+          backgroundColor: 'var(--bg-info)', 
           borderRadius: '4px',
           textAlign: 'center'
         }}>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1976d2' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--color-info)' }}>
             {recentFiles.filter(f => f.status === 'pending').length}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>ממתינים לאישור</div>
         </div>
         <div style={{ 
           padding: '12px', 
-          backgroundColor: '#e8f5e8', 
+          backgroundColor: 'var(--bg-success)', 
           borderRadius: '4px',
           textAlign: 'center'
         }}>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#388e3c' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--color-success)' }}>
             {recentMessages.filter(m => m.status === 'open').length}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>פניות פתוחות</div>
         </div>
         <div style={{ 
           padding: '12px', 
-          backgroundColor: '#fff3e0', 
+          backgroundColor: 'var(--bg-warning)', 
           borderRadius: '4px',
           textAlign: 'center'
         }}>
@@ -321,7 +323,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
         </div>
         <div style={{ 
           padding: '12px', 
-          backgroundColor: '#fce4ec', 
+          backgroundColor: 'var(--bg-error)', 
           borderRadius: '4px',
           textAlign: 'center'
         }}>
