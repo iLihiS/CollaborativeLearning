@@ -25,6 +25,7 @@ import {
 
 import { createPageUrl } from '@/utils'
 import { User, Student, Lecturer } from '@/api/entities'
+import AdminDesktopGuard from '@/components/AdminDesktopGuard'
 
 export default function AdminPanel() {
   const navigate = useNavigate()
@@ -131,7 +132,7 @@ export default function AdminPanel() {
   ]
 
   return (
-    <>
+    <AdminDesktopGuard pageName="פאנל ניהול">
       <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '80vh' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -225,6 +226,6 @@ export default function AdminPanel() {
           {toast.message}
         </Alert>
       </Snackbar>
-    </>
+    </AdminDesktopGuard>
   )
 }

@@ -162,7 +162,7 @@ export default function CoursePage() {
         color: 'white',
         background: 'linear-gradient(to right, #84cc16, #65a30d)',
         }}>
-        <Typography textAlign="left" variant="h3" component="h1" fontWeight="bold">{course.name}</Typography>
+        <Typography textAlign="left" variant="h4" component="h1" fontWeight="bold">{course.name}</Typography>
         <Typography textAlign="left" variant="h6" sx={{ opacity: 0.8, mt: 1 }}>{course.code}</Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mt: 2 }}>
           <Typography textAlign="left" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

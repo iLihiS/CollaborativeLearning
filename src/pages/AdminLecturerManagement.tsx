@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import { GraduationCap, Plus, Edit, Trash2, ArrowRight, User, Lock, Unlock, X, ChevronUp, ChevronDown, Filter, Shield, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/utils'
+import AdminDesktopGuard from '@/components/AdminDesktopGuard';
 
 type LecturerData = {
   id: string;
@@ -434,7 +435,8 @@ export default function AdminLecturerManagement() {
   }, {});
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <AdminDesktopGuard pageName="ניהול מרצים">
+      <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         חזרה לפאנל הניהול
       </Button>
@@ -838,6 +840,7 @@ export default function AdminLecturerManagement() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+      </Box>
+    </AdminDesktopGuard>
   );
 }

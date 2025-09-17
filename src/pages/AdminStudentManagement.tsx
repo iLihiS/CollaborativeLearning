@@ -13,6 +13,7 @@ import {
 import { Users, Plus, Edit, Trash2, ArrowRight, GraduationCap, ChevronUp, ChevronDown, Filter, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import AdminDesktopGuard from '@/components/AdminDesktopGuard';
 
 type StudentData = {
   id: string;
@@ -383,7 +384,8 @@ export default function AdminStudentManagement() {
   }, {});
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <AdminDesktopGuard pageName="ניהול סטודנטים">
+      <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         חזרה לפאנל הניהול
       </Button>
@@ -789,6 +791,7 @@ export default function AdminStudentManagement() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+      </Box>
+    </AdminDesktopGuard>
   );
 }

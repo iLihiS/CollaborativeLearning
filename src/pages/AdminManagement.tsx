@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import { Shield, Plus, Edit, Trash2, ArrowRight, ChevronUp, ChevronDown, Filter, X, Lock, Unlock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/utils'
+import AdminDesktopGuard from '@/components/AdminDesktopGuard';
 
 type AdminData = {
   id: string;
@@ -386,7 +387,8 @@ export default function AdminManagement() {
   };
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <AdminDesktopGuard pageName="ניהול מנהלים">
+      <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         בחזרה לפאנל הניהול
       </Button>
@@ -666,6 +668,7 @@ export default function AdminManagement() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+      </Box>
+    </AdminDesktopGuard>
   );
 }

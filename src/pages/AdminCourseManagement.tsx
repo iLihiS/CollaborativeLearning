@@ -10,6 +10,7 @@ import {
 import { BookOpen, Plus, Edit, Trash2, ArrowRight, GraduationCap, Lock, Unlock, X, AlertTriangle, ChevronUp, ChevronDown, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import AdminDesktopGuard from '@/components/AdminDesktopGuard';
 
 type CourseData = {
   id: string;
@@ -551,7 +552,8 @@ export default function AdminCourseManagement() {
 
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <AdminDesktopGuard pageName="ניהול קורסים">
+      <Box sx={{ p: 2, bgcolor: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Button component={Link} to={createPageUrl("AdminPanel")} variant="outlined" startIcon={<ArrowRight />} sx={{ mb: 3 }}>
         בחזרה לפאנל הניהול
       </Button>
@@ -1066,6 +1068,7 @@ export default function AdminCourseManagement() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+      </Box>
+    </AdminDesktopGuard>
   );
 }
